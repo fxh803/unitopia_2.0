@@ -4,7 +4,6 @@ import { defineProps } from 'vue'
 const props = defineProps<{
   mode: 'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | null
   setMode: (m: 'draw' | 'move' | 'erase' | 'rect' | 'ellipse') => void
-  onSave: () => void
   onClear: () => void
 }>()
 </script>
@@ -83,13 +82,6 @@ const props = defineProps<{
     >
       <span class="i-carbon-trash-can" />
     </button>
-    <button
-      class="text-white rounded bg-green-600 flex h-10 w-10 items-center justify-center hover:bg-green-700"
-      title="Submit"
-      @click="props.onSave"
-    >
-      <span class="i-carbon-save" />
-    </button>
   </div>
 </template>
 
@@ -104,10 +96,6 @@ const props = defineProps<{
 }
 .i-carbon-erase::before {
   content: '\f1c0';
-  font-family: 'carbon-icons';
-}
-.i-carbon-save::before {
-  content: '\f1c1';
   font-family: 'carbon-icons';
 }
 .i-carbon-trash-can::before {

@@ -64,7 +64,17 @@ const { isDrawingShape, shapeStart, previewShape, addShapeEventListeners, remove
 // 模式切换
 const { setMode } = useCanvasMode(() => canvas, mode, brushWidth, getDpr, removeShapeEventListeners, addShapeEventListeners, previewShape)
 // 历史管理
-const { history, saveSnapshot, handleHistorySelect, handleDeleteHistory } = useHistory(() => canvas)
+const { 
+  history, 
+  currentSlideIndex,
+  isSliding,
+  initializeEmptySlide, 
+  updateCurrentSlide, 
+  addNewSlide, 
+  handleHistorySelect, 
+  handleDeleteHistory,
+  setupCanvasChangeListener
+} = useHistory(() => canvas)
 // 对象操作
 const {
   showDeleteBtn,
@@ -110,6 +120,11 @@ onMounted(async () => {
     brush.color = '#000'
     brush.width = brushWidth.value * dpr
     canvas.freeDrawingBrush = brush
+    
+    // 初始化空白幻灯片
+    initializeEmptySlide()
+    // 设置画布变化监听器
+    setupCanvasChangeListener()
   }
   window.addEventListener('resize', updateCanvasSize)
 
@@ -145,7 +160,13 @@ onBeforeUnmount(() => {
 <template>
   <section class="bg-gray-900 flex h-full min-h-0 min-w-0 w-full">
     <!-- 幻灯片历史区 - 移动到左侧 -->
-    <HistoryPanel :history="history" @select="handleHistorySelect" @delete="handleDeleteHistory" />
+    <HistoryPanel 
+      :history="history" 
+      :current-slide-index="currentSlideIndex"
+      @select="handleHistorySelect" 
+      @delete="handleDeleteHistory"
+      @add-new="addNewSlide"
+    />
     <!-- 主画布区域 -->
     <div ref="canvasAreaRef"
       class="p-2 border-r border-[#e6e6e6] bg-[#E5E5E5] flex flex-1 flex-row min-h-0 min-w-0 items-center justify-center relative overflow-hidden">
@@ -182,7 +203,7 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <!-- 工具栏 -->
-      <CanvasToolbar :mode="mode" :set-mode="setMode" :on-save="saveSnapshot" :on-clear="clearCanvas" />
+      <CanvasToolbar :mode="mode" :set-mode="setMode" :on-clear="clearCanvas" />
       <!-- 画笔粗细调节面板，仅在绘制/擦除模式下显示 -->
       <BrushSizePanel v-if="mode === 'draw' || mode === 'erase'" :width="brushWidth"
         @update:width="brushWidth = $event" />
