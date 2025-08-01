@@ -2,13 +2,6 @@
 import { ref } from 'vue'
 import Table from './Table.vue'
 
-interface TableData {
-  [key: string]: any
-}
-
-const tableData = ref<TableData[]>([])
-const tableColumns = ref<string[]>([])
-const isLoading = ref(false)
 
 // 切换状态
 const activeTab = ref<'table' | 'overview'>('table')
@@ -17,13 +10,6 @@ const activeTab = ref<'table' | 'overview'>('table')
 const switchTab = (tab: 'table' | 'overview') => {
   activeTab.value = tab
 }
-
-// 处理数据更新
-const handleDataUpdate = (data: TableData[], columns: string[]) => {
-  tableData.value = data
-  tableColumns.value = columns
-}
-
 </script>
 
 <template>
@@ -58,11 +44,7 @@ const handleDataUpdate = (data: TableData[], columns: string[]) => {
     <div class="flex-1 overflow-hidden">
       <!-- Table 模式 -->
       <div v-if="activeTab === 'table'" class="h-full">
-        <Table 
-          :table-data="tableData" 
-          :table-columns="tableColumns" 
-          :is-loading="isLoading"
-          @data-update="handleDataUpdate" />
+        <Table />
       </div>
 
       <!-- Overview 模式 -->
