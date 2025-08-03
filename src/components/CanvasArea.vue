@@ -5,26 +5,23 @@ import ContainerToolbar from './ContainerToolbar.vue'
 import MarkerToolbar from './MarkerToolbar.vue'
 import FirstToolbar from './FirstToolbar.vue'
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useCanvasMode } from '~/composables/canvas/useCanvasMode'
+import { storeToRefs } from 'pinia' 
 import { useShapeDrawing } from '~/composables/canvas/useShapeDrawing'
 import { useObjectActions } from '~/composables/canvas/useObjectActions'
 import { useColorPickerStore } from '~/stores/colorpicker'
 import { useSelectedModeStore } from '~/stores/selectedMode'
 import { useBrushSizeStore } from '~/stores/brushsize'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
-
+import { useCanvasModeStore } from '~/stores/canvasMode'
 const selectedModeStore = useSelectedModeStore()
-const {selectedMode, isContainerMode} = storeToRefs(selectedModeStore)
-const {setSelectedMode} = selectedModeStore
+const {selectedMode, isContainerMode} = storeToRefs(selectedModeStore) 
 
 const brushSizeStore = useBrushSizeStore()
 const { brushWidth } = storeToRefs(brushSizeStore) 
 
 const collageSeriesStore = useCollageSeriesStore()
 const { collageSeries, currentSlideIndex } = storeToRefs(collageSeriesStore)
-const { 
-  setCanvas,
+const {  
   initializeEmptySlide, 
   updateCurrentSlide, 
   addNewSlide, 
@@ -32,6 +29,10 @@ const {
   handleDeleteCollageSeries,
   setupCanvasChangeListener
 } = collageSeriesStore
+
+const canvasModeStore = useCanvasModeStore()
+const { mode } = storeToRefs(canvasModeStore)
+const { setMode, clearCanvas } = canvasModeStore
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const canvasAreaRef = ref<HTMLDivElement | null>(null)
@@ -70,26 +71,13 @@ function updateCanvasSize() {
   }
 }
 
-function clearCanvas() {
-  if (canvas) {
-    // 复制一份对象数组，避免遍历时出错
-    const objects = canvas.getObjects().concat();
-    objects.forEach(obj => {
-      canvas!.remove(obj);
-    });
-    canvas.discardActiveObject();
-    canvas.renderAll();
-    // 背景色会自动保留，无需重新设置
-  }
-}
 
-const mode = ref<'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | null>(null) 
+
+// const mode = ref<'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | null>(null) 
 
 
 // 形状绘制
-const { isDrawingShape, shapeStart, previewShape, addShapeEventListeners, removeShapeEventListeners } = useShapeDrawing(() => canvas, mode, isContainerMode)
-// 模式切换
-  const { setMode } = useCanvasMode(() => canvas, mode, brushWidth, isContainerMode, getDpr, removeShapeEventListeners, addShapeEventListeners, previewShape)
+const { isDrawingShape, shapeStart, previewShape, addShapeEventListeners, removeShapeEventListeners } = useShapeDrawing(() => canvas, mode, isContainerMode) 
 // 对象操作
 const {
   showDeleteBtn,
@@ -104,12 +92,25 @@ const {
   hideBtns,
 } = useObjectActions(() => canvas)
 
-watch(() => selectedMode.value, (newMode) => {
+watch(selectedMode, (newMode) => {
   if (newMode !== null) {
-    setMode(mode.value)
+    setMode(mode.value, isContainerMode.value, colorPickerStore.selectedColor, brushWidth.value)
   }
 })
-
+// 监听 mode 变化，自动清理 shape 预览和事件
+watch(mode, () => {
+    if (!canvas) return
+    if (mode.value !== 'rect' && mode.value !== 'ellipse') {
+      removeShapeEventListeners();
+      if (previewShape.value) {
+        canvas.remove(previewShape.value)
+        previewShape.value = null
+      }
+    }
+    else{
+      addShapeEventListeners();
+    }
+  })
 // 监听颜色变化，更新画笔颜色
 watch(() => colorPickerStore.selectedColor, (color) => {
   // 更新画笔颜色（仅在Marker模式下）
@@ -150,7 +151,8 @@ onMounted(async () => {
     canvas.freeDrawingBrush = brush
     
     // 设置 canvas 引用
-    setCanvas(() => canvas)
+    canvasModeStore.setCanvas(() => canvas)
+    collageSeriesStore.setCanvas(() => canvas)
     // 初始化空白幻灯片
     initializeEmptySlide()
     // 设置画布变化监听器
@@ -229,19 +231,9 @@ onBeforeUnmount(() => {
       <!-- 一级工具栏：模式选择 -->
       <FirstToolbar />
       <!-- Container工具栏：仅在container模式下显示 -->
-      <ContainerToolbar 
-        :mode="mode" 
-        :set-mode="setMode" 
-        :on-clear="clearCanvas" 
-        :show="selectedMode === 'container'"
-      />
+      <ContainerToolbar v-if="selectedMode === 'container'" />
       <!-- Marker工具栏：仅在marker模式下显示 -->
-      <MarkerToolbar 
-        :mode="mode" 
-        :set-mode="setMode" 
-        :on-clear="clearCanvas" 
-        :show="selectedMode === 'marker'"
-      />
+      <MarkerToolbar v-if="selectedMode === 'marker'" />
       <!-- 画笔粗细调节面板，仅在绘制/擦除模式下显示 -->
       <BrushSizePanel v-if="mode === 'draw' || mode === 'erase'" />
     </div>

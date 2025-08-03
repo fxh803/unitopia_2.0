@@ -69,18 +69,7 @@ export function useCanvasMode(canvas: () => Canvas | null, mode: Ref<string | nu
     canvasInstance.renderAll();
   }
 
-  // 监听 mode 变化，自动清理 shape 预览和事件
-  watch(mode, () => {
-    const canvasInstance = canvas()
-    if (!canvasInstance) return
-    if (mode.value !== 'rect' && mode.value !== 'ellipse') {
-      removeShapeEventListeners();
-      if (previewShape.value) {
-        canvasInstance.remove(previewShape.value)
-        previewShape.value = null
-      }
-    }
-  })
+  
 
   return { setMode }
 } 
