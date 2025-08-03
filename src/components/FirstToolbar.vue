@@ -1,35 +1,10 @@
 <script setup lang="ts">
 import { defineProps, ref, defineEmits, watch } from 'vue'
-
-const props = defineProps<{
-  selectedModeType?: 'marker' | 'container' | null
-}>()
-
-const emit = defineEmits<{
-  modeTypeChange: [type: 'marker' | 'container' | null]
-}>()
-
-// 当前选中的模式类型
-const selectedModeType = ref(props.selectedModeType || null)
-
-// 监听外部模式类型变化
-watch(() => props.selectedModeType, (newType) => {
-  if (newType !== undefined) {
-    selectedModeType.value = newType
-  }
-})
-
-// 选择模式类型
-const selectModeType = (type: 'marker' | 'container') => {
-  // 如果点击的是当前已选中的模式，则取消选择
-  if (selectedModeType.value === type) {
-    selectedModeType.value = null
-    emit('modeTypeChange', null)
-  } else {
-    selectedModeType.value = type
-    emit('modeTypeChange', type)
-  }
-}
+import { useSelectedModeStore } from '~/stores/selectedMode'
+import { storeToRefs } from 'pinia'
+const selectedModeStore = useSelectedModeStore()
+const {selectedMode} = storeToRefs(selectedModeStore)
+const {setSelectedMode} = selectedModeStore
 </script>
 
 <template>
@@ -38,24 +13,24 @@ const selectModeType = (type: 'marker' | 'container') => {
     <button
       class="rounded flex h-10 w-10 items-center justify-center"
       :class="[
-        selectedModeType === 'marker'
+        selectedMode === 'marker'
           ? 'bg-[#0d99ff] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
       ]"
       title="Marker Mode"
-      @click="selectModeType('marker')"
+      @click="setSelectedMode('marker')"
     >
       <span class="i-carbon:data-categorical" />
     </button>
     <button
       class="rounded flex h-10 w-10 items-center justify-center"
       :class="[
-        selectedModeType === 'container'
+        selectedMode === 'container'
           ? 'bg-[#0d99ff] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
       ]"
       title="Container Mode"
-      @click="selectModeType('container')"
+      @click="setSelectedMode('container')"
     >
       <span class="i-carbon:area-custom" />
     </button>

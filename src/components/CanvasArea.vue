@@ -5,12 +5,17 @@ import ContainerToolbar from './ContainerToolbar.vue'
 import MarkerToolbar from './MarkerToolbar.vue'
 import FirstToolbar from './FirstToolbar.vue'
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
-
+import { storeToRefs } from 'pinia'
 import { useCanvasMode } from '~/composables/canvas/useCanvasMode'
 import { useShapeDrawing } from '~/composables/canvas/useShapeDrawing'
 import { useCollageSeries } from '~/composables/canvas/useCollageSeries'
 import { useObjectActions } from '~/composables/canvas/useObjectActions'
 import { useColorPickerStore } from '~/stores/colorpicker'
+import { useSelectedModeStore } from '~/stores/selectedMode'
+
+const selectedModeStore = useSelectedModeStore()
+const {selectedMode, isContainerMode} = storeToRefs(selectedModeStore)
+const {setSelectedMode} = selectedModeStore
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const canvasAreaRef = ref<HTMLDivElement | null>(null)
@@ -63,11 +68,8 @@ function clearCanvas() {
   }
 }
 
-const mode = ref<'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | null>(null)
-const selectedModeType = ref<'marker' | 'container' | null>(null) // 添加模式类型状态
+const mode = ref<'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | null>(null) 
 
-// 计算是否为Container模式
-const isContainerMode = computed(() => selectedModeType.value === 'container')
 
 // 形状绘制
 const { isDrawingShape, shapeStart, previewShape, addShapeEventListeners, removeShapeEventListeners } = useShapeDrawing(() => canvas, mode, isContainerMode)
@@ -98,15 +100,11 @@ const {
   hideBtns,
 } = useObjectActions(() => canvas)
 
-// 处理模式类型变化
-const handleModeTypeChange = (type: 'marker' | 'container' | null) => {
-  selectedModeType.value = type
-  // 当模式类型变化时，清空绘制模式
-  if (mode.value !== null) {
-    // 调用当前模式来取消激活
-    setMode(mode.value as 'draw' | 'move' | 'erase' | 'rect' | 'ellipse')
+watch(() => selectedMode.value, (newMode) => {
+  if (newMode !== null) {
+    setMode(mode.value)
   }
-}
+})
 
 // 监听颜色变化，更新画笔颜色
 watch(() => colorPickerStore.selectedColor, (color) => {
@@ -229,20 +227,20 @@ onBeforeUnmount(() => {
         </button>
       </div>
       <!-- 一级工具栏：模式选择 -->
-      <FirstToolbar :selected-mode-type="selectedModeType" @mode-type-change="handleModeTypeChange" />
+      <FirstToolbar />
       <!-- Container工具栏：仅在container模式下显示 -->
       <ContainerToolbar 
         :mode="mode" 
         :set-mode="setMode" 
         :on-clear="clearCanvas" 
-        :show="selectedModeType === 'container'"
+        :show="selectedMode === 'container'"
       />
       <!-- Marker工具栏：仅在marker模式下显示 -->
       <MarkerToolbar 
         :mode="mode" 
         :set-mode="setMode" 
         :on-clear="clearCanvas" 
-        :show="selectedModeType === 'marker'"
+        :show="selectedMode === 'marker'"
       />
       <!-- 画笔粗细调节面板，仅在绘制/擦除模式下显示 -->
       <BrushSizePanel v-if="mode === 'draw' || mode === 'erase'" :width="brushWidth"
