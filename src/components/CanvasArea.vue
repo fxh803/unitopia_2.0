@@ -1,18 +1,14 @@
 <script setup lang="ts">
 import { Canvas, PencilBrush } from 'fabric'
-import BrushSizePanel from './BrushSizePanel.vue'
-import ContainerToolbar from './ContainerToolbar.vue'
-import MarkerToolbar from './MarkerToolbar.vue'
-import FirstToolbar from './FirstToolbar.vue'
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
-import { storeToRefs } from 'pinia'
-import { useShapeDrawing } from '~/composables/canvas/useShapeDrawing'
+import { storeToRefs } from 'pinia' 
 import { useObjectActionsStore } from '~/stores/objectActions'
 import { useColorPickerStore } from '~/stores/colorpicker'
 import { useSelectedModeStore } from '~/stores/selectedMode'
 import { useBrushSizeStore } from '~/stores/brushsize'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useCanvasModeStore } from '~/stores/canvasMode'
+import { useShapeDrawingStore } from '~/stores/shapeDrawing'
 const selectedModeStore = useSelectedModeStore()
 const {selectedMode, isContainerMode} = storeToRefs(selectedModeStore) 
 
@@ -48,6 +44,13 @@ const {
   togglePathClosed,
   hideBtns
 } = objectActionsStore
+
+const shapeDrawingStore = useShapeDrawingStore()
+const { isDrawingShape, shapeStart, previewShape } = storeToRefs(shapeDrawingStore)
+const { 
+  addShapeEventListeners,
+  removeShapeEventListeners
+} = shapeDrawingStore
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const canvasAreaRef = ref<HTMLDivElement | null>(null)
@@ -85,10 +88,7 @@ function updateCanvasSize() {
     }
   }
 }
-
-// 形状绘制
-const { isDrawingShape, shapeStart, previewShape, addShapeEventListeners, removeShapeEventListeners } = useShapeDrawing(() => canvas, mode, isContainerMode)
-
+ 
 watch(selectedMode, (newMode) => {
   if (newMode !== null) {
     setMode(mode.value)
@@ -96,18 +96,18 @@ watch(selectedMode, (newMode) => {
 })
 // 监听 mode 变化，自动清理 shape 预览和事件
 watch(mode, () => {
-    if (!canvas) return
-    if (mode.value !== 'rect' && mode.value !== 'ellipse') {
-      removeShapeEventListeners();
-      if (previewShape.value) {
-        canvas.remove(previewShape.value)
-        previewShape.value = null
-      }
+  if (!canvas) return
+  if (mode.value !== 'rect' && mode.value !== 'ellipse') {
+    removeShapeEventListeners();
+    if (previewShape.value) {
+      canvas.remove(previewShape.value)
+      previewShape.value = null
     }
+  }
     else{
-      addShapeEventListeners();
-    }
-  })
+    addShapeEventListeners();
+  }
+})
 // 监听颜色变化，更新画笔颜色
 watch(() => colorPickerStore.selectedColor, (color) => {
   // 更新画笔颜色（仅在Marker模式下）
@@ -132,7 +132,7 @@ onMounted(async () => {
   setTimeout(() => {
     updateCanvasSize()
   }, 100)
-  
+
   if (canvasEl.value) {
     canvas = new Canvas(canvasEl.value, {
       backgroundColor: '#ffffff',
@@ -146,11 +146,12 @@ onMounted(async () => {
     brush.color = '#000'
     brush.width = brushWidth.value * dpr
     canvas.freeDrawingBrush = brush
-    
+
     // 设置 canvas 引用
     canvasModeStore.setCanvas(() => canvas)
     collageSeriesStore.setCanvas(() => canvas)
     objectActionsStore.setCanvas(() => canvas)
+    shapeDrawingStore.setCanvas(() => canvas)
     // 初始化空白幻灯片
     initializeEmptySlide()
     // 设置画布变化监听器
@@ -176,8 +177,7 @@ onMounted(async () => {
       updateClosePathBtnPosition()
     },
   })
-  canvas.renderAll()
-  removeShapeEventListeners()
+  canvas.renderAll() 
 })
 
 onBeforeUnmount(() => {
