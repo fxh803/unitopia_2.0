@@ -89,8 +89,8 @@ function updateCanvasSize() {
   }
 }
  
-watch(selectedMode, (newMode) => {
-  if (newMode !== null) {
+watch(selectedMode, (newMode, oldMode) => { 
+  if (newMode !== oldMode || newMode === null) { 
     setMode(mode.value)
   }
 })
@@ -152,6 +152,7 @@ onMounted(async () => {
     collageSeriesStore.setCanvas(() => canvas)
     objectActionsStore.setCanvas(() => canvas)
     shapeDrawingStore.setCanvas(() => canvas)
+    selectedModeStore.setCanvas(() => canvas)
     // 初始化空白幻灯片
     initializeEmptySlide()
     // 设置画布变化监听器

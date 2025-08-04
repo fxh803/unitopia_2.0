@@ -120,7 +120,11 @@ export const useShapeDrawingStore = defineStore('shapeDrawing', () => {
         })
       }
       if (shapeObj) {
+        // 为形状对象设置dataType属性
+        shapeObj.set('dataType', selectedModeStore.selectedMode);
         canvasInstance.add(shapeObj)
+        // 应用当前模式的透明度规则
+        selectedModeStore.handleModeSwitch(selectedModeStore.selectedMode);
       }
       // 移除预览
       canvasInstance.remove(previewShape.value)
