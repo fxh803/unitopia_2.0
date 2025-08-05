@@ -268,6 +268,22 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         canvasInstance.fire('object:modified', { target: activeObject })
     }
 
+    function getCurrentObjectColor() {
+        const canvasInstance = canvasRef.value?.()
+        const activeObject = currentPathObj.value
+        if (!activeObject || !canvasInstance) return null
+
+        // 优先返回 stroke 颜色，如果没有则返回 fill 颜色
+        if (activeObject.stroke) {
+            return activeObject.stroke
+        } else if (activeObject.fill && activeObject.fill !== 'transparent' && activeObject.fill !== 'rgba(0,0,0,0)') {
+            return activeObject.fill
+        }
+        
+        // 默认颜色
+        return '#000000'
+    }
+
     function hideBtns() {
         showDeleteBtn.value = false
         showClosePathBtn.value = false
@@ -296,6 +312,7 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         togglePathClosed,
         toggleGroup,
         applyColor,
+        getCurrentObjectColor,
         hideBtns,
         setCanvas,
         setCurrentPathObj
