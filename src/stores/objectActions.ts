@@ -17,9 +17,23 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
     function setCanvas(canvas: () => Canvas | null) {
         canvasRef.value = canvas
     }
+    const isPathClosed = computed(() => {
+        const obj = currentPathObj.value
+        return !!(obj && obj.fill && obj.fill !== 'transparent' && obj.fill !== 'rgba(0,0,0,0)')
+    })
+    const isGroupMode = computed(() => {
+        const obj = currentPathObj.value
+        return !!(obj && obj.type === 'group')
+    })
+
+    const isMultipleSelection = computed(() => {
+        const obj = currentPathObj.value
+        return !!(obj && obj.type === 'activeselection')
+    })
     function updateDeleteBtnPosition() {
         const canvasInstance = canvasRef.value?.()
         const obj = canvasInstance?.getActiveObject()
+        currentPathObj.value = obj
         if (!obj) {
             showDeleteBtn.value = false
             return
@@ -44,17 +58,6 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         }
         showDeleteBtn.value = true
     }
-
-    function deleteActiveObject() {
-        const canvasInstance = canvasRef.value?.()
-        const obj = canvasInstance?.getActiveObject()
-        if (obj && canvasInstance) {
-            canvasInstance.remove(obj)
-            canvasInstance.discardActiveObject()
-            canvasInstance.renderAll()
-        }
-    }
-
     function updateClosePathBtnPosition() {
         const canvasInstance = canvasRef.value?.()
         const obj = canvasInstance?.getActiveObject()
@@ -62,8 +65,11 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         if (!obj) {
             showClosePathBtn.value = false
             return
+        } 
+        if(isGroupMode.value || isMultipleSelection.value){
+            showClosePathBtn.value = false
+            return
         }
-
         // 获取画布的变换信息
         const zoom = canvasInstance.getZoom()
         const vpt = canvasInstance.viewportTransform
@@ -83,21 +89,16 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         }
         showClosePathBtn.value = true
     }
-
     function updateGroupBtnPosition() {
         const canvasInstance = canvasRef.value?.()
         const activeObject = canvasInstance?.getActiveObject()
+        currentPathObj.value = activeObject
         if (!activeObject) {
             showGroupBtn.value = false
             return
-        }
+        } 
 
-        // 检查是否为组对象（拆分组）或多选对象（分组）
-        const isGroup = activeObject.type === 'group'
-        const objects = activeObject.getObjects ? activeObject.getObjects() : [activeObject]
-        const isMultipleSelection = objects.length > 1
-
-        if (!isGroup && !isMultipleSelection) {
+        if (!isGroupMode.value && !isMultipleSelection.value) {
             showGroupBtn.value = false
             return
         }
@@ -107,13 +108,13 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         const vpt = canvasInstance.viewportTransform
 
         // 计算选择框的左上角位置
-        const tl = activeObject.aCoords.tl
-        const btnOffsetX = -60
+        const tr = activeObject.aCoords.tr
+        const btnOffsetX = -20
         const btnOffsetY = 20
 
         // 应用画布变换
-        const x = (tl.x * zoom) + (vpt[4] || 0)
-        const y = (tl.y * zoom) + (vpt[5] || 0)
+        const x = (tr.x * zoom) + (vpt[4] || 0)
+        const y = (tr.y * zoom) + (vpt[5] || 0)
 
         groupBtnPosition.value = {
             top: `${y - btnOffsetY}px`,
@@ -121,12 +122,20 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         }
         showGroupBtn.value = true
     }
-
-    const isPathClosed = computed(() => {
-        const obj = currentPathObj.value
-        return !!(obj && obj.fill && obj.fill !== 'transparent' && obj.fill !== 'rgba(0,0,0,0)')
-    })
-
+    function deleteActiveObject() {
+        const canvasInstance = canvasRef.value?.()
+        const obj = canvasInstance?.getActiveObject()
+        if (isMultipleSelection.value){
+            const objects = obj.getObjects()
+            canvasInstance.remove(...objects)
+            canvasInstance.discardActiveObject()
+            canvasInstance.renderAll() 
+        }else if (obj && canvasInstance) {
+            canvasInstance.remove(obj)
+            canvasInstance.discardActiveObject()
+            canvasInstance.renderAll()
+        }
+    }
     function togglePathClosed() {
         if (!currentPathObj.value) return
         const canvasInstance = canvasRef.value?.()
@@ -147,10 +156,9 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         if (!activeObject || !canvasInstance) return
 
                 // 检查是否为组对象（拆分组）
-        if (activeObject.type === 'group') {
+        if (isGroupMode.value) {
             // 使用removeAll()方法获取组中的所有对象并移除它们
-            const objects = activeObject.removeAll()
-            console.log('objects', objects)
+            const objects = activeObject.removeAll() 
             // 将对象重新添加到画布
             canvasInstance.add(...objects)
             
@@ -164,10 +172,10 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
             
             // 设置为活动对象
             canvasInstance.setActiveObject(activeSelection)
-            canvasInstance.requestRenderAll()
+            canvasInstance.requestRenderAll() 
         }else {
             // 分组：检查是否为多选对象
-            if (activeObject.isType && activeObject.isType('activeselection')) {
+            if (isMultipleSelection.value) {
                 // 获取所有选中的对象
                 const objects = activeObject.getObjects() 
                 
@@ -182,10 +190,7 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
                 // 将组添加到画布
                 canvasInstance.add(group)
                 canvasInstance.setActiveObject(group)
-                canvasInstance.requestRenderAll()
-                
-                // 触发object:modified事件
-                canvasInstance.fire('object:modified', { target: group })
+                canvasInstance.requestRenderAll() 
             }
         }
     }
@@ -203,8 +208,9 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         showClosePathBtn,
         closePathBtnPosition,
         showGroupBtn,
-        groupBtnPosition,
-        currentPathObj,
+        groupBtnPosition, 
+        isGroupMode,
+        isMultipleSelection,
         updateDeleteBtnPosition,
         deleteActiveObject,
         updateClosePathBtnPosition,

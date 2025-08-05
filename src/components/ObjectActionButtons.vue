@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { useObjectActionsStore } from '~/stores/objectActions'
 import { storeToRefs } from 'pinia'
+import { watch } from 'vue'
+
 const objectActionsStore = useObjectActionsStore()
 const {
     showDeleteBtn,
@@ -10,16 +12,13 @@ const {
     showGroupBtn,
     groupBtnPosition,
     isPathClosed,
-    updateDeleteBtnPosition,
-    updateClosePathBtnPosition,
-    updateGroupBtnPosition,
-    hideBtns
+    isGroupMode
 } = storeToRefs(objectActionsStore)
 const {
     deleteActiveObject,
     togglePathClosed,
     toggleGroup
-} = objectActionsStore
+} = objectActionsStore 
 </script>
 
 <template>
@@ -50,18 +49,9 @@ const {
 
     <!-- 分组/拆分组按钮 -->
     <button v-if="showGroupBtn" class="group-btn" :style="groupBtnPosition" @click="toggleGroup">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-            <!-- 分组图标：多个方框组合 -->
-            <rect x="2" y="2" width="4" height="4" stroke="white" stroke-width="1" fill="none"/>
-            <rect x="8" y="2" width="4" height="4" stroke="white" stroke-width="1" fill="none"/>
-            <rect x="2" y="8" width="4" height="4" stroke="white" stroke-width="1" fill="none"/>
-            <rect x="8" y="8" width="4" height="4" stroke="white" stroke-width="1" fill="none"/>
-            <!-- 连接线 -->
-            <line x1="6" y1="4" x2="8" y2="4" stroke="white" stroke-width="1"/>
-            <line x1="4" y1="6" x2="4" y2="8" stroke="white" stroke-width="1"/>
-            <line x1="12" y1="6" x2="12" y2="8" stroke="white" stroke-width="1"/>
-            <line x1="6" y1="10" x2="8" y2="10" stroke="white" stroke-width="1"/>
-        </svg>
+        <!-- Group图标 -->
+        <div v-if="!isGroupMode" class="i-carbon:group-objects"></div> 
+        <div v-else class="i-carbon:ungroup-objects"></div> 
     </button>
 </template>
 
@@ -83,15 +73,9 @@ const {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
     transform: translate(-50%, -50%);
     transition: all 0.2s ease;
-    pointer-events: none;
+    /* pointer-events: none; */
     /* 让事件穿透按钮，到达下面的控制点 */
 }
-
-.delete-btn>svg {
-    pointer-events: all;
-    /* 让SVG图标本身可以响应点击 */
-}
-
 .delete-btn:hover {
     background-color: #ef4444;
     /* red-500 */
@@ -127,9 +111,9 @@ const {
 .group-btn {
     position: absolute;
     z-index: 10;
-    background-color: #10b981;
+    background-color: #ffffff;
     /* green-500 */
-    color: white;
+    color: #0d99ff;
     border: none;
     border-radius: 50%;
     width: 30px;
@@ -145,7 +129,7 @@ const {
 }
 
 .group-btn:hover {
-    background-color: #059669;
+    /* background-color: #e0e0e0; */
     /* green-600 */
     transform: translate(-50%, -50%) scale(1.1);
 }
