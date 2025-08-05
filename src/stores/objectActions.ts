@@ -157,7 +157,7 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
 
     function toggleGroup() {
         const canvasInstance = canvasRef.value?.()
-        const activeObject = currentPathObj.value
+        const activeObject = canvasInstance?.getActiveObject()
         if (!activeObject || !canvasInstance) return
 
         // 检查是否为组对象（拆分组）
@@ -203,6 +203,10 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
     function updateColorBtnPosition() {
         const canvasInstance = canvasRef.value?.()
         if (!currentPathObj.value) {
+            showColorBtn.value = false
+            return
+        }
+        if (isGroupMode.value || isMultipleSelection.value) {
             showColorBtn.value = false
             return
         }
