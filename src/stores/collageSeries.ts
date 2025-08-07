@@ -5,7 +5,7 @@ import { useOverviewStore } from '~/stores/overview'
 
 export const useCollageSeriesStore = defineStore('collageSeries', () => {
     // 拼贴系列状态
-    const collageSeries = ref<{ json: string, preview: string }[]>([])
+    const collageSeries = ref<{ json: string, preview: string, dataTypeArray: any[] }[]>([])
     const currentSlideIndex = ref(0)
     const stopListen = ref(false) // 添加标志
     const canvasRef = ref<(() => Canvas | null) | null>(null)
@@ -26,7 +26,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             format: 'png',
             multiplier: 2
         })
-        collageSeries.value = [{ json, preview }]
+        collageSeries.value = [{ json, preview, dataTypeArray: [] }]
         currentSlideIndex.value = 0
     }
 
@@ -57,8 +57,10 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                 obj.set('opacity', originalOpacity)
             }
         })
-
-        collageSeries.value[currentSlideIndex.value] = { json, preview }
+        //遍历jsonObj，将他们的dataType做成一个数组
+        const dataTypeArray = canvasInstance.getObjects().map((obj: any) => obj.get('dataType'))
+        console.log("debug:",dataTypeArray)
+        collageSeries.value[currentSlideIndex.value] = { json, preview, dataTypeArray }
     }
 
     // 清空画布
@@ -86,10 +88,9 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             format: 'png',
             multiplier: 2
         })
-        collageSeries.value.push({ json, preview })
+        collageSeries.value.push({ json, preview, dataTypeArray: [] })
         currentSlideIndex.value = collageSeries.value.length - 1
-        stopListen.value = false
-        overviewStore.updateMarkerObjects()
+        stopListen.value = false 
     }
 
     // 选择幻灯片
@@ -100,22 +101,26 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         currentSlideIndex.value = idx
         const json = collageSeries.value[idx].json
         const jsonObj = typeof json === 'string' ? JSON.parse(json) : json
-         
+        const dataTypeArray = collageSeries.value[idx].dataTypeArray
+     
         // 清空当前画布
-        clearCanvas()
+        clearCanvas() 
         if(jsonObj.objects.length > 0){
             canvasInstance.loadFromJSON(json, () => {
                 setTimeout(() => {
                     if (canvasInstance) {
                         canvasInstance.renderAll()
+                        // 恢复自定义属性
+                        restoreCustomProperties(canvasInstance, dataTypeArray) 
+                        overviewStore.updateMarkerObjects()
                     }
                     stopListen.value = false
-                }, 100)
+                }, 200)
             })
         }else{
             stopListen.value = false
         }
-        overviewStore.updateMarkerObjects()
+        
     }
 
     // 删除幻灯片
@@ -129,20 +134,21 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         } else if(idx < currentSlideIndex.value){
             currentSlideIndex.value -= 1
         }
-        collageSeries.value.splice(idx, 1)
-        overviewStore.updateMarkerObjects()
+        collageSeries.value.splice(idx, 1) 
     }
 
-    // 监听画布变化，自动更新当前幻灯片
-    function setupCanvasChangeListener() { 
-        const canvasInstance = canvasRef.value?.()
-        if (!canvasInstance) return
-
-        canvasInstance.on('object:added', updateCurrentSlide)
-        canvasInstance.on('object:modified', updateCurrentSlide)
-        canvasInstance.on('object:removed', updateCurrentSlide)
-        canvasInstance.on('object:updated', updateCurrentSlide)
+    // 恢复自定义属性
+    function restoreCustomProperties(canvasInstance: Canvas, dataTypeArray: any) {
+        const objects = canvasInstance.getObjects() 
+        // 遍历画布对象和JSON对象，恢复自定义属性
+        objects.forEach((obj, index) => {
+            if (dataTypeArray[index]) {
+                obj.set('dataType', dataTypeArray[index])
+            }
+        })
     }
+
+    
 
     return {
         collageSeries,
@@ -153,7 +159,6 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         updateCurrentSlide,
         addNewSlide,
         handleCollageSeriesSelect,
-        handleDeleteCollageSeries,
-        setupCanvasChangeListener,
+        handleDeleteCollageSeries
     }
 }) 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue'
+import { onMounted, onUnmounted, watch } from 'vue'
 import { useCanvasModeStore } from '~/stores/canvasMode'
 import { useTableStore } from '~/stores/table'
 import { useSelectedModeStore } from '~/stores/selectedMode'
@@ -11,13 +11,11 @@ const selectedModeStore = useSelectedModeStore()
 const overviewStore = useOverviewStore()
 
 // 组件挂载时初始化
-onMounted(() => {
-  // 延迟初始化，确保画布已经准备好
-  setTimeout(() => {
+onMounted(() => { 
     overviewStore.updateMarkerObjects()
-    overviewStore.initializeEventListeners()
-  }, 100)
 })
+
+ 
 </script>
 
 <template>

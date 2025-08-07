@@ -17,6 +17,7 @@ const {
     showGroupBtn, 
     showLayerUpBtn, 
     showLayerDownBtn,
+    showColorBtn,
     actionBtnPosition,
     isPathClosed,
     isGroupMode
@@ -28,6 +29,12 @@ const {
     bringForward,
     sendBackwards
 } = objectActionsStore
+
+// 删除对象并关闭圆盘
+const handleDeleteObject = () => {
+    deleteActiveObject()
+    closeWheel()
+}
 
 // 控制转盘显示状态
 const showWheel = ref(false)
@@ -85,7 +92,7 @@ const colorBtnPos = computed(() => calculateButtonPosition(-90))
 
 <template>
     <!-- 更多按钮 -->
-    <button v-if="showDeleteBtn || showClosePathBtn || showGroupBtn || showLayerUpBtn || showLayerDownBtn"
+    <button v-if="showDeleteBtn || showClosePathBtn || showGroupBtn || showLayerUpBtn || showLayerDownBtn || showColorBtn"
         ref="moreBtnRef" class="more-btn" :style="actionBtnPosition" @click="toggleWheel">
         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
             <path
@@ -117,7 +124,7 @@ const colorBtnPos = computed(() => calculateButtonPosition(-90))
             <div class="wheel-content">
                 <!-- 删除按钮 -->
                 <button v-if="showDeleteBtn" class="wheel-btn delete-wheel-btn" :style="deleteBtnPos"
-                    @click="deleteActiveObject">
+                    @click="handleDeleteObject">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor"
                         viewBox="0 0 16 16">
                         <path

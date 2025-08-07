@@ -17,8 +17,7 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
   function setCanvas(canvas: () => Canvas | null) {
     canvasRef.value = canvas
   }
-  function setMode(m: 'draw' | 'move' | 'erase' | 'rect' | 'ellipse') {
-    console.log('setmode', m)
+  function setMode(m: 'draw' | 'move' | 'erase' | 'rect' | 'ellipse') { 
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
     // 再次点击同模式，取消激活
@@ -49,23 +48,6 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         canvasInstance.freeDrawingBrush.color = selectedModeStore.isContainerMode ? '#000000' : colorPickerStore.selectedColor;
         canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr;
       }
-
-      // 监听绘制完成事件，为绘制的路径设置dataType
-      canvasInstance.on('path:created', (e) => {
-        const path = e.path;
-        if (path) {
-          // 根据当前选择的模式设置dataType
-          path.set('dataType', selectedModeStore.selectedMode);
-
-          // 在container模式下，将新绘制的路径移动到最底层
-          if (selectedModeStore.selectedMode === 'container') {
-            canvasInstance.sendObjectToBack(path, true);
-          }
-
-          // 应用当前模式的透明度规则
-          selectedModeStore.handleModeSwitch(selectedModeStore.selectedMode);
-        }
-      });
     } else if (m === 'erase') {
       canvasInstance.isDrawingMode = true;
       canvasInstance.selection = false;
@@ -109,8 +91,29 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
     canvasInstance.renderAll();
     // 背景色会自动保留，无需重新设置
   }
+  function setDrawedObjectDataType(e) {
+    // 监听绘制完成事件，为绘制的路径设置dataType
+    const canvasInstance = canvasRef.value?.()
+    if (!canvasInstance) return
+    console.log('触发')
+    // object:added 事件中，对象在 e.target 中
+    const path = e.target;
+    console.log('path',path,selectedModeStore.selectedMode)
+    if (path) {
+      // 根据当前选择的模式设置dataType
+      path.set('dataType', selectedModeStore.selectedMode);
+
+      // 在container模式下，将新绘制的路径移动到最底层
+      if (selectedModeStore.selectedMode === 'container') {
+        canvasInstance.sendObjectToBack(path, true);
+      }
+
+      // 应用当前模式的透明度规则
+      selectedModeStore.handleModeSwitch(selectedModeStore.selectedMode);
+    }
+  }
 
 
 
-  return { mode, setMode, setCanvas, clearCanvas }
+  return { mode, setMode, setCanvas, clearCanvas, setDrawedObjectDataType }
 }) 

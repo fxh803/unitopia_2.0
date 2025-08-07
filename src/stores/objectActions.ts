@@ -85,8 +85,7 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
         actionBtnPosition.value = {
             top: `${y - btnOffsetY}px`,
             left: `${x + btnOffsetX}px`,
-        }
-        showDeleteBtn.value = true
+        } 
     }
     function deleteActiveObject() {
         const canvasInstance = canvasRef.value?.()

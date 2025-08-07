@@ -14,36 +14,35 @@ const selectedModeStore = useSelectedModeStore()
 const {selectedMode, isContainerMode} = storeToRefs(selectedModeStore) 
 
 const overviewStore = useOverviewStore()
-
+const { updateMarkerObjects } = overviewStore
 const brushSizeStore = useBrushSizeStore()
-const { brushWidth } = storeToRefs(brushSizeStore) 
+const { brushWidth } = storeToRefs(brushSizeStore)
 
 const collageSeriesStore = useCollageSeriesStore()
-const { collageSeries, currentSlideIndex } = storeToRefs(collageSeriesStore)
-const {  
-  initializeEmptySlide, 
-  updateCurrentSlide, 
-  addNewSlide, 
-  handleCollageSeriesSelect, 
-  handleDeleteCollageSeries,
-  setupCanvasChangeListener
+const { collageSeries, currentSlideIndex, stopListen } = storeToRefs(collageSeriesStore)
+const {
+  initializeEmptySlide,
+  updateCurrentSlide,
+  addNewSlide,
+  handleCollageSeriesSelect,
+  handleDeleteCollageSeries
 } = collageSeriesStore
 
 const canvasModeStore = useCanvasModeStore()
 const { mode } = storeToRefs(canvasModeStore)
-const { setMode, clearCanvas } = canvasModeStore
+const { setMode, clearCanvas, setDrawedObjectDataType } = canvasModeStore
 
 const objectActionsStore = useObjectActionsStore()
 const {
-  updateActionBtnPosition, 
+  updateActionBtnPosition,
   updateActionBtnVisble,
   hideBtns,
-  setCurrentPathObj, 
+  setCurrentPathObj,
 } = objectActionsStore
 
 const shapeDrawingStore = useShapeDrawingStore()
 const { isDrawingShape, shapeStart, previewShape } = storeToRefs(shapeDrawingStore)
-const { 
+const {
   addShapeEventListeners,
   removeShapeEventListeners
 } = shapeDrawingStore
@@ -84,9 +83,62 @@ function updateCanvasSize() {
     }
   }
 }
- 
-watch(selectedMode, (newMode, oldMode) => { 
-  if (newMode !== oldMode || newMode === null) { 
+function addCanvasEventListeners(){
+  canvas.on({
+    'selection:created': ()=>{
+      setCurrentPathObj()
+      updateActionBtnVisble()
+    updateActionBtnPosition()
+    
+    },
+    'selection:updated': ()=>{
+      setCurrentPathObj()
+      updateActionBtnVisble()
+    updateActionBtnPosition()
+    
+    },
+    'selection:cleared': hideBtns,
+    'object:moving': hideBtns,
+    'object:scaling': hideBtns,
+    'object:rotating': hideBtns,
+    'object:modified': () => {
+      setCurrentPathObj()
+      updateActionBtnVisble()
+      updateActionBtnPosition()
+      updateMarkerObjects()
+      updateCurrentSlide()
+    },
+    'object:added': (e) => {
+      setDrawedObjectDataType(e)
+      updateMarkerObjects()
+      updateCurrentSlide()
+    },
+    'object:removed': () => {
+      updateMarkerObjects()
+      updateCurrentSlide()
+    }
+  })
+}
+function removeCanvasEventListeners(){
+  canvas.off('selection:created')
+  canvas.off('selection:updated')
+  canvas.off('selection:cleared')
+  canvas.off('object:moving')
+  canvas.off('object:scaling')
+  canvas.off('object:rotating')
+  canvas.off('object:modified')
+  canvas.off('object:added')
+  canvas.off('object:removed')
+}
+watch (stopListen, (newVal) => {
+  if (!newVal) {
+    addCanvasEventListeners()
+  } else {
+    removeCanvasEventListeners()
+  }
+})
+watch(selectedMode, (newMode, oldMode) => {
+  if (newMode !== oldMode || newMode === null) {
     setMode(mode.value)
   }
 })
@@ -100,7 +152,7 @@ watch(mode, () => {
       previewShape.value = null
     }
   }
-    else{
+  else {
     addShapeEventListeners();
   }
 })
@@ -127,7 +179,7 @@ onMounted(async () => {
   // 延迟一下确保DOM完全渲染
   setTimeout(() => {
     updateCanvasSize()
-  }, 100)
+  }, 200)
 
   if (canvasEl.value) {
     canvas = new Canvas(canvasEl.value, {
@@ -152,28 +204,10 @@ onMounted(async () => {
     overviewStore.setCanvas(() => canvas)
     // 初始化空白幻灯片
     initializeEmptySlide()
-    // 设置画布变化监听器
-    setupCanvasChangeListener()
+    addCanvasEventListeners()
   }
   window.addEventListener('resize', updateCanvasSize)
-
-  if (!canvas) return
-  // 事件监听
-  const handleSelection = () => {
-    setCurrentPathObj()
-    updateActionBtnPosition()
-    updateActionBtnVisble()
-  }
-  canvas.on({
-    'selection:created': handleSelection,
-    'selection:updated': handleSelection,
-    'selection:cleared': hideBtns,
-    'object:moving': hideBtns,
-    'object:scaling': hideBtns,
-    'object:rotating': hideBtns,
-    'object:modified': handleSelection
-  })
-  canvas.renderAll() 
+ 
 })
 
 onBeforeUnmount(() => {

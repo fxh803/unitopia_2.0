@@ -2,8 +2,12 @@ import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { useTableStore } from '~/stores/table'
 import { Canvas } from 'fabric'
+import { storeToRefs } from 'pinia'
+import { useCollageSeriesStore } from '~/stores/collageSeries'
 export const useOverviewStore = defineStore('overview', () => {
   const tableStore = useTableStore()
+  const collageSeriesStore = useCollageSeriesStore()
+  const {stopListen} = storeToRefs(collageSeriesStore)
   const canvasRef = ref<(() => Canvas | null) | null>(null)
 
   // 设置 canvas 引用
@@ -29,11 +33,9 @@ export const useOverviewStore = defineStore('overview', () => {
 
 
   // 获取所有 marker 对象
-  const getMarkerObjects = async () => {
-    console.log('getMarkerObjects')
+  const getMarkerObjects = async () => { 
     const canvas = canvasRef.value?.()
-    if (!canvas) {
-      console.log('画布未初始化')
+    if (!canvas) { 
       return []
     }
 
@@ -41,8 +43,7 @@ export const useOverviewStore = defineStore('overview', () => {
     console.log('画布对象总数:', objects.length)
     
     const markerObjects = objects.filter(obj => {
-      const dataType = obj.get('dataType')
-      console.log('对象类型:', obj.type, 'dataType:', dataType)
+      const dataType = obj.get('dataType') 
       return dataType === 'marker'
     })
     
@@ -50,10 +51,8 @@ export const useOverviewStore = defineStore('overview', () => {
     
     // 并行处理所有缩略图生成
     const markerDataPromises = markerObjects.map(async (obj, index) => {
-      // 生成缩略图
-      console.log('处理对象:', obj)
-      const thumbnail = await generateThumbnail(obj)
-      console.log('生成的缩略图:', thumbnail)
+      // 生成缩略图 
+      const thumbnail = await generateThumbnail(obj) 
       
       return {
         id: `marker-${index}`,
@@ -130,6 +129,11 @@ export const useOverviewStore = defineStore('overview', () => {
 
   // 更新 marker 对象列表
   const updateMarkerObjects = async () => {
+    console.log('updateMarkerObjects')
+    if(stopListen.value){
+      console.log('stopListen')
+      return
+    }
     markerObjects.value = await getMarkerObjects()
   }
 
@@ -156,18 +160,7 @@ export const useOverviewStore = defineStore('overview', () => {
       marker.dataRange = { start, end }
     }
   }
-
-  // 初始化事件监听
-  const initializeEventListeners = () => {
-    const canvas = canvasRef.value?.()
-    if (canvas) {
-      canvas.on('object:added', updateMarkerObjects)
-      canvas.on('path:created', updateMarkerObjects) 
-      canvas.on('object:modified', updateMarkerObjects)
-      canvas.on('object:removed', updateMarkerObjects)
-      canvas.on('object:updated', updateMarkerObjects)
-    }
-  }
+ 
 
 
 
@@ -186,9 +179,7 @@ export const useOverviewStore = defineStore('overview', () => {
     updateMarkerObjects,
     handleVisualEncodingChange,
     handleDataFieldChange,
-    handleDataRangeChange,
-    initializeEventListeners,
-    getMarkerObjects,
+    handleDataRangeChange,   
     setCanvas
   }
 }) 
