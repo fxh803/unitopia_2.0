@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Canvas } from 'fabric'
 import { useOverviewStore } from '~/stores/overview'
+import { ElStep } from 'element-plus'
 
 export const useCollageSeriesStore = defineStore('collageSeries', () => {
     // 拼贴系列状态
@@ -176,8 +177,15 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
 
         // 如果删除的是当前幻灯片 
         if (idx === currentSlideIndex.value) {
-            currentSlideIndex.value = Math.max(0, idx - 1)
-            handleCollageSeriesSelect(currentSlideIndex.value)
+            if (currentSlideIndex.value > 0) {
+                currentSlideIndex.value = Math.max(0, idx - 1)
+                handleCollageSeriesSelect(Math.max(0, idx - 1))
+            }
+            else{
+                handleCollageSeriesSelect(idx + 1)
+                currentSlideIndex.value = 0
+            }
+           
         } else if (idx < currentSlideIndex.value) {
             currentSlideIndex.value -= 1
         }
