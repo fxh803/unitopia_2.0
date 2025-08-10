@@ -4,9 +4,10 @@ import { useSelectedModeStore } from '~/stores/selectedMode'
 import { useColorPickerStore } from '~/stores/colorpicker'
 import { useBrushSizeStore } from '~/stores/brushsize'
 import { useBezierDrawingStore } from '~/stores/bezierDrawing'
+import { useForceDrawingStore } from '~/stores/forceDrawing'
 
 export const useCanvasModeStore = defineStore('canvasMode', () => {
-  const mode = ref<'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | 'bezier' | null>(null)
+  const mode = ref<'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | 'bezier' | 'force' | null>(null)
   const canvasRef = ref<(() => Canvas | null) | null>(null)
 
   // 导入其他 store
@@ -14,13 +15,14 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
   const colorPickerStore = useColorPickerStore()
   const brushSizeStore = useBrushSizeStore()
   const bezierDrawingStore = useBezierDrawingStore()
+  const forceDrawingStore = useForceDrawingStore()
 
   // 设置 canvas 引用
   function setCanvas(canvas: () => Canvas | null) {
-    canvasRef.value = canvas 
+    canvasRef.value = canvas
   }
-  
-  function setMode(m: 'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | 'bezier') { 
+
+  function setMode(m: 'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | 'bezier' | 'force') {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
     // 再次点击同模式，取消激活
@@ -86,7 +88,11 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         canvasInstance.freeDrawingBrush.color = 'rgba(0, 123, 255, 0.1)';
         canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr;
       }
-    }  
+    } else if (m === 'force') {
+      canvasInstance.isDrawingMode = false;
+      canvasInstance.selection = false;
+      canvasInstance.getObjects().forEach(obj => { obj.selectable = false; obj.evented = false; }); 
+    }
     canvasInstance.renderAll();
   }
 
@@ -142,11 +148,11 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
     }
   }
 
-  return { 
-    mode, 
-    setMode, 
-    setCanvas, 
-    clearCanvas, 
+  return {
+    mode,
+    setMode,
+    setCanvas,
+    clearCanvas,
     setDrawedObjectDataType
   }
 }) 

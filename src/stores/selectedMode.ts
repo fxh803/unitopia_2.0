@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 
 export const useSelectedModeStore = defineStore('selectedMode', () => {
     // 颜色选择器状态
-    const selectedMode = ref<'marker' | 'container' | 'emitter' | null>(null)
+    const selectedMode = ref<'marker' | 'container' | 'emitter' | 'force' | null>(null)
     const canvasRef = ref<(() => Canvas | null) | null>(null)
     
     // 计算是否为Container模式
@@ -15,7 +15,7 @@ export const useSelectedModeStore = defineStore('selectedMode', () => {
     }
 
     // 处理模式切换时的对象透明度
-    function handleModeSwitch(newMode: 'marker' | 'container' | 'emitter' | null) {
+    function handleModeSwitch(newMode: 'marker' | 'container' | 'emitter' | 'force' | null) {
         const canvasInstance = canvasRef.value?.()
         if (!canvasInstance) return
 
@@ -40,7 +40,7 @@ export const useSelectedModeStore = defineStore('selectedMode', () => {
         canvasInstance.renderAll()
     }
 
-    const setSelectedMode = (mode: 'marker' | 'container' | 'emitter' | null) => {
+    const setSelectedMode = (mode: 'marker' | 'container' | 'emitter' | 'force' | null) => {
         // 如果点击的是当前已选中的模式，则取消选择（设为null）
         if (selectedMode.value === mode) {
             selectedMode.value = null

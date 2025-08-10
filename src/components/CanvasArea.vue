@@ -11,6 +11,7 @@ import { useCanvasModeStore } from '~/stores/canvasMode'
 import { useShapeDrawingStore } from '~/stores/shapeDrawing'
 import { useOverviewStore } from '~/stores/overview'
 import { useBezierDrawingStore } from '~/stores/bezierDrawing'
+import { useForceDrawingStore } from '~/stores/forceDrawing' 
 const selectedModeStore = useSelectedModeStore()
 const {selectedMode, isContainerMode} = storeToRefs(selectedModeStore) 
 
@@ -48,10 +49,9 @@ const {
   removeShapeEventListeners
 } = shapeDrawingStore
 
+const forceDrawingStore = useForceDrawingStore()
+const { addForcePointListener, removeForcePointListener } = forceDrawingStore
 const bezierDrawingStore = useBezierDrawingStore()
-const {
-  setCanvas
-} = bezierDrawingStore
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const canvasAreaRef = ref<HTMLDivElement | null>(null)
@@ -157,6 +157,12 @@ watch(mode, () => {
   else {
     addShapeEventListeners();
   }
+  if (mode.value === 'force') {
+    addForcePointListener()
+  }
+  else {
+    removeForcePointListener()
+  }
 })
 // 监听颜色变化，更新画笔颜色
 watch(() => colorPickerStore.selectedColor, (color) => {
@@ -205,6 +211,7 @@ onMounted(async () => {
     selectedModeStore.setCanvas(() => canvas)
     overviewStore.setCanvas(() => canvas)
     bezierDrawingStore.setCanvas(() => canvas)
+    forceDrawingStore.setCanvas(() => canvas)
     // 初始化空白幻灯片
     initializeEmptySlide()
     addCanvasEventListeners()
@@ -242,6 +249,8 @@ onBeforeUnmount(() => {
       <MarkerToolbar v-if="selectedMode === 'marker'" />
       <!-- Emitter工具栏：仅在emitter模式下显示 -->
       <EmitterToolbar v-if="selectedMode === 'emitter'" />
+      <!-- Force工具栏：仅在force模式下显示 -->
+      <ForceToolbar v-if="selectedMode === 'force'" />
       <!-- 画笔粗细调节面板，仅在绘制/擦除模式下显示 -->
       <BrushSizePanel v-if="mode === 'draw' || mode === 'erase'" />
     </div>

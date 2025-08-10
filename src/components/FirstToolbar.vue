@@ -45,6 +45,18 @@ const {setSelectedMode} = selectedModeStore
     >
     <div class="i-carbon:anchor"></div>
     </button>
+    <button
+      class="rounded flex h-10 w-10 items-center justify-center"
+      :class="[
+        selectedMode === 'force'
+          ? 'bg-[#0d99ff] text-white'
+          : 'bg-white text-black hover:bg-[#f5f5f5]'
+      ]"
+      title="Force Mode"
+      @click="setSelectedMode('force')"
+    >
+      <span class="i-carbon:radio-button" />
+    </button>
   </div>
 </template>
  

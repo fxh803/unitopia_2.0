@@ -70,6 +70,13 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
             showLayerUpBtn.value = false
             showLayerDownBtn.value = false
         }
+        if(selectedModeStore.selectedMode === 'force') { 
+            showClosePathBtn.value = false
+            showGroupBtn.value = false
+            showColorBtn.value = false
+            showLayerUpBtn.value = false
+            showLayerDownBtn.value = false
+        }
     }
     function updateActionBtnPosition() {
         const canvasInstance = canvasRef.value?.()

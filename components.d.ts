@@ -19,6 +19,7 @@ declare module 'vue' {
     ElTableColumn: typeof import('element-plus')['ElTableColumn']
     EmitterToolbar: typeof import('./src/components/EmitterToolbar.vue')['default']
     FirstToolbar: typeof import('./src/components/FirstToolbar.vue')['default']
+    ForceToolbar: typeof import('./src/components/ForceToolbar.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
     MarkerToolbar: typeof import('./src/components/MarkerToolbar.vue')['default']
     ObjectActionButtons: typeof import('./src/components/ObjectActionButtons.vue')['default']
