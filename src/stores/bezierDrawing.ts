@@ -15,7 +15,7 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
   // 从路径中采样点并创建多段贝塞尔曲线
   function createBezierFromPath(path: fabric.Path) {
     if (isCreatingBezier.value) return // 防止递归调用
-    
+
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance || !path.path) return
 
@@ -26,7 +26,7 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
       const points = path.path
       console.log(points)
       const sampledPoints = samplePathPoints(points, 20)
-      
+
       if (sampledPoints.length < 4) {
         isCreatingBezier.value = false
         return
@@ -34,7 +34,7 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
 
       // 创建多段贝塞尔曲线
       createMultiSegmentBezier(sampledPoints)
-      
+
       // 移除原始路径
       canvasInstance.remove(path)
       canvasInstance.renderAll()
@@ -46,10 +46,10 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
   // 从路径中采样指定数量的点
   function samplePathPoints(path: any[], targetCount: number) {
     const points: { x: number, y: number }[] = []
-    
+
     // 提取所有路径点
     const allPoints: { x: number, y: number }[] = []
-    
+
     path.forEach((segment: any) => {
       if (segment[0] === 'M' || segment[0] === 'L') {
         // 移动到点或直线到点
@@ -83,6 +83,8 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
 
+    const bezierPaths: fabric.Path[] = []
+
     // 每4个点创建一段贝塞尔曲线
     for (let i = 0; i <= points.length - 4; i += 3) {
       const p1 = points[i]
@@ -97,20 +99,29 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
           stroke: '#0066cc',
           strokeWidth: 2,
           fill: '',
-          selectable: true,
-          evented: true,
           strokeDashArray: [5, 5], // 添加虚线样式：5像素实线，5像素空白
-          dataType: 'emitter' // 设置dataType为emitter
+          // dataType: 'emitter' // 设置dataType为emitter
         }
       )
 
-      canvasInstance.add(bezierPath)
+      bezierPaths.push(bezierPath)
     }
 
-    canvasInstance.renderAll()
-    
-    // 启动虚线动画
-    startDashAnimation()
+    // 创建group包含所有贝塞尔曲线段
+    if (bezierPaths.length > 0) {
+      const bezierGroup = new fabric.Group(bezierPaths, {
+        dataType: 'emitter',
+        selectable: false,
+        evented: false
+      })
+
+      // 将group添加到画布
+      canvasInstance.add(bezierGroup)
+      canvasInstance.renderAll()
+
+      // 启动虚线动画
+      startDashAnimation()
+    }
   }
 
   // 启动虚线动画
@@ -119,31 +130,35 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
     if (animationId.value) {
       cancelAnimationFrame(animationId.value)
     }
-    
+
     let offset = 0
     const animate = () => {
       const canvasInstance = canvasRef.value?.()
       if (!canvasInstance) return
-      
-      // 只对emitter类型的路径应用动画
+
+      // 只对emitter类型的对象应用动画
       canvasInstance.getObjects().forEach(obj => {
-        if (obj.type === 'path' && obj.dataType === 'emitter') {
-          obj.set('strokeDashOffset', offset)
+        if (obj.dataType === 'emitter') {
+          obj.getObjects().forEach((groupObj: any) => {
+            if (groupObj.type === 'path') {
+              groupObj.set('strokeDashOffset', offset)
+            }
+          })
         }
       })
-      
+
       canvasInstance.renderAll()
-      
+
       // 更新偏移量，实现移动效果
       offset -= 0.5 // 负值使虚线向左移动，正值向右移动
-      
+
       // 继续动画循环
       animationId.value = requestAnimationFrame(animate)
     }
-    
+
     animate()
   }
-  
+
   // 停止虚线动画
   function stopDashAnimation() {
     if (animationId.value) {
@@ -156,20 +171,20 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
   function clearAllBezierCurves() {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
-    
+
     // 停止动画
     stopDashAnimation()
-    
+
     // 清理所有绘制的线条
     canvasInstance.getObjects().forEach(obj => {
-      if (obj.type === 'path' && obj.dataType === 'emitter') {
+      if (obj.dataType === 'emitter') {
         canvasInstance.remove(obj)
       }
     })
-    
+
     canvasInstance.renderAll()
   }
-  
+
   return {
     setCanvas,
     clearAllBezierCurves,

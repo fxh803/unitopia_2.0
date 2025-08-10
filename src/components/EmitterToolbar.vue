@@ -31,6 +31,20 @@ const { clearAllBezierCurves } = bezierDrawingStore
     </button>
     
     <button
+      class="rounded flex h-10 w-10 items-center justify-center"
+      :class="[
+        'rounded flex h-10 w-10 items-center justify-center',
+        mode === 'move'
+          ? 'bg-[#0d99ff] text-white'
+          : 'bg-white text-black hover:bg-[#f5f5f5]'
+      ]"
+      title="Move"
+      @click="() => setMode('move')"
+    >
+      <span class="i-carbon-move" />
+    </button>
+    
+    <button
       class="text-white rounded bg-red-600 flex h-10 w-10 items-center justify-center hover:bg-red-700"
       title="Clear All Bezier Curves"
       @click="clearAllBezierCurves"
