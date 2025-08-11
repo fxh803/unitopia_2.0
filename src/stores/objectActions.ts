@@ -5,7 +5,9 @@ import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useSelectedModeStore } from '~/stores/selectedMode'
 import { useObjectColorPickerStore } from '~/stores/objectColorPicker'
+import { useForceDrawingStore } from '~/stores/forceDrawing'
 const selectedModeStore = useSelectedModeStore()
+const forceDrawingStore = useForceDrawingStore()
 const objectColorPickerStore = useObjectColorPickerStore()
 const { objectColor } = storeToRefs(objectColorPickerStore)
 export const useObjectActionsStore = defineStore('objectActions', () => {
@@ -76,6 +78,9 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
             showColorBtn.value = false
             showLayerUpBtn.value = false
             showLayerDownBtn.value = false
+            if(forceDrawingStore.forceType === 'fieldForce') {
+                showDeleteBtn.value = false
+            }
         }
     }
     function updateActionBtnPosition() {
