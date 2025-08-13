@@ -1,18 +1,24 @@
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useOverviewStore } from '~/stores/overview'
 import { Canvas } from 'fabric'
-
+import { storeToRefs } from 'pinia'
 // 定义数据类型接口
 interface ProcessedData {
-  markers: string[] // base64 字符串数组
+  markers: Array<{
+    thumbnail: string
+    markerId: string
+  }> // base64 字符串数组
   container: string // 整个画布的 base64（隐藏除 container 元素以外的对象）
-  emitter: {
-    controlPoints: Array<{ x: number; y: number }>
-  } | null // 只能有一个 emitter
+  emitter: Array<{ x: number; y: number }>
   forces: Array<{
     type: 'pointForce' | 'fieldForce'
     coordinates?: Array<{ x: number; y: number }> // pointForce 的坐标
     rotation?: number // fieldForce 的旋转角度
+  }>
+  dataBinding: Array<{
+    dataField: string
+    dataRange: string
+    markerId: string
   }>
 }
 
@@ -20,17 +26,18 @@ interface ProcessedData {
 export async function collectAllSlidesData(): Promise<ProcessedData> {
   console.log('开始收集')
   const collageSeriesStore = useCollageSeriesStore()
-  const overviewStore = useOverviewStore()
 
-  const result: ProcessedData = {
-    markers: [],
-    container: '',
-    emitter: null,
-    forces: []
-  }
+  const resultList = []
   try {
     // 遍历所有幻灯片
     for (let i = 0; i < collageSeriesStore.collageSeries.length; i++) {
+      const result: ProcessedData = {
+        markers: [],
+        container: '',
+        emitter: null,
+        forces: [],
+        dataBinding: []
+      }
       const slide = collageSeriesStore.collageSeries[i]
       //新建临时画布
       const tempCanvas = new Canvas(document.createElement('canvas'), {
@@ -46,9 +53,11 @@ export async function collectAllSlidesData(): Promise<ProcessedData> {
        processForce(tempCanvas, result, i)
        processEmitter(tempCanvas, result, i)
        processContainer(tempCanvas, result, i)
+       processDataBinding(result, i)
+       resultList.push(result)
     }
-    console.log('数据收集完成:', result)
-    return result
+    console.log('数据收集完成:', resultList)
+    return resultList
 
   } catch (error) {
     console.error('收集幻灯片数据时出错:', error)
@@ -67,7 +76,10 @@ function processMarker(tempCanvas: Canvas, result: ProcessedData, slideIndex: nu
         format: 'png',
         multiplier: 1
       })
-      result.markers.push(thumbnail)
+      result.markers.push({
+        thumbnail,
+        markerId: obj.get('markerId')
+      })
     }
   }
 }
@@ -129,9 +141,7 @@ function processEmitter(tempCanvas: Canvas, result: ProcessedData, slideIndex: n
       })
 
       // 设置结果
-      result.emitter = {
-        controlPoints
-      }
+      result.emitter = controlPoints
 
       // 只处理第一个 emitter，退出循环
       break
@@ -164,7 +174,23 @@ function processForce(tempCanvas: Canvas, result: ProcessedData, slideIndex: num
     }
   }
 }
-
+// 处理数据绑定
+function processDataBinding(result: ProcessedData, slideIndex: number) {
+  const collageSeriesStore = useCollageSeriesStore()
+  const overviewStore = useOverviewStore()
+  const { dataBindingSettings } = storeToRefs(overviewStore) 
+  const slideId = collageSeriesStore.collageSeries[slideIndex].slideId
+  const markerData = Array.from(dataBindingSettings.value.entries())
+    .filter(([key, value]) => key.startsWith(slideId))
+    .map(([key, value]) => {
+      return {
+        dataField: value.dataField,
+        dataRange: value.dataRange,
+        markerId: key.substring(key.indexOf('marker'))
+      }
+    })
+  result.dataBinding = markerData
+}
 // 发送数据到后端的函数
 export async function sendDataToServer(data: ProcessedData): Promise<boolean> {
   try {
