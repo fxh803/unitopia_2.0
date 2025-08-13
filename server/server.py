@@ -10,29 +10,61 @@ CORS(app)  # 启用跨域支持
  
 
 @app.route('/api/process-data', methods=['POST'])
-def process_data(): 
-    try:
-        # 获取请求数据
-        data = request.get_json() 
-        # 读取example.json作为模板
-        print(data)
-        json_data = json.loads(open('./example.json', 'r').read()) 
-        for i, data_item in enumerate(data):
-            json_data["collage"][i]["marker_config"][0]["marker"] = data_item["markers"]
-            json_data["collage"][i]["container_config"]["container"] = data_item["container"]
-            json_data["collage"][i]["emitter"] = data_item["emitter"]
-            json_data["collage"][i]["forces"] = data_item["forces"]
-            json_data["collage"][i]["dataBinding"] = data_item["dataBinding"]
+def process_data():  
+    # 获取请求数据
+    data = request.get_json() 
+    print(data)
+    json_data = {
+        "collage": []
+    }
+    for i, collage_data in enumerate(data):#这是要输入的数据
+        # 确保 collage 列表长度足够
+        while len(json_data["collage"]) <= i:
+            json_data["collage"].append({
+                "marker_config": [],
+                "container_config": {},
+                "emitter": {},
+                "forces": []
+            })
         
-        # 返回处理结果
-        return jsonify({
-            "success": True,
-            "message": "数据接收成功"
-        }), 200
-        
-    except Exception as e:
-        print(f"处理数据时出错: {str(e)}")
-        return jsonify({"error": f"服务器内部错误: {str(e)}"}), 500
+        # 处理标记点数据
+        for j, marker_data in enumerate(collage_data["markers"]):
+            # 确保 marker_config 列表长度足够
+            while len(json_data["collage"][i]["marker_config"]) <= j:
+                json_data["collage"][i]["marker_config"].append({
+                    "marker": [],
+                    "visual_encoding": [],
+                    "data": []
+                })
+            
+            json_data["collage"][i]["marker_config"][j]["marker"] = [marker_data["thumbnail"]]
+            markerId = marker_data["markerId"]  
+            visualEncoding = None
+            data = None
+            for binding in collage_data.get("dataBinding", []):
+                if binding.get("markerId") == markerId:
+                    visualEncoding = binding.get("visualEncoding")
+                    data = binding.get("data")
+                    break
+            
+            # 确保 visual_encoding 列表长度足够
+            while len(json_data["collage"][i]["marker_config"][j]["visual_encoding"]) <= 0:
+                json_data["collage"][i]["marker_config"][j]["visual_encoding"].append({})
+            
+            json_data["collage"][i]["marker_config"][j]["visual_encoding"][0]["channel"] = visualEncoding
+            json_data["collage"][i]["marker_config"][j]["data"] = data
+
+        json_data["collage"][i]["container_config"]["container"] = collage_data["container"]
+        json_data["collage"][i]["emitter"]["control_points"] = collage_data["emitter"]
+        json_data["collage"][i]["forces"] = collage_data["forces"] 
+    print(json_data)
+    with open('example.json', 'w') as f:
+        json.dump(json_data, f, indent=4)
+    # 返回处理结果
+    return jsonify({
+        "success": True,
+        "message": "数据接收成功"
+    }), 200
 
  
 if __name__ == '__main__': 

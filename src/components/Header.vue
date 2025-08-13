@@ -13,7 +13,7 @@ import { collectAllSlidesData, sendDataToServer } from '~/composables/server'
     
     <!-- 播放按钮 -->
     <button class="ml-50px flex items-center gap-2 px-6 h-full bg-white hover:bg-gray-100 text-gray-800 transition-colors duration-200 font-medium border-l border-gray-200"
-    @click="collectAllSlidesData">
+    @click="sendDataToServer">
       <div class="i-carbon:play text-lg"></div>
       <span>Run</span>
     </button>

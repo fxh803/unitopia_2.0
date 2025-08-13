@@ -19,6 +19,7 @@ interface ProcessedData {
   dataBinding: Array<{
     data: Array<any>
     markerId: string
+    visualEncoding: any
   }>
 }
 
@@ -186,13 +187,14 @@ function processDataBinding(result: ProcessedData, slideIndex: number) {
       return {
         dataField: value.dataField,
         dataRange: value.dataRange,
+        visualEncoding:value.visualEncoding,
         markerId: key.substring(key.indexOf('marker'))
       }
     })
   const tableStore = useTableStore()
   const tableData = tableStore.tableData
   console.log(tableData)
-  const dataBindingList: Array<{ data: Array<any>, markerId: string }> = [] 
+  const dataBindingList: Array<{ data: Array<any>, markerId: string, visualEncoding: any }> = [] 
 
   markerData.forEach(marker => {
     const temp: any[] = []
@@ -203,7 +205,8 @@ function processDataBinding(result: ProcessedData, slideIndex: number) {
      })
      dataBindingList.push({
       data: temp,
-      markerId: marker.markerId
+      markerId: marker.markerId,
+      visualEncoding: marker.visualEncoding
     })
   })
   result.dataBinding = dataBindingList
