@@ -2,6 +2,7 @@ import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useOverviewStore } from '~/stores/overview'
 import { Canvas } from 'fabric'
 import { storeToRefs } from 'pinia'
+import { useTableStore } from '~/stores/table'
 // 定义数据类型接口
 interface ProcessedData {
   markers: Array<{
@@ -16,8 +17,7 @@ interface ProcessedData {
     rotation?: number // fieldForce 的旋转角度
   }>
   dataBinding: Array<{
-    dataField: string
-    dataRange: string
+    data: Array<any>
     markerId: string
   }>
 }
@@ -49,12 +49,12 @@ export async function collectAllSlidesData(): Promise<ProcessedData> {
       //渲染画布
       tempCanvas.renderAll()
       collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.forceTypeArray)
-       processMarker(tempCanvas, result, i)
-       processForce(tempCanvas, result, i)
-       processEmitter(tempCanvas, result, i)
-       processContainer(tempCanvas, result, i)
-       processDataBinding(result, i)
-       resultList.push(result)
+      processMarker(tempCanvas, result, i)
+      processForce(tempCanvas, result, i)
+      processEmitter(tempCanvas, result, i)
+      processContainer(tempCanvas, result, i)
+      processDataBinding(result, i)
+      resultList.push(result)
     }
     console.log('数据收集完成:', resultList)
     return resultList
@@ -106,7 +106,7 @@ function processEmitter(tempCanvas: Canvas, result: ProcessedData, slideIndex: n
     if (obj.get('dataType') === 'emitter') {
       const controlPoints: Array<{ x: number; y: number }> = []
       const addedPoints = new Set<string>() // 用于去重
-      
+
       // 遍历 group 中的所有对象
       obj.getObjects().forEach((groupObj: any) => {
         if (groupObj.type === 'path' && groupObj.path) {
@@ -115,7 +115,7 @@ function processEmitter(tempCanvas: Canvas, result: ProcessedData, slideIndex: n
           if (Array.isArray(path)) {
             // 先收集所有点，保持顺序
             const allPoints: Array<{ x: number; y: number }> = []
-            
+
             path.forEach((segment: any) => {
               if (segment[0] === 'M') {
                 // 移动到点 - 起始点
@@ -127,7 +127,7 @@ function processEmitter(tempCanvas: Canvas, result: ProcessedData, slideIndex: n
                 allPoints.push({ x: segment[5], y: segment[6] }) // 终点
               }
             })
-            
+
             // 去重但保持顺序
             allPoints.forEach(point => {
               const pointKey = `${point.x},${point.y}`
@@ -178,7 +178,7 @@ function processForce(tempCanvas: Canvas, result: ProcessedData, slideIndex: num
 function processDataBinding(result: ProcessedData, slideIndex: number) {
   const collageSeriesStore = useCollageSeriesStore()
   const overviewStore = useOverviewStore()
-  const { dataBindingSettings } = storeToRefs(overviewStore) 
+  const { dataBindingSettings } = storeToRefs(overviewStore)
   const slideId = collageSeriesStore.collageSeries[slideIndex].slideId
   const markerData = Array.from(dataBindingSettings.value.entries())
     .filter(([key, value]) => key.startsWith(slideId))
@@ -189,13 +189,31 @@ function processDataBinding(result: ProcessedData, slideIndex: number) {
         markerId: key.substring(key.indexOf('marker'))
       }
     })
-  result.dataBinding = markerData
+  const tableStore = useTableStore()
+  const tableData = tableStore.tableData
+  console.log(tableData)
+  const dataBindingList: Array<{ data: Array<any>, markerId: string }> = [] 
+
+  markerData.forEach(marker => {
+    const temp: any[] = []
+    // 用 slice 保证顺序和 dataRange 匹配
+    const tableRow = tableData.slice(marker.dataRange.start-1, marker.dataRange.end)
+    tableRow.forEach((row: any) => {
+      temp.push(row[marker.dataField])
+     })
+     dataBindingList.push({
+      data: temp,
+      markerId: marker.markerId
+    })
+  })
+  result.dataBinding = dataBindingList
 }
 // 发送数据到后端的函数
-export async function sendDataToServer(data: ProcessedData): Promise<boolean> {
+export async function sendDataToServer(): Promise<boolean> {
   try {
+    const data = await collectAllSlidesData()
     // 这里实现向后端发送数据的逻辑
-    const response = await fetch('/api/process-slides', {
+    const response = await fetch('http://localhost:5000/api/process-data', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
