@@ -82,6 +82,10 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
                 showDeleteBtn.value = false
             }
         }
+        const activeObject = canvasInstance?.getActiveObject() 
+        if(activeObject && activeObject.get('dataType') === 'container' && activeObject.get('type') === 'image') {
+            showClosePathBtn.value = false 
+        }
     }
     function updateActionBtnPosition() {
         const canvasInstance = canvasRef.value?.()
@@ -242,14 +246,12 @@ export const useObjectActionsStore = defineStore('objectActions', () => {
 
         // 获取所有对象
         const allObjects = canvasInstance.getObjects()
-
-        // 检查是否有container对象
-        const hasContainer = allObjects.some(obj => obj.get('dataType') === 'container') 
-        if (hasContainer) {
+        // 统计container对象的数量
+        const containerCount = allObjects.filter(obj => obj.get('dataType') === 'container').length
+        if (containerCount>0) {
             // 如果有container对象，检查当前对象是否已经是倒数第二层
             const currentIndex = allObjects.indexOf(activeObject)
-            if (currentIndex <= 1) {
-                // 如果已经是倒数第二层或更靠前，就不再移动
+            if (currentIndex <= containerCount) { 
                 return
             }
         }
