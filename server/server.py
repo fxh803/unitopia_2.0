@@ -8,7 +8,7 @@ import base64
 from unitopia import Unitopia 
 app = Flask(__name__, template_folder='',static_folder="")
 CORS(app)  # 启用跨域支持
-
+unitopia = Unitopia() 
 @app.route('/api/process-data', methods=['POST'])
 def process_data():  
     
@@ -102,11 +102,9 @@ def process_data():
     print(json_data)
     with open(f'./workdir/{str(id)}_{i}/collage.json', 'w') as f:
         json.dump(json_data, f, indent=4)
-
-
-    # unitopia = Unitopia('./test/closed.json') 
-    unitopia = Unitopia(f'./workdir/{str(id)}_{i}/collage.json',id = str(id)) 
-    unitopia.start_collage()
+ 
+    
+    unitopia.start_collage(f'./workdir/{str(id)}_{i}/collage.json',id = str(id))
     # 返回处理结果
     return jsonify({
         "success": True,
