@@ -50,7 +50,7 @@ const {
 } = shapeDrawingStore
 
 const forceDrawingStore = useForceDrawingStore()
-const { addForcePointListener, removeForcePointListener } = forceDrawingStore
+const { addForcePointListener, removeForcePointListener, startBlinkAnimation, stopBlinkAnimation } = forceDrawingStore
 const bezierDrawingStore = useBezierDrawingStore()
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
@@ -146,6 +146,11 @@ watch (stopListen, (newVal) => {
 watch(selectedMode, (newMode, oldMode) => {
   if (newMode !== oldMode || newMode === null) {
     setMode(mode.value)
+  }
+  if (newMode === 'force') { 
+    startBlinkAnimation()
+  }else{ 
+     stopBlinkAnimation()
   }
 })
 // 监听 mode 变化，自动清理 shape 预览和事件

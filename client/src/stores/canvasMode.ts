@@ -138,8 +138,8 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         path.set('markerId', markerId) 
       }
 
-      // 在container模式下，将新绘制的路径移动到最底层
-      if (selectedModeStore.selectedMode === 'container') {
+      // 在container模式下，将新绘制的路径移动到最底层（擦除路径除外）
+      if (selectedModeStore.selectedMode === 'container' && mode.value !== 'erase') {
         canvasInstance.sendObjectToBack(path, true);
       }
 

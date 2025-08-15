@@ -27,13 +27,23 @@ export const useSelectedModeStore = defineStore('selectedMode', () => {
             
             if (newMode === null) {
                 // 取消选择模式，所有对象恢复正常透明度
-                obj.set('opacity', 1)
+                if (objType === 'marker') {
+                    obj.set('opacity', 0)
+                } else {
+                    obj.set('opacity', 1)
+                }
             } else if (objType === newMode) {
                 // 当前模式的对象保持完全不透明
                 obj.set('opacity', 1)
             } else if (objType && objType !== newMode) {
                 // 其他模式的对象变成半透明
-                obj.set('opacity', 0.3)
+                if (objType === 'marker' && newMode != 'marker') { 
+                    obj.set('opacity', 0)
+                } else if (objType != 'marker' && newMode === 'marker') {
+                    obj.set('opacity', 0)
+                } else {
+                    obj.set('opacity', 0.3)
+                }
             }
         })
         

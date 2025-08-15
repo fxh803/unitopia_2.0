@@ -43,10 +43,9 @@ export async function collectAllSlidesData(): Promise<ProcessedData> {
       const canvas = collageSeriesStore.canvasRef?.()
       //新建临时画布
       // 画布大小与原fabric画布一致
-      const originalWidth = canvas.width 
-      const originalHeight = canvas.height 
-      console.log(originalWidth, originalHeight) 
-      
+      const originalWidth = canvas.width
+      const originalHeight = canvas.height
+
       const tempCanvas = new Canvas(document.createElement('canvas'), {
         width: originalWidth,
         height: originalHeight
@@ -55,7 +54,7 @@ export async function collectAllSlidesData(): Promise<ProcessedData> {
       await tempCanvas.loadFromJSON(slide.json)
       //渲染画布
       tempCanvas.renderAll()
-      collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.forceTypeArray)
+      collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.forceTypeArray, slide.uploadTypeArray)
       processMarker(tempCanvas, result, i)
       processForce(tempCanvas, result, i)
       processEmitter(tempCanvas, result, i)
@@ -75,17 +74,29 @@ export async function collectAllSlidesData(): Promise<ProcessedData> {
 // 处理 marker 对象
 function processMarker(tempCanvas: Canvas, result: ProcessedData, slideIndex: number) {
   //解析对应索引的幻灯片
-  const canvasObjects = tempCanvas.getObjects() 
+  const canvasObjects = tempCanvas.getObjects()
   for (const obj of canvasObjects) {
     if (obj.get('dataType') === 'marker') {
-      const thumbnail = obj.toDataURL({
-        format: 'png',
-        multiplier: 1
-      })
-      result.markers.push({
-        thumbnail,
-        markerId: obj.get('markerId')
-      })
+      console.log(obj.get('uploadType'))
+      if (obj.get('uploadType') === 'marker_svg') {
+        // 导出 SVG 格式的 marker
+        const svgString = obj.toSVG()
+        result.markers.push({
+          thumbnail: svgString,
+          markerId: obj.get('markerId')
+        })
+      }
+      else {
+        const thumbnail = obj.toDataURL({
+          format: 'png',
+          multiplier: 1
+        })
+        result.markers.push({
+          thumbnail,
+          markerId: obj.get('markerId')
+        })
+      }
+
     }
   }
 }
@@ -198,22 +209,22 @@ function processDataBinding(result: ProcessedData, slideIndex: number) {
       return {
         dataField: value.dataField,
         dataRange: value.dataRange,
-        visualEncoding:value.visualEncoding,
+        visualEncoding: value.visualEncoding,
         markerId: key.substring(key.indexOf('marker'))
       }
     })
   const tableStore = useTableStore()
-  const tableData = tableStore.tableData 
-  const dataBindingList: Array<{ data: Array<any>, markerId: string, visualEncoding: any }> = [] 
+  const tableData = tableStore.tableData
+  const dataBindingList: Array<{ data: Array<any>, markerId: string, visualEncoding: any }> = []
 
   markerData.forEach(marker => {
     const temp: any[] = []
     // 用 slice 保证顺序和 dataRange 匹配
-    const tableRow = tableData.slice(marker.dataRange.start-1, marker.dataRange.end)
+    const tableRow = tableData.slice(marker.dataRange.start - 1, marker.dataRange.end)
     tableRow.forEach((row: any) => {
       temp.push(row[marker.dataField])
-     })
-     dataBindingList.push({
+    })
+    dataBindingList.push({
       data: temp,
       markerId: marker.markerId,
       visualEncoding: marker.visualEncoding
@@ -228,14 +239,14 @@ export async function sendDataToServer(): Promise<boolean> {
     const time = Math.floor(Date.now() / 1000)
     const collageSeriesStore = useCollageSeriesStore()
     const canvas = collageSeriesStore.canvasRef?.()
-    const originalWidth = canvas.width 
-    const originalHeight = canvas.height 
+    const originalWidth = canvas.width
+    const originalHeight = canvas.height
     const sendData = {
-      "data":data,
-      "id":time,
-      "canvasWidth":originalWidth,
-      "canvasHeight":originalHeight
-    }  
+      "data": data,
+      "id": time,
+      "canvasWidth": originalWidth,
+      "canvasHeight": originalHeight
+    }
     console.log(sendData)
     // 这里实现向后端发送数据的逻辑
     const response = await fetch('http://localhost:5000/api/process-data', {

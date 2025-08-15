@@ -65,7 +65,11 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         const originalOpacities = new Map()
         canvasInstance.getObjects().forEach((obj: any) => {
             originalOpacities.set(obj, obj.opacity)
-            obj.set('opacity', 1)
+            if (obj.get('dataType') === 'marker') {
+                obj.set('opacity', 0)
+            }else{
+                obj.set('opacity', 1)
+            }
         })
 
         const json = JSON.stringify(canvasInstance.toJSON())

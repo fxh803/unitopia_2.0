@@ -17,8 +17,7 @@ def process_data():
     data = request_data['data']
     id = request_data['id']
     canvas_width = request_data['canvasWidth']
-    canvas_height = request_data['canvasHeight']
-    print(data)
+    canvas_height = request_data['canvasHeight'] 
     json_data = {
         "collage": []
     }
@@ -37,7 +36,6 @@ def process_data():
         
         # 处理标记点数据
         for j, marker_data in enumerate(collage_data["markers"]):
-            print(collage_data["forces"])
             # 确保 marker_config 列表长度足够
             while len(json_data["collage"][i]["marker_config"]) <= j:
                 json_data["collage"][i]["marker_config"].append({
@@ -48,12 +46,26 @@ def process_data():
             
             ##########################   marker ########################
             marker_id = marker_data["markerId"]
-            marker_type = 'svg' if marker_data['thumbnail'].startswith('data:image/svg+xml;base64,') else 'png'
-            marker_base64 = marker_data['thumbnail'].split(',')[1]
-            marker_path = f"./workdir/{str(id)}_{i}/markers/"+str(marker_id)+"."+marker_type
-            with open(marker_path, "wb") as f_marker:
-                f_marker.write(base64.b64decode(marker_base64))
-            json_data["collage"][i]["marker_config"][j]["marker"] = [marker_path]
+            marker_type = 'png' if marker_data['thumbnail'].startswith('data:image/png;base64,') else 'svg'
+            if marker_type == 'png':
+                marker_base64 = marker_data['thumbnail'].split(',')[1]
+                marker_path = f"./workdir/{str(id)}_{i}/markers/"+str(marker_id)+".png"
+                with open(marker_path, "wb") as f_marker:
+                    f_marker.write(base64.b64decode(marker_base64))
+                json_data["collage"][i]["marker_config"][j]["marker"] = [marker_path]
+            elif marker_type == 'svg':
+                marker_string = marker_data['thumbnail']
+                # 确保 marker_string 是完整的SVG格式
+                if not marker_string.startswith('<svg'):
+                    # 添加SVG头部和尾部
+                    svg_header = '<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 150 150" width="150" height="150">\n'
+                    svg_footer = '\n</svg>'
+                    marker_string = svg_header + marker_string + svg_footer
+                
+                marker_path = f"./workdir/{str(id)}_{i}/markers/"+str(marker_id)+".svg"
+                with open(marker_path, "w", encoding="utf-8") as f_marker:
+                    f_marker.write(marker_string)
+                json_data["collage"][i]["marker_config"][j]["marker"] = [marker_path]
             
             visualEncoding = None
             data = None
@@ -72,18 +84,19 @@ def process_data():
 
         
         ##########################   container ######################## 
-        if collage_data["container"] != '':
+        if collage_data["container"] and collage_data["container"] != '':
             container_base64 = collage_data["container"].split(',')[1]
             container_path = f"./workdir/{str(id)}_{i}/container.png"
             with open(container_path, "wb") as f_container:
                 f_container.write(base64.b64decode(container_base64))
             json_data["collage"][i]["container_config"]["container"] = container_path 
         ##########################   emitter ########################
-        json_data["collage"][i]["emitter_config"]["control_points"] = [
-            [point["x"]/canvas_width, point["y"]/canvas_height] for point in collage_data["emitter"]
-        ]
+        if collage_data["emitter"] and len(collage_data["emitter"]) > 0:
+            json_data["collage"][i]["emitter_config"]["control_points"] = [
+                [point["x"]/canvas_width, point["y"]/canvas_height] for point in collage_data["emitter"]
+            ]
         ##########################   forces ########################
-        if len(collage_data["forces"]) > 0:
+        if collage_data["forces"] and len(collage_data["forces"]) > 0:
             force_type = collage_data["forces"][0]["type"]
             json_data["collage"][i]["container_config"]["boundary"] = "open"
             if force_type == "pointForce":
@@ -95,7 +108,7 @@ def process_data():
                 rotation = collage_data["forces"][0]["rotation"]
                 # 根据 rotation 计算单位向量，初始方向为正右（1,0），rotation为弧度制 
                 x = math.cos(rotation)
-                y = math.sin(rotation)
+                y = -math.sin(rotation)
                 json_data["collage"][i]["force_config"]["force_points"] = [x, y]
                 json_data["collage"][i]["force_config"]["force_type"] = "indicate_direction"
 
