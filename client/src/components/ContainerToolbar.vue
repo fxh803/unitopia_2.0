@@ -218,5 +218,10 @@ const triggerFileUpload = () => {
     >
       <span class="i-carbon-trash-can" />
     </button>
+
+    
+    <div class="flex justify-center pt-2 border-t border-gray-200">
+      <backgroundUploader />
+    </div>
   </div>
 </template>

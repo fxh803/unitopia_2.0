@@ -13,6 +13,7 @@ import { useOverviewStore } from '~/stores/overview'
 import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useForceDrawingStore } from '~/stores/forceDrawing' 
 import { useAnimationStore } from '~/stores/animation'
+import { useBackgroundStore } from '~/stores/background'
 const animationStore = useAnimationStore()
 const {collaging,result_data} = storeToRefs(animationStore)
 const selectedModeStore = useSelectedModeStore()
@@ -63,7 +64,7 @@ const canvasSize = ref(400)
 let canvas: Canvas | null = null
 
 const colorPickerStore = useColorPickerStore()
-
+const backgroundStore = useBackgroundStore()
 function getDpr() {
   return window.devicePixelRatio || 1
 }
@@ -227,6 +228,7 @@ onMounted(async () => {
     overviewStore.setCanvas(() => canvas)
     bezierDrawingStore.setCanvas(() => canvas)
     forceDrawingStore.setCanvas(() => canvas)
+    backgroundStore.setCanvas(() => canvas)
     // 初始化空白幻灯片
     initializeEmptySlide()
     addCanvasEventListeners()

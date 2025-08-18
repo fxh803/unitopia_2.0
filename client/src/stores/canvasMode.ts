@@ -5,7 +5,7 @@ import { useColorPickerStore } from '~/stores/colorpicker'
 import { useBrushSizeStore } from '~/stores/brushsize'
 import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useForceDrawingStore } from '~/stores/forceDrawing'
-
+import { useBackgroundStore } from '~/stores/background'
 export const useCanvasModeStore = defineStore('canvasMode', () => {
   const mode = ref<'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | 'bezier' | 'force' | null>(null)
   const canvasRef = ref<(() => Canvas | null) | null>(null)
@@ -16,7 +16,7 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
   const brushSizeStore = useBrushSizeStore()
   const bezierDrawingStore = useBezierDrawingStore()
   const forceDrawingStore = useForceDrawingStore()
-
+  const backgroundStore = useBackgroundStore()
   // 设置 canvas 引用
   function setCanvas(canvas: () => Canvas | null) {
     canvasRef.value = canvas
@@ -110,6 +110,10 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         if (!bezierDrawingStore.isCreatingBezier) {
           bezierDrawingStore.createBezierFromPath(path)
         }
+        return
+      }
+      if (backgroundStore.creatingBackground) {
+        path.set('dataType', 'background')
         return
       }
 

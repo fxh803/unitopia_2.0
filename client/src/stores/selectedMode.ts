@@ -37,12 +37,14 @@ export const useSelectedModeStore = defineStore('selectedMode', () => {
                 obj.set('opacity', 1)
             } else if (objType && objType !== newMode) {
                 // 其他模式的对象变成半透明
-                if (objType === 'marker' && newMode != 'marker') { 
-                    obj.set('opacity', 0)
-                } else if (objType != 'marker' && newMode === 'marker') {
+                if (objType === 'marker' !== (newMode === 'marker')) {
                     obj.set('opacity', 0)
                 } else {
-                    obj.set('opacity', 0.3)
+                    if (objType === 'background') {
+                        obj.set('opacity', 1)
+                    } else {
+                        obj.set('opacity', 0.3)
+                    }
                 }
             }
         })

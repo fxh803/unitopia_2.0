@@ -8,6 +8,7 @@ export {}
 /* prettier-ignore */
 declare module 'vue' {
   export interface GlobalComponents {
+    BackgroundUploader: typeof import('./src/components/BackgroundUploader.vue')['default']
     BrushSizePanel: typeof import('./src/components/BrushSizePanel.vue')['default']
     CanvasArea: typeof import('./src/components/CanvasArea.vue')['default']
     CanvasToolbar: typeof import('./src/components/CanvasToolbar.vue')['default']
