@@ -123,9 +123,8 @@ const triggerFileUpload = () => {
 <template>
   <div class="px-2 py-4 border border-[#e6e6e6] rounded-xl bg-white flex flex-col gap-3 shadow right-6 top-1/2 absolute z-10 -translate-y-1/2">
     <button
-      class="rounded flex h-10 w-10 items-center justify-center "
+      class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
-        'rounded flex h-10 w-10 items-center justify-center',
         mode === 'draw'
           ? 'bg-[#0d99ff] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
@@ -136,9 +135,8 @@ const triggerFileUpload = () => {
       <span class="i-carbon-pen" />
     </button>
     <button
-      class="rounded flex h-10 w-10 items-center justify-center "
+      class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
-        'rounded flex h-10 w-10 items-center justify-center',
         mode === 'move'
           ? 'bg-[#0d99ff]'
           : 'bg-white hover:bg-[#f5f5f5]'
@@ -154,9 +152,8 @@ const triggerFileUpload = () => {
       />
     </button>
     <button
-      class="rounded flex h-10 w-10 items-center justify-center "
+      class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
-        'rounded flex h-10 w-10 items-center justify-center',
         mode === 'erase'
           ? 'bg-[#0d99ff] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
@@ -167,9 +164,8 @@ const triggerFileUpload = () => {
       <span class="i-carbon-erase" />
     </button>
     <button
-      class="rounded flex h-10 w-10 items-center justify-center "
+      class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
-        'rounded flex h-10 w-10 items-center justify-center',
         mode === 'rect'
           ? 'bg-[#0d99ff] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
@@ -180,9 +176,8 @@ const triggerFileUpload = () => {
       <span class="i-carbon:checkbox" />
     </button>
     <button
-      class="rounded flex h-10 w-10 items-center justify-center "
+      class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
-        'rounded flex h-10 w-10 items-center justify-center',
         mode === 'ellipse'
           ? 'bg-[#0d99ff] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
@@ -195,7 +190,7 @@ const triggerFileUpload = () => {
     
     <!-- PNG上传按钮 -->
     <button
-      class="rounded flex h-10 w-10 items-center justify-center bg-white text-black hover:bg-[#f5f5f5]"
+      class="rounded flex h-10 w-10 items-center justify-center bg-white text-black hover:bg-[#f5f5f5] cursor-pointer"
       title="upload container"
       @click="triggerFileUpload"
     >
@@ -212,7 +207,7 @@ const triggerFileUpload = () => {
     />
     
     <button
-      class="text-white rounded bg-red-600 flex h-10 w-10 items-center justify-center hover:bg-red-700"
+      class="text-white rounded bg-red-600 flex h-10 w-10 items-center justify-center hover:bg-red-700 cursor-pointer"
       title="Clear Canvas"
       @click="clearCanvas"
     >

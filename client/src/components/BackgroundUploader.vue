@@ -22,7 +22,7 @@ const handleFileUpload = (event: Event) => {
       console.log('背景图片已上传:', file.name)
       console.log('图片',result)
       // 将图片保存到backgroundStore
-      background.value = result
+    
       setBackgroundImage(result, file.name)
     }
     reader.readAsDataURL(file)
@@ -47,7 +47,12 @@ const setBackgroundImage = (imageDataUrl: string, fileName: string) => {
   }
   
   console.log('Canvas实例获取成功:', canvasInstance)
+  
+  // 先清空之前的背景
   backgroundStore.clearBackground()
+  
+  // 设置新的背景值
+  background.value = imageDataUrl
   // 使用fabric.js的Promise方式加载图片
   FabricImage.fromURL(imageDataUrl).then((fabricImg) => {
     console.log('背景图片创建成功:', fabricImg)
@@ -94,7 +99,7 @@ const setBackgroundImage = (imageDataUrl: string, fileName: string) => {
 }
 
 const triggerFileUpload = () => {
-    creatingBackground.value = true
+  creatingBackground.value = true
   fileInputRef.value?.click()
 }
 </script>
@@ -103,11 +108,24 @@ const triggerFileUpload = () => {
   <div class="flex flex-col gap-2">
     <!-- 背景图片上传按钮 -->
     <button
-      class="rounded flex h-10 w-10 items-center justify-center bg-white text-black hover:bg-[#f5f5f5] border border-gray-200"
-      title="上传背景图片"
-      @click="triggerFileUpload"
+      class="relative rounded flex h-10 w-10 items-center justify-center transition-colors cursor-pointer"
+             :class="[
+         background 
+           ? 'bg-gray-300 text-gray-500' 
+           : 'bg-white text-black hover:bg-[#f5f5f5]'
+       ]"
+       :title="background ? 'background uploaded' : 'upload background'"
+               @click="triggerFileUpload"
     >
       <span class="i-carbon-image text-lg" />
+      
+             <!-- 绿色打勾图标 -->
+       <div 
+         v-if="background"
+         class="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full flex items-center justify-center"
+       >
+         <span class="i-carbon-checkmark text-white text-xs" />
+       </div>
     </button>
     
     <!-- 隐藏的文件输入框 -->

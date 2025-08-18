@@ -13,9 +13,8 @@ const { clearAllBezierCurves } = bezierDrawingStore
 <template>
   <div class="px-2 py-4 border border-[#e6e6e6] rounded-xl bg-white flex flex-col gap-3 shadow right-6 top-1/2 absolute z-10 -translate-y-1/2">
     <button
-      class="rounded flex h-10 w-10 items-center justify-center"
+      class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
-        'rounded flex h-10 w-10 items-center justify-center',
         mode === 'bezier'
           ? 'bg-[#0d99ff] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
@@ -27,9 +26,8 @@ const { clearAllBezierCurves } = bezierDrawingStore
     </button>
     
     <button
-      class="rounded flex h-10 w-10 items-center justify-center "
+      class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
-        'rounded flex h-10 w-10 items-center justify-center',
         mode === 'move'
           ? 'bg-[#0d99ff]'
           : 'bg-white hover:bg-[#f5f5f5]'
@@ -46,7 +44,7 @@ const { clearAllBezierCurves } = bezierDrawingStore
     </button>
     
     <button
-      class="text-white rounded bg-red-600 flex h-10 w-10 items-center justify-center hover:bg-red-700"
+      class="text-white rounded bg-red-600 flex h-10 w-10 items-center justify-center hover:bg-red-700 cursor-pointer"
       title="Clear All Bezier Curves"
       @click="clearAllBezierCurves"
     >
