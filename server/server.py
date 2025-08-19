@@ -138,14 +138,16 @@ def process_data():
                 ] 
                 json_data["collage"][i]["force_config"]["force_type"] = "points"
             elif force_type == "fieldForce":
-                rotation = collage_data["forces"][0]["rotation"]
-                # 根据 rotation 计算单位向量，初始方向为正右（1,0），rotation为弧度制 
-                x = math.cos(rotation)
-                y = -math.sin(rotation)
+                rotation = collage_data["forces"][0]["rotation"] 
+                rotation_rad = (rotation* math.pi) / 180 
+                # 计算单位向量
+                x = math.cos(rotation_rad)
+                y = math.sin(rotation_rad)
                 json_data["collage"][i]["force_config"]["force_points"] = [x, y]
                 json_data["collage"][i]["force_config"]["force_type"] = "indicate_direction"
-
-    print(json_data)
+        json_data["collage"][i]['marker_config'][0]['init_size_ratio'] = 0.6
+        json_data["collage"][i]['iterations'] = 300
+ 
     with open(f'./workdir/{str(id)}_{i}/collage.json', 'w') as f:
         json.dump(json_data, f, indent=4)
  
@@ -158,7 +160,6 @@ def process_data():
     }), 200
 
 def collage_callback(result):
-    print(result)
     progress_data[result['id']] = result
 
 @app.route('/fetchProgressApi', methods=['GET'])
