@@ -31,6 +31,7 @@ declare module 'vue' {
     RouterLink: typeof import('vue-router')['RouterLink']
     RouterView: typeof import('vue-router')['RouterView']
     RunningStatusIndicator: typeof import('./src/components/RunningStatusIndicator.vue')['default']
+    SubCanvasArea: typeof import('./src/components/subCanvasArea.vue')['default']
     Table: typeof import('./src/components/Table.vue')['default']
     ToastPanel: typeof import('./src/components/ToastPanel.vue')['default']
   }

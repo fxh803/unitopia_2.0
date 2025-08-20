@@ -1,22 +1,12 @@
 <script setup lang="ts">
-import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useAnimationStore } from '~/stores/animation'
 import Table from './Table.vue'
 import Overview from './Overview.vue'
 
-
 // 拼贴处理状态store
 const animationStore = useAnimationStore()
 const { collaging ,result_data} = storeToRefs(animationStore)
-
-// 切换状态
-const activeTab = ref<'table' | 'overview'>('table')
-
-// 切换标签页
-const switchTab = (tab: 'table' | 'overview') => {
-  activeTab.value = tab
-}
 </script>
 
 <template>
@@ -28,42 +18,19 @@ const switchTab = (tab: 'table' | 'overview') => {
     >
     </div>
     
-    <!-- 切换栏 -->
-    <div class="flex-shrink-0 bg-white border-b border-gray-200 px-4 py-2">
-      <div class="flex justify-center space-x-6">
-        <button class="relative px-1 py-2 text-sm font-medium transition-colors duration-200" :class="[
-          activeTab === 'table'
-            ? 'text-[#0d99ff]'
-            : 'text-gray-400 hover:text-gray-600'
-        ]" @click="switchTab('table')">
-          Table
-          <!-- 下划线指示器 -->
-          <div v-if="activeTab === 'table'"
-            class="absolute bottom-0 left-0 h-0.5 bg-[#0d99ff] transition-all duration-200 w-full"></div>
-        </button>
-        <button class="relative px-1 py-2 text-sm font-medium transition-colors duration-200" :class="[
-          activeTab === 'overview'
-            ? 'text-[#0d99ff]'
-            : 'text-gray-400 hover:text-gray-600'
-        ]" @click="switchTab('overview')">
-          Overview
-          <!-- 下划线指示器 -->
-          <div v-if="activeTab === 'overview'"
-            class="absolute bottom-0 left-0 h-0.5 bg-[#0d99ff] transition-all duration-200 w-full"></div>
-        </button>
-      </div>
-    </div>
-
-    <!-- 内容区域 -->
-    <div class="flex-1 overflow-hidden">
-      <!-- Table 模式 -->
-      <div v-if="activeTab === 'table'" class="h-full">
+    <!-- 内容区域 - 上半部分Table，下半部分SubCanvasArea -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- 上半部分：Table -->
+      <div class="flex-1 min-h-0">
         <Table />
       </div>
-
-      <!-- Overview 模式 -->
-      <div v-else-if="activeTab === 'overview'" class="h-full">
-        <Overview />
+      
+      <!-- 分隔线 -->
+      <div class="border-t border-gray-200"></div>
+      
+      <!-- 下半部分：SubCanvasArea -->
+      <div class="flex-1 min-h-0">
+        <SubCanvasArea />
       </div>
     </div>
   </aside>

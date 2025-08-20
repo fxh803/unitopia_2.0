@@ -1,27 +1,29 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref, nextTick } from 'vue'
+import { useResizeHandleStore } from '~/stores/resizeHandle'
 
-const leftWidth = ref(300)
-const dragging = ref(false)
+const resizeHandleStore = useResizeHandleStore()
 const container = ref<HTMLElement | null>(null)
 const showBar = ref(false)
 
 function startDrag(_e: MouseEvent) {
-  dragging.value = true
+  resizeHandleStore.setDragging(true)
   document.body.style.cursor = 'col-resize'
 }
 
 function onDrag(e: MouseEvent) {
-  if (!dragging.value || !container.value)
+  if (!resizeHandleStore.isDragging || !container.value)
     return
   const rect = container.value.getBoundingClientRect()
   let newWidth = e.clientX - rect.left
   newWidth = Math.max(400, Math.min(newWidth, rect.width * 0.8))
-  leftWidth.value = newWidth
+  
+  // 更新store中的左侧宽度
+  resizeHandleStore.updateLeftWidth(newWidth)
 }
 
 function stopDrag() {
-  dragging.value = false
+  resizeHandleStore.setDragging(false)
   document.body.style.cursor = ''
 }
 
@@ -29,9 +31,9 @@ function handleMouseMove(e: MouseEvent) {
   if (!container.value) return
   const rect = container.value.getBoundingClientRect()
   const x = e.clientX - rect.left
-  if (Math.abs(x - leftWidth.value) < 12) {
+  if (Math.abs(x - resizeHandleStore.leftWidth) < 12) {
     showBar.value = true
-  } else if (!dragging.value) {
+  } else if (!resizeHandleStore.isDragging) {
     showBar.value = false
   }
 }
@@ -41,7 +43,8 @@ onMounted(() => {
   nextTick(() => {
     if (container.value) {
       const containerWidth = container.value.offsetWidth
-      leftWidth.value = containerWidth * 0.7
+      const initialWidth = containerWidth * 0.7
+      resizeHandleStore.updateLeftWidth(initialWidth)
     }
   })
   window.addEventListener('mousemove', onDrag)
@@ -57,14 +60,14 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div ref="container" class="flex h-full w-full select-none relative">
+  <div ref="container" class="flex h-full w-full select-none relative overflow-hidden">
     <!-- 左侧画布区 + 滑动条 -->
-    <div :style="{ width: `${leftWidth}px` }" class="h-full border-r border-gray-300 relative">
+    <div :style="{ width: `${resizeHandleStore.leftWidth}px` }" class="h-full border-r border-gray-300 relative">
       <slot name="left" />
       <!-- 滑动条，绝对定位在右侧 -->
       <div
         class="resizer-bar"
-        :class="{ 'resizer-bar-active': showBar || dragging }"
+        :class="{ 'resizer-bar-active': showBar || resizeHandleStore.isDragging }"
         style="position: absolute; top: 0; right: 0; height: 100%;"
         @mousedown="startDrag"
       />
