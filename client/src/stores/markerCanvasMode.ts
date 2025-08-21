@@ -62,7 +62,7 @@ export const useSubCanvasModeStore = defineStore('subCanvasMode', () => {
         obj.selectable = false
         obj.evented = false
       })
-      
+      const dpr = window.devicePixelRatio || 1
       if (canvasInstance.freeDrawingBrush) {
         canvasInstance.freeDrawingBrush.color = '#ffffff'
         canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr

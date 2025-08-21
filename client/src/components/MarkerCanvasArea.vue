@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Canvas, PencilBrush } from 'fabric'
+import { Canvas, PencilBrush, Group } from 'fabric'
 import { ref, onMounted, onBeforeUnmount, nextTick, watch, computed } from 'vue'
 import { useResizeHandleStore } from '~/stores/resizeHandle'
 import { useSubCanvasModeStore } from '~/stores/markerCanvasMode'
@@ -18,17 +18,47 @@ const canvasHeight = ref(0)
 let canvas: Canvas | null = null
 
 // 实时预览图
-const previewDataUrl = ref<string>('')
-const PREVIEW_TARGET_WIDTH_PX = 120
+const previewDataUrl = ref<string>('') 
 
-function updatePreviewNow() {
+async function updatePreview() {
+  // 获取当前画布的所有对象
   if (!canvas) return
-  try {
-    const url = canvas.toDataURL({ format: 'png', multiplier: 0.3, enableRetinaScaling: false as any })
-    previewDataUrl.value = url
-  } catch (e) {
-    // 忽略偶发错误
-  }
+  
+  // 获取画布上的所有对象
+  const allObjects = canvas.getObjects() 
+  //新建一个fabricjs的group，将所有objectsgroup一起
+  const cloneObjects = await Promise.all(allObjects.map(async (obj) => {
+    return obj.clone()
+  }))
+    const group = new Group(cloneObjects)
+    const tempCanvas = document.createElement('canvas')
+      tempCanvas.width = 60
+      tempCanvas.height = 60
+
+      const tempFabricCanvas = new Canvas(tempCanvas, {
+        width: 60,
+        height: 60,
+        backgroundColor: '#ffffff'
+      }) 
+      const originWidth = group.width
+      const originHeight = group.height
+      // 计算缩放比例，确保对象适合缩略图 
+      const scaleX = 50 / Math.max(originWidth, 1)
+      const scaleY = 50 / Math.max(originHeight, 1)
+      const scale = Math.min(scaleX, scaleY, 1) // 不超过原始大小
+      //把克隆对象放到画布正中央，做好缩放，并导出给previewDataUrl
+      group.set('left', 30)
+      group.set('top', 30)
+      group.set('scaleX', scale)
+      group.set('scaleY', scale)
+      group.set('originX', 'center')
+      group.set('originY', 'center')
+      group.set('opacity', 1)
+      tempFabricCanvas.add(group)
+      tempFabricCanvas.renderAll()
+      previewDataUrl.value = tempFabricCanvas.toDataURL({ format: 'png', multiplier: 1, enableRetinaScaling: false as any })
+   
+  
 }
 
 // 计算画布容器的实际尺寸
@@ -59,7 +89,6 @@ function updateCanvasSize() {
       canvas.setWidth(canvasWidth.value)
       canvas.setHeight(canvasHeight.value)
       canvas.renderAll()
-      updatePreviewNow()
     }
   }
 }
@@ -103,11 +132,12 @@ onMounted(async () => {
       subCanvasModeStore.setCanvas(() => canvas)
       subObjectActionsStore.setCanvas(() => canvas)
 
-      // 预览：绑定渲染后事件，节流更新
-      canvas.on('after:render', updatePreviewNow)
 
       // 其他事件监听
-      canvas.on('object:added', subCanvasModeStore.setDrawedObjectDataType)
+      canvas.on('object:added', (e) => {
+        subCanvasModeStore.setDrawedObjectDataType(e)
+        updatePreview()
+      })
       canvas.on('selection:created', subObjectActionsStore.setCurrentPathObj)
       canvas.on('selection:updated', subObjectActionsStore.setCurrentPathObj)
       canvas.on('selection:cleared', subObjectActionsStore.hideBtns)
@@ -118,25 +148,25 @@ onMounted(async () => {
         subObjectActionsStore.setCurrentPathObj()
         subObjectActionsStore.updateActionBtnVisble()
         subObjectActionsStore.updateActionBtnPosition()
+        updatePreview()
       })
-
-      canvas.renderAll()
-      updatePreviewNow()
+      canvas.on('object:removed', updatePreview)
+      canvas.renderAll() 
     }
   }, 200)
 })
 
 onBeforeUnmount(() => {
   if (canvas) {
-    canvas.off('after:render', updatePreviewNow)
-    canvas.off('object:added', subCanvasModeStore.setDrawedObjectDataType)
-    canvas.off('selection:created', subObjectActionsStore.setCurrentPathObj)
-    canvas.off('selection:updated', subObjectActionsStore.setCurrentPathObj)
-    canvas.off('selection:cleared', subObjectActionsStore.hideBtns)
-    canvas.off('object:moving', subObjectActionsStore.hideBtns)
-    canvas.off('object:scaling', subObjectActionsStore.hideBtns)
-    canvas.off('object:rotating', subObjectActionsStore.hideBtns)
+    canvas.off('object:added')
+    canvas.off('selection:created')
+    canvas.off('selection:updated')
+    canvas.off('selection:cleared')
+    canvas.off('object:moving')
+    canvas.off('object:scaling')
+    canvas.off('object:rotating')
     canvas.off('object:modified')
+    canvas.off('object:removed')
     canvas.dispose()
   }
 })
@@ -151,8 +181,8 @@ onBeforeUnmount(() => {
       />
 
       <!-- 实时预览图 - 左上角 -->
-      <div class="absolute top-5 left-5 z-10 bg-white/80 border border-gray-300 rounded shadow-sm p-1">
-        <img :src="previewDataUrl" alt="Marker预览" class="block w-30px h-auto rounded" />
+      <div v-if="previewDataUrl" class="absolute top-5 left-5 z-10 bg-white/80 border border-gray-300 rounded shadow-sm p-1">
+        <img :src="previewDataUrl" alt="" class="block w-30px h-30px h-auto rounded" />
       </div>
       
       <!-- 新的横向工具栏 - 右上角 -->
