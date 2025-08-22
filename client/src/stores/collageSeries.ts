@@ -66,12 +66,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         // 临时保存所有对象的原始透明度
         const originalOpacities = new Map()
         canvasInstance.getObjects().forEach((obj: any) => {
-            originalOpacities.set(obj, obj.opacity)
-            if (obj.get('dataType') === 'marker') {
-                obj.set('opacity', 0)
-            }else{
-                obj.set('opacity', 1)
-            }
+            originalOpacities.set(obj, obj.opacity)   
         })
 
         const json = JSON.stringify(canvasInstance.toJSON())

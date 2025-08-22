@@ -114,16 +114,16 @@ function addCanvasEventListeners() {
       setCurrentPathObj()
       updateActionBtnVisble()
       updateActionBtnPosition()
-      updateMarkerObjects()
+      // updateMarkerObjects()
       updateCurrentSlide()
     },
     'object:added': (e) => {
       setDrawedObjectDataType(e)
-      updateMarkerObjects()
+      // updateMarkerObjects()
       updateCurrentSlide()
     },
     'object:removed': () => {
-      updateMarkerObjects()
+      // updateMarkerObjects()
       updateCurrentSlide()
     }
   })
@@ -223,10 +223,7 @@ async function handleDrop(e: DragEvent) {
     
     if (objects && objects.length > 0) {
       const clonedObject = objects[0]
-      
-     
-      
-      // 然后设置属性（确保对象已经完全初始化）
+      // 先设置所有属性（包括dataType），然后再添加到画布
       clonedObject.set({
         left: dropX,
         top: dropY,
@@ -234,7 +231,8 @@ async function handleDrop(e: DragEvent) {
         evented: true,
         dataType: 'marker'
       })
-       // 先添加到主画布
+      
+      // 添加到主画布（此时所有属性都已设置好）
       canvas.add(clonedObject)
       // 强制更新对象
       clonedObject.setCoords()

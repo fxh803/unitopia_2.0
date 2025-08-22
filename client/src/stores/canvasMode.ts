@@ -116,7 +116,9 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         path.set('dataType', 'background')
         return
       }
-
+      if(path.get('dataType') === 'marker'){ 
+        return
+      }
       // 根据当前选择的模式设置dataType
       path.set('dataType', selectedModeStore.selectedMode);
 
