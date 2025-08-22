@@ -224,8 +224,7 @@ async function handleDrop(e: DragEvent) {
     if (objects && objects.length > 0) {
       const clonedObject = objects[0]
       
-      // 先添加到主画布
-      canvas.add(clonedObject)
+     
       
       // 然后设置属性（确保对象已经完全初始化）
       clonedObject.set({
@@ -235,6 +234,8 @@ async function handleDrop(e: DragEvent) {
         evented: true,
         dataType: 'marker'
       })
+       // 先添加到主画布
+      canvas.add(clonedObject)
       // 强制更新对象
       clonedObject.setCoords()
       canvas.renderAll()
