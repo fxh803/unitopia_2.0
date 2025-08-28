@@ -32,31 +32,31 @@ let canvas: Canvas | null = null
 // 实时预览图
 const previewDataUrl = ref<string>('')
 const previewGroup = ref<Group | null>(null)
-// 拖拽预览图到主画布
-function handlePreviewDragStart(e: DragEvent) {
-  if (!canvas || !previewGroup.value) return
+// // 拖拽预览图到主画布
+// function handlePreviewDragStart(e: DragEvent) {
+//   if (!canvas || !previewGroup.value) return
   
-  try {
-    // 直接获取预览组的JSON数据
-    const groupJson = previewGroup.value.toJSON() 
+//   try {
+//     // 直接获取预览组的JSON数据
+//     const groupJson = previewGroup.value.toJSON() 
     
-    // 设置拖拽数据
-    if (e.dataTransfer) {
-      e.dataTransfer.setData('application/json', JSON.stringify(groupJson))
-      e.dataTransfer.setData('text/plain', 'Marker Canvas Content')
-      e.dataTransfer.effectAllowed = 'copy'
-    }
+//     // 设置拖拽数据
+//     if (e.dataTransfer) {
+//       e.dataTransfer.setData('application/json', JSON.stringify(groupJson))
+//       e.dataTransfer.setData('text/plain', 'Marker Canvas Content')
+//       e.dataTransfer.effectAllowed = 'copy'
+//     }
     
-    console.log('开始拖拽预览图，预览组JSON:', groupJson)
-  } catch (error) {
-    console.error('准备拖拽数据时出错:', error)
-    e.preventDefault()
-  }
-}
+//     console.log('开始拖拽预览图，预览组JSON:', groupJson)
+//   } catch (error) {
+//     console.error('准备拖拽数据时出错:', error)
+//     e.preventDefault()
+//   }
+// }
 
-function handlePreviewDragEnd(e: DragEvent) {
-  console.log('拖拽预览图结束')
-}
+// function handlePreviewDragEnd(e: DragEvent) {
+//   console.log('拖拽预览图结束')
+// }
 
 async function updatePreview() {
   // 获取当前画布的所有对象
@@ -230,10 +230,8 @@ onBeforeUnmount(() => {
 
     <!-- 实时预览图 - 左上角 -->
     <div v-if="previewDataUrl"
-      class="absolute top-5 left-5 z-10 bg-white/80 border border-gray-300 rounded shadow-sm p-1 cursor-move"
-      draggable="true"
-      @dragstart="handlePreviewDragStart"
-      @dragend="handlePreviewDragEnd">
+      draggable="false"
+      class="absolute top-5 left-5 z-10 bg-white/80 border border-gray-300 rounded shadow-sm p-1">
       <img :src="previewDataUrl" alt="" class="block w-30px h-30px h-auto rounded" />
     </div>
 
