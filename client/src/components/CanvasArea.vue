@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Canvas, PencilBrush } from 'fabric'
+import { Canvas, PencilBrush, Group } from 'fabric'
 import * as fabric from 'fabric'
 import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { storeToRefs } from 'pinia'
@@ -231,9 +231,9 @@ async function handleDrop(e: DragEvent) {
       const objects = await fabric.util.enlivenObjects(groupJson, 'fabric') 
       
       if (objects && objects.length > 0) {
-        const clonedObject = objects[0]
+        const group = new Group(objects) 
         // 先设置所有属性（包括dataType），然后再添加到画布
-        clonedObject.set({
+        group.set({
           left: dropX,
           top: dropY,
           selectable: true,
@@ -246,26 +246,25 @@ async function handleDrop(e: DragEvent) {
         
         // 调节对象大小，最大高/宽为50，保持宽高比
         const maxSize = 50
-        const currentWidth = clonedObject.width || clonedObject.getScaledWidth()
-        const currentHeight = clonedObject.height || clonedObject.getScaledHeight()
+        const currentWidth = group.width || group.getScaledWidth()
+        const currentHeight = group.height || group.getScaledHeight()
         
         if (currentWidth > 0 && currentHeight > 0) {
           const scaleX = maxSize / Math.max(currentWidth, currentHeight)
           const scaleY = scaleX // 保持宽高比
           
-          clonedObject.set({
+          group.set({
             scaleX: scaleX,
             scaleY: scaleY
           })
         }
         
         // 添加到主画布（此时所有属性都已设置好）
-        canvas.add(clonedObject)
+        canvas.add(group)
         // 强制更新对象
-        clonedObject.setCoords()
+        group.setCoords()
         canvas.renderAll()
-        
-        console.log('成功添加Marker画布预览对象到主画布，dataType:', clonedObject.get('dataType'))
+         
       } else {
         console.warn('enlivenObjects返回的对象为空或无效')
       }
