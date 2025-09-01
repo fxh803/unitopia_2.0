@@ -13,6 +13,7 @@ import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useForceDrawingStore } from '~/stores/forceDrawing'
 import { useAnimationStore } from '~/stores/animation'
 import { useBackgroundStore } from '~/stores/background'
+import { handleMarkerDropCanvas } from '~/composables/server'
 const animationStore = useAnimationStore()
 const { collaging, result_data } = storeToRefs(animationStore)
 const selectedModeStore = useSelectedModeStore()
@@ -222,7 +223,7 @@ async function handleDrop(e: DragEvent) {
 
     const dropX = e.clientX - canvasRect.left
     const dropY = e.clientY - canvasRect.top 
-
+    const pos = await handleMarkerDropCanvas(markerId,[dropX,dropY])
     try { 
       // 使用 fabric.util.enlivenObjects 重新创建对象 (Fabric.js 6.x 返回 Promise)
       // 确保传递的是对象数组，每个对象都有 type 属性

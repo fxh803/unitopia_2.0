@@ -1,4 +1,4 @@
-import { useCollageSeriesStore } from '~/stores/collageSeries' 
+import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { Canvas } from 'fabric'
 import { storeToRefs } from 'pinia'
 import { useTableStore } from '~/stores/table'
@@ -130,6 +130,11 @@ function processContainer(tempCanvas: Canvas) {
     format: 'png',
     multiplier: 1
   })
+  for (const obj of canvasObjects) {
+    if (obj.get('dataType') != 'container') {
+      obj.set('visible', true)
+    }
+  }
   return containerBase64
 }
 
@@ -172,7 +177,7 @@ function processEmitter(tempCanvas: Canvas) {
           }
         }
       })
- 
+
       // 只处理第一个 emitter，退出循环
       break
     }
@@ -213,26 +218,17 @@ function processForce(tempCanvas: Canvas) {
 }
 // 处理数据绑定
 function processDataBinding(tempCanvas: Canvas) {
-  const canvasObjects = tempCanvas.getObjects()
-  const tableStore = useTableStore()
-  const tableData = tableStore.tableData
+  const canvasObjects = tempCanvas.getObjects() 
   const dataBindingList: Array<{ data: Array<any>, markerId: string, visualEncoding: any }> = []
   for (const obj of canvasObjects) {
     if (obj.get('dataType') === 'marker') {
       const markerId = obj.get('markerId')
-      const markerStore = useMarkerStore() 
+      const markerStore = useMarkerStore()
       const markersData = markerStore.markers.find(m => m.id === markerId)
-      const dataField = markersData.mapping.dataField
-      const dataRange = markersData.mapping.dataRange
       const visualEncoding = markersData.mapping.visualEncoding
-      const temp: any[] = [] 
-      // 用 slice 保证顺序和 dataRange 匹配
-      const tableRow = tableData.slice(dataRange.start - 1, dataRange.end) 
-      tableRow.forEach((row: any) => {
-        temp.push(row[dataField])
-      })
+      const data = pharseData(markerId)
       dataBindingList.push({
-        data: temp,
+        data: data,
         markerId: markerId,
         visualEncoding: visualEncoding
       })
@@ -245,17 +241,17 @@ function processDataBinding(tempCanvas: Canvas) {
 // 轮询处理状态的函数
 async function startProgressTimer() {
   const animationStore = useAnimationStore()
-  const { process_id,progress_data,result_data } = storeToRefs(animationStore)
+  const { process_id, progress_data, result_data } = storeToRefs(animationStore)
   try {
     const response = await fetch('http://localhost:5000/fetchProgressApi?id=' + process_id.value)
     if (response.ok) {
       // 解析 JSON 响应
       const result = await response.json()
-      if(result.progress){ 
+      if (result.progress) {
         progress_data.value.push(result.progress)
         result_data.value.push(result.result)
         animationStore.updateAnimation()
-      } 
+      }
     } else {
       console.error('获取处理状态失败:', response.statusText)
     }
@@ -276,10 +272,10 @@ export async function sendDataToServer(): Promise<boolean> {
     const data = await collectAllSlidesData()
     for (const [index, subData] of data.entries()) {//对于每一个slide
       subData.markers.forEach((marker: any) => {
-        if(marker.thumbnail.includes('data:image/png;base64,')){
-         collage_result_type.value.push('png')
-         return
-        } 
+        if (marker.thumbnail.includes('data:image/png;base64,')) {
+          collage_result_type.value.push('png')
+          return
+        }
       })
       if (collage_result_type.value[index] === undefined) {
         collage_result_type.value.push('svg')
@@ -336,25 +332,66 @@ export async function sendDataToServer(): Promise<boolean> {
 export async function sendUploadContainerToServer(stringBase64: string) {
   const canvasModeStore = useCanvasModeStore()
   const { containerColor } = storeToRefs(canvasModeStore)
-   const response = await fetch('http://localhost:5000/uploadContainerApi', {
+  const response = await fetch('http://localhost:5000/uploadContainerApi', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify({'container': stringBase64, 'containerColor': containerColor.value})
+    body: JSON.stringify({ 'container': stringBase64, 'containerColor': containerColor.value })
   })
   if (response.ok) {
     // 解析 JSON 响应
     const result = await response.json()
-    if(result.container){  
+    if (result.container) {
       return result.container
-    } 
+    }
   } else {
     console.error('获取处理状态失败:', response.statusText)
-  } 
+  }
   return ''
 }
-
-export async function handleMarkerDropCanvas(markerId: string) { 
-
+function pharseData(markerId: string) {
+  const markerStore = useMarkerStore()
+  const tableStore = useTableStore()
+  const tableData = tableStore.tableData
+  const markersData = markerStore.markers.find(m => m.id === markerId)
+  const dataField = markersData.mapping.dataField
+  const dataRange = markersData.mapping.dataRange
+  const visualEncoding = markersData.mapping.visualEncoding
+  const data: any[] = []
+  // 用 slice 保证顺序和 dataRange 匹配
+  const tableRow = tableData.slice(dataRange.start - 1, dataRange.end)
+  tableRow.forEach((row: any) => {
+    data.push(row[dataField])
+  })
+  return data
+}
+export async function handleMarkerDropCanvas(markerId: string,pos: [number,number]) {
+  const collageSeriesStore = useCollageSeriesStore()
+  const canvas = collageSeriesStore.canvasRef?.()
+  const container = processContainer(canvas)
+  const data = pharseData(markerId)  
+  const response = await fetch('http://localhost:5000/markerDropApi', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(
+      {
+        'markerData': data,
+        'container': container,
+        'pos': pos
+      }
+    )
+  })
+  if (response.ok) {
+    const result = await response.json()
+    console.log(result)
+    if (result.init_pos) {
+      return result.init_pos
+      
+    }
+  } else {
+    console.error('获取处理状态失败:', response.statusText)
+  }
 }

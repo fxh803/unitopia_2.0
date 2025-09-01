@@ -118,11 +118,13 @@ def process_data():
 
         
         ##########################   container ######################## 
-        if collage_data["container"] and collage_data["container"] != '':
-            container_base64 = collage_data["container"].split(',')[1]
+        if collage_data["container"] and collage_data["container"] != '': 
+            mask = base64_to_image(collage_data["container"])
+            mask_array = np.array(mask)  
+            mask_binary_array = np.where(mask_array[:, :, 3]>0, 0, 1) 
+            binary_image = Image.fromarray((mask_binary_array * 255).astype(np.uint8))
             container_path = f"./workdir/{str(id)}_{i}/container.png"
-            with open(container_path, "wb") as f_container:
-                f_container.write(base64.b64decode(container_base64))
+            binary_image.save(container_path)
             json_data["collage"][i]["container_config"]["container"] = container_path 
         ##########################   emitter ########################
         if collage_data["emitter"] and len(collage_data["emitter"]) > 0:
@@ -187,6 +189,39 @@ def upload_container_api():
     # 添加base64头部
     base64_with_header = f"data:image/png;base64,{base64_string}"
     return jsonify({"container": base64_with_header })
+@app.route('/markerDropApi', methods=['POST'])
+def marker_drop_api():
+    request_data = request.get_json()
+    markerData = request_data['markerData']
+    container = request_data['container']
+    container = base64_to_image(container) 
+    pos = request_data['pos']
+    
+    # 1. 统计markerData的长度
+    num_markers = len(markerData)
+
+    # 2. 在container图像上找到pos所在的非透明区域
+    contour = find_region_containing_point(container, pos)
+    
+    if contour is None:
+        # 如果点击位置没有在非透明区域内，返回错误
+        return jsonify({
+            "success": False,
+            "message": "点击位置不在有效区域内",
+            "init_pos": []
+        })
+    
+    # 3. 在找到的区域内生成均匀分布的点
+    uniform_points = generate_uniform_points_in_contour(contour, num_markers)
+    
+    # 将点坐标转换为字典格式
+    init_positions = [{"x": int(point[0]), "y": int(point[1])} for point in uniform_points]
+    
+    return jsonify({
+        "success": True,
+        "message": f"成功为{num_markers}个标记生成了{len(init_positions)}个初始位置",
+        "init_pos": init_positions
+    })
 
 if __name__ == '__main__': 
     
