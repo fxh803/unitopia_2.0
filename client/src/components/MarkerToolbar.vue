@@ -20,6 +20,24 @@ const markerStore = useMarkerStore()
 // 文件上传相关
 const fileInputRef = ref<HTMLInputElement>()
 
+// 绘制菜单控制
+const showDrawMenu = ref(false)
+
+const toggleDrawMenu = () => {
+  showDrawMenu.value = !showDrawMenu.value
+}
+ 
+
+// 点击外部关闭菜单
+onMounted(() => {
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement
+    if (!target.closest('.draw-tool-menu')) {
+      showDrawMenu.value = false
+    }
+  })
+})
+
 // Marker相关功能
 const clearCanvas = () => { 
     markerCanvasModeStore.clearMarkers()
@@ -244,19 +262,57 @@ const saveMarkers = async () => {
   <div class="flex items-center gap-2 p-1">
     <!-- 颜色选择器 -->
     <ColorPicker />
-    <!-- 绘制模式按钮 -->
-    <button
-      class="rounded flex h-7 w-7 items-center justify-center cursor-pointer"
-      :class="[
-        mode === 'draw'
-          ? 'bg-[#0d99ff] text-white'
-          : 'bg-white text-black hover:bg-[#f5f5f5]'
-      ]"
-      title="绘制模式"
-      @click="() => setMode('draw')"
-    >
-      <span class="i-carbon-pen" />
-    </button>
+    <!-- 绘制工具聚合按钮 -->
+    <div class="relative draw-tool-menu">
+      <button
+        class="rounded flex h-7 w-7 items-center justify-center cursor-pointer relative"
+        :class="[
+          (mode === 'draw' || mode === 'rect' || mode === 'ellipse')
+            ? 'bg-[#0d99ff] text-white'
+            : 'bg-white text-black hover:bg-[#f5f5f5]'
+        ]"
+        title="绘制工具"
+        @click="toggleDrawMenu"
+      >
+        <span class="i-carbon-pen" />
+      </button>
+      
+      <!-- 绘制工具上拉菜单 -->
+      <div 
+        v-if="showDrawMenu"
+        class="absolute left-0 bottom-full mb-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px] draw-tool-menu"
+      >
+        <!-- 圆形 -->
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 rounded-t-lg"
+          :class="mode === 'ellipse' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
+          @click="() => { setMode('ellipse'); showDrawMenu = false; }"
+        >
+          <span class="i-carbon-circle-outline text-sm" />
+          <span class="text-xs">圆形</span>
+        </button>
+        
+        <!-- 矩形 -->
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50"
+          :class="mode === 'rect' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
+          @click="() => { setMode('rect'); showDrawMenu = false; }"
+        >
+          <span class="i-carbon-checkbox text-sm" />
+          <span class="text-xs">矩形</span>
+        </button>
+        
+        <!-- 自由绘制 -->
+        <button
+          class="w-full flex items-center gap-2 px-3 py-2 text-left hover:bg-gray-50 rounded-b-lg"
+          :class="mode === 'draw' ? 'bg-blue-50 text-blue-600' : 'text-gray-700'"
+          @click="() => { setMode('draw'); showDrawMenu = false; }"
+        >
+          <span class="i-carbon-pen text-sm" />
+          <span class="text-xs">自由绘制</span>
+        </button>
+      </div>
+    </div>
     
     <!-- 移动模式按钮 -->
     <button
@@ -289,34 +345,6 @@ const saveMarkers = async () => {
       @click="() => setMode('erase')"
     >
       <span class="i-carbon-erase" />
-    </button>
-    
-    <!-- 画框按钮 -->
-    <button
-      class="rounded flex h-7 w-7 items-center justify-center cursor-pointer"
-      :class="[
-        mode === 'rect'
-          ? 'bg-[#0d99ff] text-white'
-          : 'bg-white text-black hover:bg-[#f5f5f5]'
-      ]"
-      title="画框"
-      @click="() => setMode('rect')"
-    >
-      <span class="i-carbon-checkbox" />
-    </button>
-    
-    <!-- 画圈按钮 -->
-    <button
-      class="rounded flex h-7 w-7 items-center justify-center cursor-pointer"
-      :class="[
-        mode === 'ellipse'
-          ? 'bg-[#0d99ff] text-white'
-          : 'bg-white text-black hover:bg-[#f5f5f5]'
-      ]"
-      title="画圈"
-      @click="() => setMode('ellipse')"
-    >
-      <span class="i-carbon-circle-outline" />
     </button>
     
     <!-- 上传Marker按钮 -->
@@ -359,5 +387,27 @@ const saveMarkers = async () => {
 </template>
 
 <style scoped>
-/* 可以添加自定义样式 */
+/* 绘制工具菜单样式 */
+.draw-tool-menu {
+  /* 确保菜单在正确的层级显示 */
+  z-index: 1000;
+}
+
+/* 上拉菜单动画 */
+.draw-tool-menu > div {
+  animation: slideUp 0.2s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+
 </style>

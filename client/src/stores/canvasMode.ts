@@ -125,11 +125,65 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
     }
   }
 
+  function adjustLayer() {
+    const canvasInstance = canvasRef.value?.()
+    if (!canvasInstance) return
+    
+    // 获取画布上的所有对象
+    const objects = canvasInstance.getObjects()
+    
+    // 按 dataType 分组对象
+    const backgroundObjects = []
+    const containerObjects = []
+    const otherObjects = []
+    
+    objects.forEach(obj => {
+      const dataType = obj.get('dataType')
+      if (dataType === 'background') {
+        backgroundObjects.push(obj)
+      } else if (dataType === 'container') {
+        containerObjects.push(obj)
+      } else {
+        otherObjects.push(obj)
+      }
+    })
+    
+    // 将 background 对象移动到最底层
+    backgroundObjects.forEach(obj => {
+      canvasInstance.sendObjectToBack(obj, true)
+    })
+    
+    // 将 container 对象移动到 background 之上，其他对象之下
+    containerObjects.forEach(obj => {
+      // 先移动到最底层
+      canvasInstance.sendObjectToBack(obj, true)
+      // 然后根据 background 对象的数量，将 container 对象向前移动相应次数
+      if (backgroundObjects.length > 0) {
+        for (let i = 0; i < backgroundObjects.length; i++) {
+          canvasInstance.bringObjectForward(obj)
+        }
+      }
+    })
+    
+    // 其他对象保持相对层级在顶层
+    // 不需要额外操作，因为它们在 container 对象之上
+    
+    // 重新渲染画布
+    canvasInstance.renderAll()
+    
+    console.log('层级调整完成:', {
+      background: backgroundObjects.length,
+      container: containerObjects.length,
+      other: otherObjects.length
+    })
+  }
+
   return {
     mode,
     setMode,
     setCanvas,
     setDrawedObjectDataType,
+    adjustLayer,
     canvasRef
   }
 }) 

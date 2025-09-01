@@ -33,7 +33,7 @@ const {
 
 const canvasModeStore = useCanvasModeStore()
 const { mode } = storeToRefs(canvasModeStore)
-const { setMode, setDrawedObjectDataType } = canvasModeStore
+const { setMode, setDrawedObjectDataType, adjustLayer } = canvasModeStore
 
 const objectActionsStore = useObjectActionsStore()
 const {
@@ -110,17 +110,15 @@ function addCanvasEventListeners() {
     'object:modified': () => {
       setCurrentPathObj()
       updateActionBtnVisble()
-      updateActionBtnPosition()
-      // updateMarkerObjects()
+      updateActionBtnPosition() 
       updateCurrentSlide()
     },
     'object:added': (e) => {
-      setDrawedObjectDataType(e)
-      // updateMarkerObjects()
+      setDrawedObjectDataType(e) 
       updateCurrentSlide()
+      adjustLayer()
     },
-    'object:removed': () => {
-      // updateMarkerObjects()
+    'object:removed': () => { 
       updateCurrentSlide()
     }
   })

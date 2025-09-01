@@ -225,7 +225,7 @@ onBeforeUnmount(() => {
 
 <template>
   <!-- 画布区域 -->
-  <div ref="canvasContainerRef" class="flex justify-center items-center bg-gray-100 min-h-0 w-full h-full relative">
+  <div ref="canvasContainerRef" class="flex justify-center items-center bg-gray-100 min-h-0 w-full h-full relative overflow-hidden">
     <canvas ref="canvasEl" class="w-full h-full border border-gray-300 rounded-lg shadow-sm" />
 
     <!-- 实时预览图 - 左上角 -->

@@ -60,7 +60,7 @@ const handleBackToEdit = () => {
 
 <template>
   <div class="relative">
-    <header class="px-6 border-b border-gray-200 bg-white flex h-16 w-full shadow items-center z-20">
+    <header class="px-6 border-b border-gray-200 bg-white flex h-14 w-full shadow items-center z-20">
       <h1 class="text-xl text-gray-800 font-bold ">
         Unitopia
       </h1>
@@ -132,7 +132,7 @@ const handleBackToEdit = () => {
     <!-- 进度条 - 移到header外部，使用fixed定位 -->
     <div 
       v-if="collaging"
-      class="fixed top-16 left-0 w-full bg-gray-200 h-2 z-50"
+      class="fixed top-14 left-0 w-full bg-gray-200 h-2 z-50"
     >
       <div 
         class="bg-blue-600 h-full transition-all duration-300 ease-out"

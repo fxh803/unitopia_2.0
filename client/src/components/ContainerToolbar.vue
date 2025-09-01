@@ -96,10 +96,7 @@ const addImageToCanvas = (imageDataUrl: string, fileName: string) => {
     })
 
     // 将图片添加到画布
-    canvasInstance.add(fabricImg)
-    
-    // 将container对象移动到最底层
-    canvasInstance.sendObjectToBack(fabricImg, true)
+    canvasInstance.add(fabricImg) 
     
     // 应用透明度规则
     selectedModeStore.handleModeSwitch('container')

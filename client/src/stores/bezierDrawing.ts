@@ -124,8 +124,7 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
       })
       
       // 将group添加到画布
-      canvasInstance.add(bezierGroup)
-      canvasInstance.bringObjectToFront(bezierGroup, true);
+      canvasInstance.add(bezierGroup) 
       canvasInstance.renderAll()
 
       // 启动虚线动画
