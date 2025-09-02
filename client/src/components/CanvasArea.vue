@@ -8,7 +8,7 @@ import { useSelectedModeStore } from '~/stores/selectedMode'
 import { useBrushSizeStore } from '~/stores/brushsize'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useCanvasModeStore } from '~/stores/canvasMode'
-import { useShapeDrawingStore } from '~/stores/shapeDrawing' 
+import { useShapeDrawingStore } from '~/stores/shapeDrawing'
 import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useForceDrawingStore } from '~/stores/forceDrawing'
 import { useAnimationStore } from '~/stores/animation'
@@ -18,7 +18,7 @@ const animationStore = useAnimationStore()
 const { collaging, result_data } = storeToRefs(animationStore)
 const selectedModeStore = useSelectedModeStore()
 const { selectedMode, isContainerMode } = storeToRefs(selectedModeStore)
- 
+
 const brushSizeStore = useBrushSizeStore()
 const { brushWidth } = storeToRefs(brushSizeStore)
 
@@ -111,15 +111,15 @@ function addCanvasEventListeners() {
     'object:modified': () => {
       setCurrentPathObj()
       updateActionBtnVisble()
-      updateActionBtnPosition() 
+      updateActionBtnPosition()
       updateCurrentSlide()
     },
     'object:added': (e) => {
-      setDrawedObjectDataType(e) 
+      setDrawedObjectDataType(e)
       updateCurrentSlide()
       adjustLayer()
     },
-    'object:removed': () => { 
+    'object:removed': () => {
       updateCurrentSlide()
     }
   })
@@ -152,14 +152,14 @@ watch(stopListen, (newVal) => {
 watch(selectedMode, (newMode, oldMode) => {
   if (newMode !== oldMode || newMode === null) {
     setMode(null)
-    if(selectedMode.value === null){
-        canvas?.getObjects().forEach(obj => {
-          if(obj.get('dataType') === 'marker'){
-            obj.selectable = true;
-            obj.evented = true;
-          }
-        });
-        canvas?.renderAll();
+    if (selectedMode.value === null) {
+      canvas?.getObjects().forEach(obj => {
+        if (obj.get('dataType') === 'marker') {
+          obj.selectable = true;
+          obj.evented = true;
+        }
+      });
+      canvas?.renderAll();
     }
   }
   if (newMode === 'force') {
@@ -216,62 +216,65 @@ async function handleDrop(e: DragEvent) {
 
   try {
     const groupJson = JSON.parse(groupJsonData)
-    
+
     // 计算拖拽位置相对于画布的偏移
     const canvasRect = canvasEl.value?.getBoundingClientRect()
     if (!canvasRect) return
 
     const dropX = e.clientX - canvasRect.left
-    const dropY = e.clientY - canvasRect.top 
-    const pos = await handleMarkerDropCanvas(markerId,[dropX,dropY])
-    try { 
-      // 使用 fabric.util.enlivenObjects 重新创建对象 (Fabric.js 6.x 返回 Promise)
-      // 确保传递的是对象数组，每个对象都有 type 属性
-      const objects = await fabric.util.enlivenObjects(groupJson, 'fabric') 
-      
-      if (objects && objects.length > 0) {
-        const group = new Group(objects) 
-        // 先设置所有属性（包括dataType），然后再添加到画布
-        group.set({
-          left: dropX,
-          top: dropY,
-          selectable: true,
-          evented: true,
-          dataType: 'marker',
-          hasControls: false,
-          originX: 'center',
-          originY: 'center',
-          markerId: markerId
-        })
-        
-        // 调节对象大小，最大高/宽为50，保持宽高比
-        const maxSize = 50
-        const currentWidth = group.width || group.getScaledWidth()
-        const currentHeight = group.height || group.getScaledHeight()
-        
-        if (currentWidth > 0 && currentHeight > 0) {
-          const scaleX = maxSize / Math.max(currentWidth, currentHeight)
-          const scaleY = scaleX // 保持宽高比
-          
+    const dropY = e.clientY - canvasRect.top
+    const pos = await handleMarkerDropCanvas(markerId, [dropX, dropY])
+    try {
+      for (const p of pos) {
+        const currentDropX = p.x
+        const currentDropY = p.y
+        const objects = await fabric.util.enlivenObjects(groupJson, 'fabric')
+
+        if (objects && objects.length > 0) {
+          const group = new Group(objects)
+          // 先设置所有属性（包括dataType），然后再添加到画布
           group.set({
-            scaleX: scaleX,
-            scaleY: scaleY
+            left: currentDropX,
+            top: currentDropY,
+            selectable: true,
+            evented: true,
+            dataType: 'marker',
+            hasControls: false,
+            originX: 'center',
+            originY: 'center',
+            markerId: markerId
           })
+
+          // 调节对象大小，最大高/宽为50，保持宽高比
+          const maxSize = 10
+          const currentWidth = group.width || group.getScaledWidth()
+          const currentHeight = group.height || group.getScaledHeight()
+
+          if (currentWidth > 0 && currentHeight > 0) {
+            const scaleX = maxSize / Math.max(currentWidth, currentHeight)
+            const scaleY = scaleX // 保持宽高比
+
+            group.set({
+              scaleX: scaleX,
+              scaleY: scaleY
+            })
+          }
+
+          // 添加到主画布（此时所有属性都已设置好）
+          canvas.add(group)
+          // 强制更新对象
+          group.setCoords()
+          canvas.renderAll()
+
+        } else {
+          console.warn('enlivenObjects返回的对象为空或无效')
         }
-        
-        // 添加到主画布（此时所有属性都已设置好）
-        canvas.add(group)
-        // 强制更新对象
-        group.setCoords()
-        canvas.renderAll()
-         
-      } else {
-        console.warn('enlivenObjects返回的对象为空或无效')
       }
-      
+
+
     } catch (enlivenError) {
       console.error('使用enlivenObjects创建对象时出错:', enlivenError)
-       
+
     }
   } catch (parseError) {
     console.error('解析拖拽数据失败:', parseError)
@@ -304,7 +307,7 @@ onMounted(async () => {
     collageSeriesStore.setCanvas(() => canvas)
     objectActionsStore.setCanvas(() => canvas)
     shapeDrawingStore.setCanvas(() => canvas)
-    selectedModeStore.setCanvas(() => canvas) 
+    selectedModeStore.setCanvas(() => canvas)
     bezierDrawingStore.setCanvas(() => canvas)
     forceDrawingStore.setCanvas(() => canvas)
     backgroundStore.setCanvas(() => canvas)

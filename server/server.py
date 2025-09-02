@@ -121,7 +121,10 @@ def process_data():
         if collage_data["container"] and collage_data["container"] != '': 
             mask = base64_to_image(collage_data["container"])
             mask_array = np.array(mask)  
-            mask_binary_array = np.where(mask_array[:, :, 3]>0, 0, 1) 
+            # 检测RGB不为白色的区域
+            r, g, b = mask_array[:, :, 0], mask_array[:, :, 1], mask_array[:, :, 2]
+            is_white = (r >= 250) & (g >= 250) & (b >= 250)
+            mask_binary_array = np.where(is_white, 1, 0) 
             binary_image = Image.fromarray((mask_binary_array * 255).astype(np.uint8))
             container_path = f"./workdir/{str(id)}_{i}/container.png"
             binary_image.save(container_path)
@@ -212,7 +215,7 @@ def marker_drop_api():
         })
     
     # 3. 在找到的区域内生成均匀分布的点
-    uniform_points = generate_uniform_points_in_contour(contour, num_markers)
+    uniform_points = poisson_disk_sampling(contour, num_markers)
     
     # 将点坐标转换为字典格式
     init_positions = [{"x": int(point[0]), "y": int(point[1])} for point in uniform_points]
