@@ -214,9 +214,8 @@ def marker_drop_api():
             "init_pos": []
         })
     
-    # 3. 在找到的区域内生成均匀分布的点
-    uniform_points = poisson_disk_sampling(contour, num_markers)
-    
+    # 3. 在找到的区域内生成均匀分布的点 
+    uniform_points = grid_based_sampling(contour, num_markers)
     # 将点坐标转换为字典格式
     init_positions = [{"x": int(point[0]), "y": int(point[1])} for point in uniform_points]
     
