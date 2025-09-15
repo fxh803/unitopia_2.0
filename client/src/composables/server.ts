@@ -440,11 +440,12 @@ export async function handleMarkerDropCanvas(markerId: string,pos: [number,numbe
     if (tempObjects && tempObjects.length > 0) {
       tempCanvas.add(...tempObjects)
     }
-  }
-  const overview = collageSeriesStore.overviews[collageSeriesStore.currentOverviewIndex]
-  const slide = overview.collageSeries[collageSeriesStore.currentSlideIndex]
-  collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.forceTypeArray)
-  const container = processContainer(tempCanvas)
+  } 
+  const container = tempCanvas.toDataURL({
+    format: 'png',
+    multiplier: 1
+  })
+ 
   const data = pharseData(markerId)  
   const response = await fetch('http://localhost:5000/markerDropApi', {
     method: 'POST',

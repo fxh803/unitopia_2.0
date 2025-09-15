@@ -2,10 +2,10 @@
 import { ref } from 'vue'
 import paper from 'paper'
 import { useBackgroundStore } from '~/stores/background'
-
+import { useCollageSeriesStore } from '~/stores/collageSeries'
 const paperCanvasRef = ref<HTMLCanvasElement | null>(null)
 const backgroundStore = useBackgroundStore()
-
+const collageSeriesStore = useCollageSeriesStore()
 onMounted(() => {
     nextTick(() => {
         // 绑定 Paper.js 到 canvas
@@ -18,10 +18,13 @@ onMounted(() => {
         paperCanvasRef.value.width = size
         paperCanvasRef.value.height = size
         paper.view.viewSize = new paper.Size(size, size);
-        
+        const currentOverview = collageSeriesStore.overviews[collageSeriesStore.currentOverviewIndex]
+        const overviewId = currentOverview?.overviewId
+        console.log('overviewId:', overviewId)
+        console.log('background:', backgroundStore.getCurrentOverviewBackground(overviewId))
         // 如果background存在，绘制到画布上
-        if (backgroundStore.background) {
-            const backgroundImage = new paper.Raster(backgroundStore.background);
+        if (backgroundStore.getCurrentOverviewBackground(overviewId)) {
+            const backgroundImage = new paper.Raster(backgroundStore.getCurrentOverviewBackground(overviewId));
             backgroundImage.onLoad = () => {
                 // 计算合适的缩放比例，使图片完全适应画布
                 const scaleX = size / backgroundImage.width;
