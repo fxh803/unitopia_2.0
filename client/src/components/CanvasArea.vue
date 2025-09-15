@@ -93,6 +93,7 @@ function updateCanvasSize() {
     }
   }
 }
+
 function addCanvasEventListeners() {
   canvas.on({
     'selection:created': () => {
@@ -489,12 +490,13 @@ onMounted(async () => {
 
   if (canvasEl.value) {
     canvas = new Canvas(canvasEl.value, {
-      backgroundColor: '#ffffff',
+      backgroundColor: 'transparent',
       isDrawingMode: false,
       selection: false,
       width: canvasSize.value,
       height: canvasSize.value,
     })
+    
     const dpr = getDpr()
     const brush = new PencilBrush(canvas)
     brush.color = '#000'
@@ -534,7 +536,7 @@ onMounted(async () => {
       <!-- 新增canvas-wrapper，包裹canvas和button -->
       <div ref="canvasWrapperRef" class="canvas-wrapper" style="position: relative;">
         <!-- 画布本体 -->
-        <canvas ref="canvasEl" class="border border-[#e6e6e6] rounded-2xl" />
+        <canvas ref="canvasEl" class="border border-[#e6e6e6] rounded-2xl canvas-with-grid" />
         <paperCanvas v-if="collaging || result_data.length > 0" />
         <!-- 对象操作按钮 -->
         <ObjectActionButtons />
@@ -550,3 +552,12 @@ onMounted(async () => {
     </div>
   </section>
 </template>
+
+<style scoped>
+.canvas-with-grid {
+  background-image: url('/transparency_grid.svg');
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+</style>

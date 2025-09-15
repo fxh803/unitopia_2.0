@@ -1,5 +1,6 @@
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { Canvas } from 'fabric'
+import * as fabric from 'fabric'
 import { storeToRefs } from 'pinia'
 import { useTableStore } from '~/stores/table'
 import { useAnimationStore } from '~/stores/animation'
@@ -57,14 +58,13 @@ export async function collectAllSlidesData(): Promise<Array<{overviewId: string,
         const originalWidth = canvas.width
         const originalHeight = canvas.height
 
-        const tempCanvas = new Canvas(document.createElement('canvas'), {
+        const tempCanvas = new Canvas(null, {
           width: originalWidth,
           height: originalHeight
         })
         //加载幻灯片数据
         await tempCanvas.loadFromJSON(slide.json)
-        //渲染画布
-        tempCanvas.renderAll()
+        tempCanvas.backgroundColor = '#ffffff'
         collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.forceTypeArray)
         result.markers = processMarker(tempCanvas)
         result.forces = processForce(tempCanvas)
@@ -331,10 +331,8 @@ export async function sendDataToServer(): Promise<boolean> {
             collage_result_type.value.push('png')
             return
           }
-        })
-        if (collage_result_type.value.length === 0 || collage_result_type.value[collage_result_type.value.length - 1] === undefined) {
-          collage_result_type.value.push('svg')
-        }
+        }) 
+        collage_result_type.value.push('svg') 
       }
     }
     const time = Math.floor(Date.now() / 1000)
@@ -425,7 +423,28 @@ export function pharseData(markerId: string) {
 export async function handleMarkerDropCanvas(markerId: string,pos: [number,number]) {
   const collageSeriesStore = useCollageSeriesStore()
   const canvas = collageSeriesStore.canvasRef?.()
-  const container = processContainer(canvas)
+  
+  // 创建临时画布来处理container
+  const tempCanvas = new Canvas(null, {
+    width: canvas.width,
+    height: canvas.height,
+    backgroundColor: '#ffffff'
+  })
+  
+  // 将原画布上的container对象复制到临时画布
+  const containerObjs = canvas.getObjects().filter(obj => obj.get('dataType') === 'container')
+  if (containerObjs.length > 0) {
+    // 使用序列化/反序列化的方式复制对象
+    const containerJson = JSON.stringify(containerObjs.map(obj => obj.toObject()))
+    const tempObjects = await fabric.util.enlivenObjects(JSON.parse(containerJson), 'fabric')
+    if (tempObjects && tempObjects.length > 0) {
+      tempCanvas.add(...tempObjects)
+    }
+  }
+  const overview = collageSeriesStore.overviews[collageSeriesStore.currentOverviewIndex]
+  const slide = overview.collageSeries[collageSeriesStore.currentSlideIndex]
+  collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.forceTypeArray)
+  const container = processContainer(tempCanvas)
   const data = pharseData(markerId)  
   const response = await fetch('http://localhost:5000/markerDropApi', {
     method: 'POST',
