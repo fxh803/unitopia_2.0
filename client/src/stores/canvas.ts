@@ -7,7 +7,7 @@ import { useCanvasModeStore } from '~/stores/canvasMode'
 
 export const useCanvasStore = defineStore('canvas', () => {
   const canvasRef = ref<(() => Canvas | null) | null>(null)
-  const containerColor = ref([130, 130, 130, 0.7])
+  const containerColor = ref([130, 130, 130, 0.6])
   
   // 导入其他 store
   const selectedModeStore = useSelectedModeStore()

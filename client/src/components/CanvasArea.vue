@@ -490,7 +490,7 @@ onMounted(async () => {
 
   if (canvasEl.value) {
     canvas = new Canvas(canvasEl.value, {
-      backgroundColor: 'transparent',
+      backgroundColor: '#ffffff',
       isDrawingMode: false,
       selection: false,
       width: canvasSize.value,
@@ -529,14 +529,14 @@ onMounted(async () => {
     <CollageSeriesPanel />
     <!-- 主画布区域 -->
     <div ref="canvasAreaRef"
-      class="p-2 border-r border-[#e6e6e6] bg-[#E5E5E5] flex flex-1 flex-row min-h-0 min-w-0 items-center justify-center relative overflow-hidden"
+      class="p-2 border-r border-[#e6e6e6] bg-[#ffffff] flex flex-1 flex-row min-h-0 min-w-0 items-center justify-center relative overflow-hidden canvas-with-grid"
       @dragover="handleDragOver" @drop="handleDrop">
       <!-- 一级工具栏：模式选择 - 放在头部 -->
       <FirstToolbar />
       <!-- 新增canvas-wrapper，包裹canvas和button -->
       <div ref="canvasWrapperRef" class="canvas-wrapper" style="position: relative;">
         <!-- 画布本体 -->
-        <canvas ref="canvasEl" class="border border-[#e6e6e6] rounded-2xl canvas-with-grid" />
+        <canvas ref="canvasEl" class="border border-[#e6e6e6] rounded-2xl" />
         <paperCanvas v-if="collaging || result_data.length > 0" />
         <!-- 对象操作按钮 -->
         <ObjectActionButtons />
@@ -556,8 +556,8 @@ onMounted(async () => {
 <style scoped>
 .canvas-with-grid {
   background-image: url('/transparency_grid.svg');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-position: center;
+  background-size: 500px 500px;
+  background-repeat: repeat;
+  background-position: 0 0;
 }
 </style>

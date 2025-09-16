@@ -423,28 +423,8 @@ export function pharseData(markerId: string) {
 export async function handleMarkerDropCanvas(markerId: string,pos: [number,number]) {
   const collageSeriesStore = useCollageSeriesStore()
   const canvas = collageSeriesStore.canvasRef?.()
+  const container = processContainer(canvas)
   
-  // 创建临时画布来处理container
-  const tempCanvas = new Canvas(null, {
-    width: canvas.width,
-    height: canvas.height,
-    backgroundColor: '#ffffff'
-  })
-  
-  // 将原画布上的container对象复制到临时画布
-  const containerObjs = canvas.getObjects().filter(obj => obj.get('dataType') === 'container')
-  if (containerObjs.length > 0) {
-    // 使用序列化/反序列化的方式复制对象
-    const containerJson = JSON.stringify(containerObjs.map(obj => obj.toObject()))
-    const tempObjects = await fabric.util.enlivenObjects(JSON.parse(containerJson), 'fabric')
-    if (tempObjects && tempObjects.length > 0) {
-      tempCanvas.add(...tempObjects)
-    }
-  } 
-  const container = tempCanvas.toDataURL({
-    format: 'png',
-    multiplier: 1
-  })
  
   const data = pharseData(markerId)  
   const response = await fetch('http://localhost:5000/markerDropApi', {
