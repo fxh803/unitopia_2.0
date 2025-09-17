@@ -17,7 +17,7 @@ const {setSelectedMode} = selectedModeStore
       class="rounded flex h-10 px-3 items-center gap-2 cursor-pointer"
       :class="[
         selectedMode === 'container'
-          ? 'bg-[#0d99ff] text-white'
+          ? 'bg-[var(--primary-color)] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]',
         collaging ? 'opacity-50 cursor-not-allowed' : ''
       ]"
@@ -31,7 +31,7 @@ const {setSelectedMode} = selectedModeStore
       class="rounded flex h-10 px-3 items-center gap-2 cursor-pointer"
       :class="[
         selectedMode === 'emitter'
-          ? 'bg-[#0d99ff] text-white'
+          ? 'bg-[var(--primary-color)] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]',
         collaging ? 'opacity-50 cursor-not-allowed' : ''
       ]"
@@ -45,7 +45,7 @@ const {setSelectedMode} = selectedModeStore
       class="rounded flex h-10 px-3 items-center gap-2 cursor-pointer"
       :class="[
         selectedMode === 'force'
-          ? 'bg-[#0d99ff] text-white'
+          ? 'bg-[var(--primary-color)] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]',
         collaging ? 'opacity-50 cursor-not-allowed' : ''
       ]"

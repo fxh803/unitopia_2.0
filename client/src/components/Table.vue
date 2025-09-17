@@ -74,6 +74,11 @@ const handleFileSelect = (e: Event) => {
     tableStore.handleFileUpload(file)
   }
 }
+
+// 处理清除数据
+const handleClearData = () => {
+  tableStore.clearTableData()
+}
 </script>
 
 <template>
@@ -93,14 +98,36 @@ const handleFileSelect = (e: Event) => {
     </div>
 
     <!-- 数据表格区域 - 只在有数据时显示 -->
-    <div v-else-if="tableStore.tableData.length > 0" class="h-full w-full overflow-hidden"
+    <div v-else-if="tableStore.tableData.length > 0" class="h-full w-full overflow-hidden flex flex-col"
       style="min-width: 0; min-height: 0; max-width: 100%; max-height: 100%; contain: layout size;">
-      <vxe-table :data="tableStore.tableData" :scroll-y="{ enabled: true }" :scroll-x="{ enabled: true }" height="100%"
-        @scroll="handleScrolling()" :cell-config="{ height: 30 }" show-header-overflow show-overflow size="small" border
-        :cell-class-name="cellClassName" :auto-resize="true">
-        <vxe-column v-for="(item, index) in tableStore.tableColumns" :key="index" :field="item" :title="item" row-resize
-          min-width="80" />
-      </vxe-table>
+      <!-- 工具栏 -->
+      <div class="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50 h-12">
+        <span class="text-sm text-gray-600">Data Table</span>
+        <div class="flex h-full gap-1">
+          <button
+            @click="handleClearData"
+            class="h-full w-8 text-white rounded transition-colors flex items-center justify-center"
+            :class="[
+              'bg-[var(--delete-color)] hover:bg-[var(--delete-hover-color)]'
+            ]"
+            title="Clear data and re-upload"
+          >
+            <span class="i-carbon:close-large text-sm"></span>
+          </button>
+          
+        </div>
+        <input ref="fileInput" type="file" class="hidden" accept=".csv" @change="handleFileSelect" />
+      </div>
+      
+      <!-- 表格内容 -->
+      <div class="flex-1 overflow-hidden">
+        <vxe-table :data="tableStore.tableData" :scroll-y="{ enabled: true }" :scroll-x="{ enabled: true }" height="100%"
+          @scroll="handleScrolling()" :cell-config="{ height: 30 }" show-header-overflow show-overflow size="small" border
+          :cell-class-name="cellClassName" :auto-resize="true">
+          <vxe-column v-for="(item, index) in tableStore.tableColumns" :key="index" :field="item" :title="item" row-resize
+            min-width="80" />
+        </vxe-table>
+      </div>
     </div>
   </div>
 </template>

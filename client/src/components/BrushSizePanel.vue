@@ -46,7 +46,7 @@ const max = 50
 }
 .slider {
   width: 100px; 
-  accent-color: #0d99ff; 
+  accent-color: var(--primary-color); 
 }
 .value {
   min-width: 24px;

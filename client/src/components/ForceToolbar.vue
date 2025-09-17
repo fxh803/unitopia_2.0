@@ -30,9 +30,9 @@ const handleAddFieldForce = async () => {
   <div
     class="px-2 py-4 border border-[#e6e6e6] rounded-xl bg-white flex flex-col gap-3 shadow right-6 top-1/2 absolute z-10 -translate-y-1/2">
     <button class="rounded flex h-10 w-10 items-center justify-center cursor-pointer" :class="[
-      mode === 'force'
-        ? 'bg-[#0d99ff] text-white'
-        : 'bg-white text-black hover:bg-[#f5f5f5]'
+        mode === 'force'
+          ? 'bg-[var(--primary-color)] text-white'
+          : 'bg-white text-black hover:bg-[#f5f5f5]'
     ]" title="Add Force Point" @click="() => setMode('force')">
       <span class="i-carbon:add" />
     </button>
@@ -49,7 +49,7 @@ const handleAddFieldForce = async () => {
       class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
         mode === 'move'
-          ? 'bg-[#0d99ff]'
+          ? 'bg-[var(--primary-color)]'
           : 'bg-white hover:bg-[#f5f5f5]'
       ]"
       title="Move"
@@ -63,7 +63,7 @@ const handleAddFieldForce = async () => {
       />
     </button>
 
-    <button class="text-white rounded bg-red-600 flex h-10 w-10 items-center justify-center hover:bg-red-700 cursor-pointer"
+    <button class="text-white rounded bg-[var(--delete-color)] flex h-10 w-10 items-center justify-center hover:bg-[var(--delete-hover-color)] cursor-pointer"
       title="Clear All Force Points" @click="clearAllForcePoints">
       <span class="i-carbon-trash-can" />
     </button>

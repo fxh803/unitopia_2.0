@@ -69,7 +69,7 @@ const handleBackToEdit = () => {
       <button 
         class="ml-50px flex items-center gap-2 px-6 h-full bg-white  text-gray-800 transition-colors duration-200 font-medium border-l border-gray-200"
         :class="[
-          collaging ? 'hover:bg-red-500' : 'hover:bg-gray-100',
+          collaging ? 'hover:bg-[var(--delete-color)]' : 'hover:bg-gray-100',
           replaying ? 'opacity-50 cursor-not-allowed' : ''
         ]"
         :disabled="replaying"
@@ -90,7 +90,7 @@ const handleBackToEdit = () => {
       <button 
         v-if="showReplayButton"
         class="flex items-center gap-2 px-6 h-full bg-white  text-gray-800 transition-colors duration-200 font-medium border-l border-gray-200"
-        :class="replaying ? 'hover:bg-red-500' : 'hover:bg-gray-100'"
+        :class="replaying ? 'hover:bg-[var(--delete-color)]' : 'hover:bg-gray-100'"
         @click="handleReplay"
       >
         <div 
@@ -135,7 +135,7 @@ const handleBackToEdit = () => {
       class="fixed top-14 left-0 w-full bg-gray-200 h-2 z-50"
     >
       <div 
-        class="bg-blue-600 h-full transition-all duration-300 ease-out"
+        class="bg-[var(--primary-color)] h-full transition-all duration-300 ease-out"
         :style="{ width: percentage + '%' }"
       ></div>
     </div>

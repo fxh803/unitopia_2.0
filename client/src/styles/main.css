@@ -1,3 +1,14 @@
+:root {
+  /* 主题蓝色 */
+  --primary-color: #0d99ff;
+  --primary-hover-color: #0b8ae6;
+  --primary-light-color: #e6f3ff;
+  
+  /* 删除相关颜色 */
+  --delete-color: #F24E1E;
+  --delete-hover-color: #E0451A;
+}
+
 html,
 body,
 #app {

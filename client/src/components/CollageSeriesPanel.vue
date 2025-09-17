@@ -118,12 +118,12 @@ onMounted(() => {
               ]" @click="handleClick(overviewIdx, slideIdx)">
               <!-- 删除按钮 -->
               <button v-if="overview.collageSeries.length > 1"
-                class="absolute top-1 right-1 z-10 hidden group-hover:block bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-red-500 hover:text-white transition-colors"
+                class="absolute top-1 right-1 z-10 hidden group-hover:block bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--delete-color)] hover:text-white transition-colors"
                 @click.stop="handleDelete(overviewIdx, slideIdx)" title="Delete">×</button>
 
               <!-- 复制按钮 -->
               <button
-                class="absolute top-1 z-10 hidden group-hover:block bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-blue-500 hover:text-white transition-colors"
+                class="absolute top-1 z-10 hidden group-hover:block bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--primary-color)] hover:text-white transition-colors"
                 :class="overview.collageSeries.length > 1 ? 'right-8' : 'right-1'"
                 @click.stop="handleDuplicate(overviewIdx, slideIdx)" title="Duplicate">
                 <div class="i-carbon:copy text-xs transform translate-x-4px"></div>

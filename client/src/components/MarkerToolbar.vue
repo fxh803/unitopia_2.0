@@ -266,7 +266,7 @@ const saveMarkers = async () => {
         class="rounded flex h-7 w-7 items-center justify-center cursor-pointer relative"
         :class="[
           (mode === 'draw' || mode === 'rect' || mode === 'ellipse')
-            ? 'bg-[#0d99ff] text-white'
+            ? 'bg-[var(--primary-color)] text-white'
             : 'bg-white text-black hover:bg-[#f5f5f5]'
         ]"
         title="绘制工具"
@@ -317,7 +317,7 @@ const saveMarkers = async () => {
       class="rounded flex h-7 w-7 items-center justify-center cursor-pointer"
       :class="[
         mode === 'move'
-          ? 'bg-[#0d99ff]'
+          ? 'bg-[var(--primary-color)]'
           : 'bg-white hover:bg-[#f5f5f5]'
       ]"
       title="移动模式"
@@ -336,7 +336,7 @@ const saveMarkers = async () => {
       class="rounded flex h-7 w-7 items-center justify-center cursor-pointer"
       :class="[
         mode === 'erase'
-          ? 'bg-[#0d99ff] text-white'
+          ? 'bg-[var(--primary-color)] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
       ]"
       title="橡皮擦"
@@ -365,7 +365,7 @@ const saveMarkers = async () => {
     
     <!-- 清除按钮 -->
     <button
-      class="text-white rounded bg-red-600 flex h-7 w-7 items-center justify-center hover:bg-red-700 cursor-pointer"
+      class="text-white rounded bg-[var(--delete-color)] flex h-7 w-7 items-center justify-center hover:bg-[var(--delete-hover-color)] cursor-pointer"
       title="清除标记"
       @click="clearCanvas"
     >

@@ -160,7 +160,7 @@ const clearBackground = async () => {
       <!-- 红色清除按钮 -->
       <div 
         v-if="currentBackground"
-        class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center cursor-pointer hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+        class="absolute -top-1 -right-1 w-4 h-4 bg-[var(--delete-color)] rounded-full flex items-center justify-center cursor-pointer hover:bg-[var(--delete-hover-color)] transition-colors opacity-0 group-hover:opacity-100"
         @click.stop="clearBackground"
         title="清除背景"
       >
