@@ -37,7 +37,7 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
     canvasInstance.discardActiveObject();
     // 统一设置
     const dpr = window.devicePixelRatio || 1
-    if (m === 'draw') {
+    if (mode.value === 'draw') {
       canvasInstance.isDrawingMode = true;
       canvasInstance.selection = false;
       canvasInstance.getObjects().forEach(obj => { obj.selectable = false; obj.evented = false; });
@@ -46,7 +46,7 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         canvasInstance.freeDrawingBrush.color = selectedModeStore.isContainerMode ? 'rgba(' + canvasStore.containerColor.join(',') + ')' : colorPickerStore.selectedColor;
         canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr;
       }
-    } else if (m === 'erase') {
+    } else if (mode.value === 'erase') {
       canvasInstance.isDrawingMode = true;
       canvasInstance.selection = false;
       canvasInstance.getObjects().forEach(obj => { obj.selectable = false; obj.evented = false; });
@@ -54,7 +54,7 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         canvasInstance.freeDrawingBrush.color = '#ffffff';
         canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr;
       }
-    } else if (m === 'move') {
+    } else if (mode.value === 'move') {
       canvasInstance.isDrawingMode = false;
       canvasInstance.selection = true;
       // 根据selectedMode设置对象的可交互性 
@@ -68,11 +68,11 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
           obj.set('evented', false);
         }
       });
-    } else if (m === 'rect' || m === 'ellipse') {
+    } else if (mode.value === 'rect' || mode.value === 'ellipse') {
       canvasInstance.isDrawingMode = false;
       canvasInstance.selection = false;
       canvasInstance.getObjects().forEach(obj => { obj.selectable = false; obj.evented = false; });
-    } else if (m === 'bezier') {
+    } else if (mode.value === 'bezier') {
       canvasInstance.isDrawingMode = true;
       canvasInstance.selection = false;
       canvasInstance.getObjects().forEach(obj => { obj.selectable = false; obj.evented = false; });
@@ -81,7 +81,7 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
         canvasInstance.freeDrawingBrush.color = 'rgba(0, 123, 255, 0.1)';
         canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr;
       }
-    } else if (m === 'force') {
+    } else if (mode.value === 'force') {
       canvasInstance.isDrawingMode = false;
       canvasInstance.selection = false;
       canvasInstance.getObjects().forEach(obj => { obj.selectable = false; obj.evented = false; }); 
