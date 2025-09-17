@@ -110,7 +110,7 @@ const handleClearData = () => {
             :class="[
               'bg-[var(--delete-color)] hover:bg-[var(--delete-hover-color)]'
             ]"
-            title="Clear data and re-upload"
+            title="Clear data"
           >
             <span class="i-carbon:close-large text-sm"></span>
           </button>

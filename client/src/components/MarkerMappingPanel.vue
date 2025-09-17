@@ -11,6 +11,7 @@ const { tableColumns } = storeToRefs(tableStore)
 
 // 从 store 获取 marker 映射配置
 const getMarkerMapping = markerStore.getMarkerMapping
+const { deleteMarker } = markerStore
 
 // 处理视觉编码变化
 const handleVisualEncodingChange = (markerId: string, encoding: 'size' | 'width' | 'height') => {
@@ -57,22 +58,35 @@ const preventInputDuringDrag = (e: Event) => {
 
 // 拖拽时的样式状态
 const isDragging = ref(false)
+
+// 处理删除单个 marker
+const handleDeleteMarker = (markerId: string) => {
+  deleteMarker(markerId)
+}
 </script>
 
 <template>
   <div class="h-full flex flex-col bg-white overflow-x-auto">
-
     <!-- Marker 列表 -->
     <div class="flex-1 overflow-y-auto p-2  min-w-320px">
       <div v-if="markers.length > 0" class="space-y-4">
         <div v-for="marker in markers" :key="marker.id"
           :class="[
-            'bg-white border rounded-lg p-2 shadow-sm flex space-x-4 cursor-move transition-all duration-200',
+            'bg-white border rounded-lg p-2 shadow-sm flex space-x-4 cursor-move transition-all duration-200 relative group',
             isDragging ? 'border-blue-400 shadow-lg bg-blue-50' : 'border-gray-200 hover:border-blue-300 hover:shadow-md'
           ]"
           draggable="true"
           @dragstart="handleMarkerDragStart(marker.id, $event)"
           @dragend="handleMarkerDragEnd">
+
+          <!-- 删除按钮 -->
+            <button
+              @click.stop="handleDeleteMarker(marker.id)"
+              class="absolute top-1 right-1 z-10 !m-0 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--delete-color)] hover:text-white transition-colors"
+              title="Delete marker"
+            >
+            <span class="i-carbon-close text-sm"></span>
+          </button>
 
           <!-- 左侧：缩略图 -->
           <div class="flex-shrink-0">

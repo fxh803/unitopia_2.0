@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
+import { useMarkerStore } from '~/stores/marker'
 
 interface TableData {
   [key: string]: any
@@ -38,7 +39,7 @@ export const useTableStore = defineStore('table', () => {
   // 处理文件上传
   const handleFileUpload = async (file: File) => {
     if (!file.name.toLowerCase().endsWith('.csv')) {
-      ElMessage.error('请上传 CSV 文件')
+      ElMessage.error('Please upload a CSV file')
       return
     }
 
@@ -48,7 +49,7 @@ export const useTableStore = defineStore('table', () => {
       const lines = text.split('\n').filter(line => line.trim())
 
       if (lines.length === 0) {
-        ElMessage.error('CSV 文件为空')
+        ElMessage.error('CSV file is empty')
         return
       }
 
@@ -73,10 +74,10 @@ export const useTableStore = defineStore('table', () => {
 
       const totalRows = lines.length - 1
       const loadedRows = data.length
-      ElMessage.success(`成功上传 ${file.name}，加载了 ${loadedRows} 行数据${totalRows > maxRows ? `（共 ${totalRows} 行，仅显示前 ${maxRows} 行）` : ''}`)
+      ElMessage.success(`Successfully uploaded ${file.name}, loaded ${loadedRows} rows${totalRows > maxRows ? ` (${totalRows} total rows, showing first ${maxRows} rows)` : ''}`)
     } catch (error) {
-      ElMessage.error('文件解析失败')
-      console.error('CSV 解析错误:', error)
+      ElMessage.error('File parsing failed')
+      console.error('CSV parsing error:', error)
     } finally {
       isLoading.value = false
     }
@@ -86,6 +87,10 @@ export const useTableStore = defineStore('table', () => {
   const clearTableData = () => {
     tableData.value = []
     tableColumns.value = []
+    
+    // 重置所有 marker 的 mapping 配置为默认值
+    const markerStore = useMarkerStore()
+    markerStore.resetAllMarkerMappings()
   }
 
   // 设置表格数据

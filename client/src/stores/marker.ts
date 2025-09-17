@@ -46,6 +46,17 @@ export const useMarkerStore = defineStore('marker', () => {
     markers.value = []
   }
   
+  // 重置所有 marker 的 mapping 配置为默认值
+  const resetAllMarkerMappings = () => {
+    markers.value.forEach(marker => {
+      marker.mapping = {
+        visualEncoding: 'size',
+        dataField: '',
+        dataRange: { start: -1, end: -1 }
+      }
+    })
+  }
+  
   // 获取 marker 的映射配置
   const getMarkerMapping = (markerId: string) => {
     const marker = markers.value.find(m => m.id === markerId)
@@ -88,6 +99,7 @@ export const useMarkerStore = defineStore('marker', () => {
     getMarkerMapping,
     updateVisualEncoding,
     updateDataField,
-    updateDataRange
+    updateDataRange,
+    resetAllMarkerMappings
   }
 })
