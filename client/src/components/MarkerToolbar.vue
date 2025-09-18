@@ -287,7 +287,7 @@ const saveMarkers = async () => {
           @click="() => { setMode('ellipse'); showDrawMenu = false; }"
         >
           <span class="i-carbon-circle-outline text-sm" />
-          <span class="text-xs">圆形</span>
+          <span class="text-xs">ellipse</span>
         </button>
         
         <!-- 矩形 -->
@@ -297,7 +297,7 @@ const saveMarkers = async () => {
           @click="() => { setMode('rect'); showDrawMenu = false; }"
         >
           <span class="i-carbon-checkbox text-sm" />
-          <span class="text-xs">矩形</span>
+          <span class="text-xs">rect</span>
         </button>
         
         <!-- 自由绘制 -->
@@ -307,7 +307,7 @@ const saveMarkers = async () => {
           @click="() => { setMode('draw'); showDrawMenu = false; }"
         >
           <span class="i-carbon-pen text-sm" />
-          <span class="text-xs">自由绘制</span>
+          <span class="text-xs">pen</span>
         </button>
       </div>
     </div>

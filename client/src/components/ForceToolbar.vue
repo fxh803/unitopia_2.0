@@ -34,7 +34,7 @@ const handleAddFieldForce = async () => {
           ? 'bg-[var(--primary-color)] text-white'
           : 'bg-white text-black hover:bg-[#f5f5f5]'
     ]" title="Add Force Point" @click="() => setMode('force')">
-      <span class="i-carbon:add" />
+      <span class="i-carbon:map-identify" />
     </button>
 
     <button class="rounded flex h-10 w-10 items-center justify-center cursor-pointer" :class="[
