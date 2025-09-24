@@ -24,12 +24,11 @@ watch(progress, (newProgress) => {
     const steps = newProgress.steps
     const now_collage = newProgress.now_collage
     const total_collage = newProgress.total_collage
-    const now_overview = newProgress.now_overview_idx
-    const total_overview = newProgress.totalOverview
+    const now_overview = newProgress.now_overview_idx 
     
     if (totalsteps > 0 && total_collage > 0) {
       const currentTypeProgress = steps / totalsteps
-      percentage.value = ((now_collage + currentTypeProgress / 2 + 1 / 2 * type) / total_collage) * 100 * (now_overview+1) / total_overview
+      percentage.value = ((now_collage + currentTypeProgress / 2 + 1 / 2 * type) / total_collage) * 100 * (now_overview+1) / totalOverview.value
       // 确保百分比在0-100之间
       percentage.value = Math.min(Math.max(percentage.value, 0), 100)
     }

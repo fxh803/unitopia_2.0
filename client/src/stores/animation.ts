@@ -62,7 +62,8 @@ export const useAnimationStore = defineStore('animation', {
       this.replaying = false
       this.hoverAttr = null
       this.hoverData = null
-      
+      this.now_overview_idx = 0
+      this.totalOverview = 0
     },
     stopReplay() {
       clearInterval(this.replayTimer);
@@ -81,6 +82,7 @@ export const useAnimationStore = defineStore('animation', {
       this.angleArray = []
       this.now_collage_idx = 0
       this.now_start_idx = 0
+      this.now_overview_idx = 0
     },
     removeAnimation() {
       if (this.markerAni) {
@@ -319,10 +321,17 @@ export const useAnimationStore = defineStore('animation', {
       this.resetReplayData()
       this.replayTimer = setInterval(() => {
         const now_collage = this.progress_data[this.replayIdx].now_collage;
-        console.log(now_collage,this.now_collage_idx)
+        const now_overview = this.progress_data[this.replayIdx].now_overview_idx;
+        this.process_id = this.progress_data[this.replayIdx].process_id;
+        this.collage_result_type = this.progress_data[this.replayIdx].collage_result_type;
+        if (now_overview != this.now_overview_idx && this.now_overview_idx != this.totalOverview - 1) {
+          console.log('nextOverview')
+          this.nextOverview()
+          return
+        }
         if (now_collage != this.now_collage_idx) {//进入下一个collage
           console.log('4')
-          this.now_start_idx = this.now_start_idx = this.elements.length
+          this.now_start_idx = this.elements.length
           this.setReplayData(this.replayIdx, now_collage, this.now_start_idx)
           for (let i = this.now_start_idx; i < this.posArray.length; i++) {
             const raster = new paper.Raster({
@@ -359,7 +368,7 @@ export const useAnimationStore = defineStore('animation', {
           }
           this.now_collage_idx = now_collage
         }
-        else if (this.replayIdx === 0) {
+        else if (this.elements.length === 0) {
           console.log('5')
           this.setReplayData(this.replayIdx, now_collage, 0)
           for (let i = 0; i < this.posArray.length; i++) {
@@ -397,7 +406,7 @@ export const useAnimationStore = defineStore('animation', {
           }
 
         }
-        else if (this.replayIdx > 0) {
+        else if (this.elements.length > 0) {
           console.log('6')
           this.setReplayData(this.replayIdx, now_collage, this.now_start_idx)
           for (let i = this.now_start_idx; i < this.elements.length; i++) {//这里先set好数据

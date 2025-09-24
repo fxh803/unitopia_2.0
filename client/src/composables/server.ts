@@ -295,15 +295,16 @@ function processDataBinding(tempCanvas: Canvas) {
 // 轮询处理状态的函数
 async function startProgressTimer() {
   const animationStore = useAnimationStore()
-  const { process_id, progress_data, result_data,totalOverview,now_overview_idx } = storeToRefs(animationStore)
+  const { process_id, progress_data, result_data ,now_overview_idx, collage_result_type } = storeToRefs(animationStore)
   try {
     const response = await fetch('http://localhost:5000/fetchProgressApi?id=' + process_id.value)
     if (response.ok) {
       // 解析 JSON 响应
       const result = await response.json()
       if (result.progress) {
-        result.progress["now_overview_idx"] = now_overview_idx
-        result.progress["totalOverview"] = totalOverview
+        result.progress["now_overview_idx"] = now_overview_idx.value
+        result.progress["process_id"] = process_id.value
+        result.progress["collage_result_type"] = collage_result_type.value
         progress_data.value.push(result.progress)
         result_data.value.push(result.result)
         animationStore.updateAnimation()
