@@ -167,9 +167,7 @@ export const useMarkerObjectActionsStore = defineStore('markerObjectActions', ()
                 canvasInstance.remove(...objects)
 
                 // 创建新的组，使用原始对象
-                const group = new Group(objects, {
-                    dataType: 'marker'
-                })
+                const group = new Group(objects)
                 // 将组添加到画布
                 canvasInstance.add(group)
                 canvasInstance.setActiveObject(group)

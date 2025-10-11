@@ -72,16 +72,10 @@ export const useMarkerCanvasModeStore = defineStore('markerCanvasMode', () => {
       canvasInstance.isDrawingMode = false
       canvasInstance.selection = true
       
-      // 只允许marker对象可交互
+      // marker 画布上所有对象都可交互
       canvasInstance.getObjects().forEach(obj => {
-        const objType = obj.get('dataType')
-        if (objType === 'marker') {
-          obj.set('selectable', true)
-          obj.set('evented', true)
-        } else {
-          obj.set('selectable', false)
-          obj.set('evented', false)
-        }
+        obj.set('selectable', true)
+        obj.set('evented', true)
       })
     } else if (m === 'rect' || m === 'ellipse') {
       // 形状绘制模式
@@ -98,37 +92,14 @@ export const useMarkerCanvasModeStore = defineStore('markerCanvasMode', () => {
     canvasInstance.renderAll()
   }
 
-  // 为绘制的对象设置数据类型
-  function setDrawedObjectDataType(e: any) {
-    const canvasInstance = canvasRef.value?.()
-    if (!canvasInstance) return
 
-    const path = e.target
-    if (path) {
-      // 设置数据类型为marker
-      path.set('dataType', 'marker')
-      console.log('setDrawedObjectDataType: 设置数据类型为marker')
-      // 生成唯一的 markerId
-      const timestamp = Date.now()
-      const randomId = Math.random().toString(36).substr(2, 9)
-      const markerId = `marker-${timestamp}-${randomId}`
-      path.set('markerId', markerId)
-
-    }
-  }
-
-  // 清除所有marker对象
+  // 清除所有对象（marker画布专用）
   function clearMarkers() {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
 
-    const objects = canvasInstance.getObjects().concat()
-    objects.forEach(obj => {
-      if (obj.get('dataType') === 'marker') {
-        canvasInstance.remove(obj)
-      }
-    })
-    canvasInstance.discardActiveObject()
+    // marker 画布上的所有对象都是 marker，直接清除
+    canvasInstance.clear()
     canvasInstance.renderAll()
   }
 
@@ -141,7 +112,6 @@ export const useMarkerCanvasModeStore = defineStore('markerCanvasMode', () => {
     mode,
     setMode,
     setCanvas,
-    setDrawedObjectDataType,
     clearMarkers,
     getCanvas,
     canvasRef

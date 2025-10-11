@@ -106,8 +106,7 @@ const addImageToCanvas = (imageDataUrl: string, fileName: string) => {
       originX: 'center',
       originY: 'center',
       selectable: false,
-      evented: false,
-      dataType: 'marker', 
+      evented: false
     })
     
     // 计算合适的缩放比例
@@ -122,11 +121,6 @@ const addImageToCanvas = (imageDataUrl: string, fileName: string) => {
       scaleX: scale,
       scaleY: scale
     })
-    //设置markerId
-    const timestamp = Date.now()
-    const randomId = Math.random().toString(36).substr(2, 9)
-    const markerId = `marker-${timestamp}-${randomId}`
-    fabricImg.set('markerId', markerId) 
 
     // 将图片添加到画布
     canvasInstance.add(fabricImg) 
@@ -161,8 +155,7 @@ const addSVGToCanvas = async (svgString: string, fileName: string) => {
       originX: 'center',
       originY: 'center',
       selectable: false,
-      evented: false,
-      dataType: 'marker',
+      evented: false
     })
     
     // 计算合适的缩放比例
@@ -177,12 +170,6 @@ const addSVGToCanvas = async (svgString: string, fileName: string) => {
       scaleX: scale,
       scaleY: scale
     })
-
-    //设置markerId
-    const timestamp = Date.now()
-    const randomId = Math.random().toString(36).substr(2, 9)
-    const markerId = `marker-${timestamp}-${randomId}`
-    svgObject.set('markerId', markerId) 
 
     // 将SVG对象添加到画布
     canvasInstance.add(svgObject) 

@@ -39,8 +39,7 @@ export const useMarkerShapeDrawingStore = defineStore('markerShapeDrawing', () =
         fill: 'rgba(0,0,0,0)',
         stroke: strokeColor,
         strokeWidth: 3,
-        selectable: false,
-        dataType: 'marker'
+        selectable: false
       })
     } else if (markerCanvasModeStore.mode === 'ellipse') {
       previewShape.value = new Ellipse({
@@ -53,8 +52,7 @@ export const useMarkerShapeDrawingStore = defineStore('markerShapeDrawing', () =
         strokeWidth: 3,
         selectable: false,
         originX: 'left',
-        originY: 'top',
-        dataType: 'marker'
+        originY: 'top'
       })
     }
     
@@ -119,8 +117,7 @@ export const useMarkerShapeDrawingStore = defineStore('markerShapeDrawing', () =
         stroke: strokeColor,
         strokeWidth: 3,
         selectable: false,
-        evented: false,
-        dataType: 'marker'
+        evented: false
       })
     } else if (markerCanvasModeStore.mode === 'ellipse') {
       shapeObj = new Ellipse({
@@ -134,18 +131,11 @@ export const useMarkerShapeDrawingStore = defineStore('markerShapeDrawing', () =
         originX: 'left',
         originY: 'top',
         selectable: false,
-        evented: false,
-        dataType: 'marker'
+        evented: false
       })
     }
     
     if (shapeObj) {
-      // 设置markerId
-      const timestamp = Date.now()
-      const randomId = Math.random().toString(36).substr(2, 9)
-      const markerId = `marker-${timestamp}-${randomId}`
-      shapeObj.set('markerId', markerId)
-      shapeObj.set('dataType', 'marker')
       // 添加到画布
       canvasInstance.add(shapeObj)
     }

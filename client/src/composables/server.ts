@@ -135,16 +135,9 @@ function processMarker(tempCanvas: Canvas) {
         if (!thumbnail) {
           obj.set('visible', true)
           obj.set('opacity', 1)
-          // 根据宽高比放大，最长边为100
-          const maxSize = 100
-          const scale = maxSize / Math.max(baseWidth, baseHeight)
-          obj.set({
-            scaleX: scale,
-            scaleY: scale
-          }) 
           // 导出前将marker移到画布的左上角
-          obj.set('left', obj.width*scale / 2)
-          obj.set('top', obj.height*scale / 2)
+          obj.set('left', obj.width/ 2)
+          obj.set('top', obj.height / 2)
           thumbnail = obj.toSVG()
         }
       }

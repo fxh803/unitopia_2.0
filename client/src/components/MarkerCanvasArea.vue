@@ -146,7 +146,6 @@ onMounted(async () => {
 
       // 其他事件监听
       canvas.on('object:added', (e) => {
-        markerCanvasModeStore.setDrawedObjectDataType(e)
         updatePreview()
       })
       canvas.on('selection:created', () => {
