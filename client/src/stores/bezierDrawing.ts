@@ -104,9 +104,9 @@ export const useBezierDrawingStore = defineStore('bezierDrawing', () => {
         `M ${p1.x} ${p1.y} C ${p2.x} ${p2.y} ${p3.x} ${p3.y} ${p4.x} ${p4.y}`,
         {
           stroke: '#0066cc',
-          strokeWidth: 2,
+          strokeWidth: 8,
           fill: '',
-          strokeDashArray: [5, 5], // 添加虚线样式：5像素实线，5像素空白
+          strokeDashArray: [10, 10], // 添加虚线样式：5像素实线，5像素空白
           // dataType: 'emitter' // 设置dataType为emitter
         }
       )

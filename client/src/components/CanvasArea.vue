@@ -13,10 +13,12 @@ import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useForceDrawingStore } from '~/stores/forceDrawing'
 import { useAnimationStore } from '~/stores/animation'
 import { useBackgroundStore } from '~/stores/background'
+import { useDataScaleStore } from '~/stores/dataScale'
 const animationStore = useAnimationStore()
 const { collaging, result_data } = storeToRefs(animationStore)
 const selectedModeStore = useSelectedModeStore()
 const { selectedMode, isContainerMode } = storeToRefs(selectedModeStore)
+const dataScaleStore = useDataScaleStore()
 
 const brushSizeStore = useBrushSizeStore()
 const { brushWidth } = storeToRefs(brushSizeStore)
@@ -276,6 +278,7 @@ onMounted(async () => {
     forceDrawingStore.setCanvas(() => canvas)
     backgroundStore.setCanvas(() => canvas)
     canvasStore.setCanvas(() => canvas)
+    dataScaleStore.setCanvas(() => canvas)
     // 初始化空白幻灯片
     initializeEmptySlide()
     addCanvasEventListeners()

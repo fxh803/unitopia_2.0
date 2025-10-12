@@ -130,6 +130,7 @@ function processMarker(tempCanvas: Canvas) {
         const scaleY = obj.scaleY || 1
         const actualWidth = baseWidth * scaleX
         const actualHeight = baseHeight * scaleY
+        console.log(actualWidth,actualHeight )
         widths.push(actualWidth)
         heights.push(actualHeight) 
         

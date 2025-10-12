@@ -4,10 +4,13 @@ import { storeToRefs } from 'pinia'
 import { useTableStore } from '~/stores/table' 
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useMarkerStore } from '~/stores/marker'
+import { useDataScaleStore } from '~/stores/dataScale'
 const collageSeriesStore = useCollageSeriesStore()
 const { collageSeries, currentSlideIndex } = storeToRefs(collageSeriesStore)
 const tableStore = useTableStore()
 const markerStore = useMarkerStore()
+const dataScaleStore = useDataScaleStore()
+const { widthScale, heightScale } = storeToRefs(dataScaleStore)
 const isDragOver = ref(false)
 const isScrolling = ref(false)
 const cellClasses = ref<Record<number, Record<number, string>>>({})
@@ -78,6 +81,7 @@ const handleFileSelect = (e: Event) => {
 // 处理清除数据
 const handleClearData = () => {
   tableStore.clearTableData()
+  dataScaleStore.resetScales()
 }
 </script>
 
@@ -125,7 +129,44 @@ const handleClearData = () => {
           @scroll="handleScrolling()" :cell-config="{ height: 30 }" show-header-overflow show-overflow size="small" border
           :cell-class-name="cellClassName" :auto-resize="true">
           <vxe-column v-for="(item, index) in tableStore.tableColumns" :key="index" :field="item" :title="item" row-resize
-            min-width="80" />
+            min-width="80">
+            <!-- 自定义 width 列的标题 -->
+            <template v-if="item === 'width'" #header>
+              <div class="flex flex-col items-center w-full gap-1 py-1">
+                <div class="text-xs font-semibold">Width</div>
+                <div class="flex items-center gap-2 w-full px-1">
+                  <input 
+                    type="range" 
+                    v-model.number="widthScale" 
+                    min="0.1" 
+                    max="5" 
+                    step="0.1"
+                    class="flex-1 scale-slider"
+                    @click.stop
+                  />
+                  <span class="text-xs text-gray-600 min-w-8">{{ widthScale.toFixed(1) }}</span>
+                </div>
+              </div>
+            </template>
+            <!-- 自定义 height 列的标题 -->
+            <template v-else-if="item === 'height'" #header>
+              <div class="flex flex-col items-center w-full gap-1 py-1">
+                <div class="text-xs font-semibold">Height</div>
+                <div class="flex items-center gap-2 w-full px-1">
+                  <input 
+                    type="range" 
+                    v-model.number="heightScale" 
+                    min="0.1" 
+                    max="5" 
+                    step="0.1"
+                    class="flex-1 scale-slider"
+                    @click.stop
+                  />
+                  <span class="text-xs text-gray-600 min-w-8">{{ heightScale.toFixed(1) }}</span>
+                </div>
+              </div>
+            </template>
+          </vxe-column>
         </vxe-table>
       </div>
     </div>
@@ -136,5 +177,47 @@ const handleClearData = () => {
 .highlight-cell {
   background-color: rgba(166, 206, 227, 0.5);
   font-weight: bold;
+}
+
+/* 滑动条样式 */
+.scale-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  height: 4px;
+  background: #ddd;
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.scale-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scale-slider::-webkit-slider-thumb:hover {
+  transform: scale(1.2);
+  background: #2563eb;
+}
+
+.scale-slider::-moz-range-thumb {
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.scale-slider::-moz-range-thumb:hover {
+  transform: scale(1.2);
+  background: #2563eb;
 }
 </style>

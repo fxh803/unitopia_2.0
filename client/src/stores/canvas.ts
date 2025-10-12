@@ -4,6 +4,7 @@ import { useSelectedModeStore } from '~/stores/selectedMode'
 import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useBackgroundStore } from '~/stores/background'
 import { useCanvasModeStore } from '~/stores/canvasMode'
+import { useDataScaleStore } from '~/stores/dataScale'
 import { Group } from 'fabric'
 import { handleMarkerDropCanvas, pharseData } from '~/composables/server'
 import * as fabric from 'fabric'
@@ -16,6 +17,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   const bezierDrawingStore = useBezierDrawingStore()
   const backgroundStore = useBackgroundStore()
   const canvasModeStore = useCanvasModeStore()
+  const dataScaleStore = useDataScaleStore()
 
   // 设置 canvas 引用
   function setCanvas(canvas: () => Canvas | null) {
@@ -330,8 +332,8 @@ export const useCanvasStore = defineStore('canvas', () => {
               const normalizedHeight = normalize(dataHeight, minHeight, maxHeight)
               
               // 根据归一化后的 width 和 height 计算缩放比例
-              const scaleX = normalizedWidth / currentWidth
-              const scaleY = normalizedHeight / currentHeight
+              const scaleX = normalizedWidth / currentWidth * dataScaleStore.widthScale
+              const scaleY = normalizedHeight / currentHeight * dataScaleStore.heightScale
               
               group.set({
                 scaleX: scaleX,
