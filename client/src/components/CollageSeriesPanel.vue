@@ -24,6 +24,13 @@ const {
 // 折叠状态
 const isCollapsed = ref(false)
 
+// 悬停状态
+const hoveredOverviewIdx = ref<number | null>(null)
+const hoveredSlideIdx = ref<number | null>(null)
+
+// 总览收起状态
+const collapsedOverviews = ref<Set<number>>(new Set())
+
 // 当前总览
 const currentOverview = computed(() => {
   return overviews.value[currentOverviewIndex.value] || null
@@ -74,6 +81,26 @@ function handleDeleteOverviewClick(overviewIdx: number) {
 function toggleCollapse() {
   isCollapsed.value = !isCollapsed.value
 }
+
+// 悬停处理函数
+function handleMouseEnter(overviewIdx: number, slideIdx: number) {
+  hoveredOverviewIdx.value = overviewIdx
+  hoveredSlideIdx.value = slideIdx
+}
+
+function handleMouseLeave() {
+  hoveredOverviewIdx.value = null
+  hoveredSlideIdx.value = null
+}
+
+// 总览收起/展开处理函数
+function toggleOverviewCollapse(overviewIdx: number) {
+  if (collapsedOverviews.value.has(overviewIdx)) {
+    collapsedOverviews.value.delete(overviewIdx)
+  } else {
+    collapsedOverviews.value.add(overviewIdx)
+  }
+}
 onMounted(() => {
   isCollapsed.value = window.innerWidth < 1440
 })
@@ -110,6 +137,14 @@ onMounted(() => {
             <div class="border rounded flex h-32 items-center justify-center bg-gray-50">
               <img :src="overview.preview" class="max-h-full max-w-full object-contain" alt="总览预览" />
             </div>
+            <!-- 收起/展开按钮 -->
+            <button 
+              class="absolute top-1 left-1 z-10 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-gray-100 transition-colors"
+              @click.stop="toggleOverviewCollapse(overviewIdx)" 
+              :title="collapsedOverviews.has(overviewIdx) ? '展开' : '收起'">
+              <div class="w-3 h-3 text-gray-600 transition-transform duration-200"
+                :class="collapsedOverviews.has(overviewIdx) ? 'i-carbon-chevron-right' : 'i-carbon-chevron-down'"></div>
+            </button>
             <!-- 删除总览按钮 -->
             <button v-if="overviews.length > 1"
               class="absolute top-1 right-1 z-10 hidden group-hover:block bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--delete-color)] hover:text-white transition-colors"
@@ -117,25 +152,31 @@ onMounted(() => {
           </div>
 
           <!-- 拼贴系列列表区域 -->
-          <div class="flex-1 overflow-y-auto">
+          <div 
+            class="overflow-hidden transition-all duration-300 ease-in-out"
+            :class="collapsedOverviews.has(overviewIdx) ? 'max-h-0 opacity-0' : 'max-h-[500px] opacity-100'">
+            <div class="flex-1 overflow-y-auto">
             <div v-for="(item, slideIdx) in overview.collageSeries" :key="item.slideId"
-              class="relative mb-3 m-l-2 m-r-2 border rounded flex h-32 items-center justify-center group cursor-pointer"
+              class="relative mb-3 m-l-2 m-r-2 border rounded flex h-32 items-center justify-center cursor-pointer"
               :class="[
                 overviewIdx === currentOverviewIndex && slideIdx === currentSlideIndex
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-[#e6e6e6] bg-[#f5f5f5]'
-              ]" @click="handleClick(overviewIdx, slideIdx)">
+              ]" 
+              @click="handleClick(overviewIdx, slideIdx)"
+              @mouseenter="handleMouseEnter(overviewIdx, slideIdx)"
+              @mouseleave="handleMouseLeave">
               <!-- 删除按钮 -->
-              <button v-if="overview.collageSeries.length > 1"
-                class="absolute top-1 right-1 z-10 hidden group-hover:block bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--delete-color)] hover:text-white transition-colors"
+              <button v-if="overview.collageSeries.length > 1 && hoveredOverviewIdx === overviewIdx && hoveredSlideIdx === slideIdx"
+                class="absolute top-1 right-1 z-10 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--delete-color)] hover:text-white transition-colors"
                 @click.stop="handleDelete(overviewIdx, slideIdx)" title="Delete">×</button>
 
               <!-- 复制按钮 -->
-              <button
-                class="absolute top-1 z-10 hidden group-hover:block bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--primary-color)] hover:text-white transition-colors"
+              <button v-if="hoveredOverviewIdx === overviewIdx && hoveredSlideIdx === slideIdx"
+                class="absolute top-1 z-10 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--primary-color)] hover:text-white transition-colors"
                 :class="overview.collageSeries.length > 1 ? 'right-8' : 'right-1'"
                 @click.stop="handleDuplicate(overviewIdx, slideIdx)" title="Duplicate">
-                <div class="i-carbon:copy text-xs transform translate-x-4px"></div>
+                <div class="i-carbon:copy text-xs"></div>
               </button>
 
               <img :src="item.preview" class="max-h-full max-w-full object-contain">
@@ -147,14 +188,17 @@ onMounted(() => {
               title="Add New Collage">
               <div class="text-gray-400 text-2xl">+</div>
             </button>
+            </div>
           </div>
         </div>
         <!-- 添加新总览按钮 -->
-      <button @click="handleAddNewOverview"
-          class="w-full mb-3 border-2 border-dashed border-gray-300 rounded bg-gray-50 flex min-h-16 items-center justify-center hover:bg-gray-100 transition-colors"
-          title="添加新总览">
-          <div class="text-gray-400 text-2xl">+</div>
-        </button>
+        <div class="flex justify-center mb-3">
+          <button @click="handleAddNewOverview"
+              class="w-12 border-2 border-dashed border-gray-300 rounded bg-gray-50 flex min-h-12 items-center justify-center hover:bg-gray-100 transition-colors"
+              title="添加新总览">
+              <div class="text-gray-400 text-2xl">+</div>
+            </button>
+        </div>
       </div>
       
     </aside>

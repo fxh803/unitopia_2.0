@@ -63,7 +63,7 @@ const handleAddFieldForce = async () => {
       />
     </button>
 
-    <button class="text-white rounded bg-[var(--delete-color)] flex h-10 w-10 items-center justify-center hover:bg-[var(--delete-hover-color)] cursor-pointer"
+    <button class="text-black rounded bg-white flex h-10 w-10 items-center justify-center hover:bg-[#f5f5f5] cursor-pointer"
       title="Clear All Force Points" @click="clearAllForcePoints">
       <span class="i-carbon-trash-can" />
     </button>

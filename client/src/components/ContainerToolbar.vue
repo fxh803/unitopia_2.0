@@ -203,7 +203,7 @@ const triggerFileUpload = () => {
     />
     
     <button
-      class="text-white rounded bg-[var(--delete-color)] flex h-10 w-10 items-center justify-center hover:bg-[var(--delete-hover-color)] cursor-pointer"
+      class="text-black rounded bg-white flex h-10 w-10 items-center justify-center hover:bg-[#f5f5f5] cursor-pointer"
       title="Clear Canvas"
       @click="clearCanvas"
     >

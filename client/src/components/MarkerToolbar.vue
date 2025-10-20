@@ -260,6 +260,8 @@ const saveMarkers = async () => {
         @click="toggleDrawMenu"
       >
         <span class="i-carbon-pen" />
+        <!-- 右下角黑三角 -->
+        <div class="absolute bottom-0 right-0 w-0 h-0 border-l-[5px] border-t-[5px] border-l-transparent border-t-black transform rotate-90"></div>
       </button>
       
       <!-- 绘制工具上拉菜单 -->
@@ -343,7 +345,7 @@ const saveMarkers = async () => {
     
     <!-- 保存按钮 -->
     <button
-      class="rounded flex h-7 w-7 items-center justify-center bg-green-600 text-white hover:bg-green-700 cursor-pointer"
+      class="rounded flex h-7 w-7 items-center justify-center bg-white text-black hover:bg-[#f5f5f5] cursor-pointer"
       title="保存标记"
       @click="saveMarkers"
     >
@@ -352,7 +354,7 @@ const saveMarkers = async () => {
     
     <!-- 清除按钮 -->
     <button
-      class="text-white rounded bg-[var(--delete-color)] flex h-7 w-7 items-center justify-center hover:bg-[var(--delete-hover-color)] cursor-pointer"
+      class="text-black rounded bg-white flex h-7 w-7 items-center justify-center hover:bg-[#f5f5f5] cursor-pointer"
       title="清除标记"
       @click="clearCanvas"
     >
