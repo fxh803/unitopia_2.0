@@ -152,10 +152,8 @@ onMounted(() => {
           </div>
 
           <!-- 拼贴系列列表区域 -->
-          <div 
-            class="transition-all duration-300 ease-in-out"
-            :class="collapsedOverviews.has(overviewIdx) ? 'max-h-0 opacity-0' : 'opacity-100'">
-            <div class="flex-1 overflow-y-auto">
+          <transition name="slide-fade">
+            <div v-show="!collapsedOverviews.has(overviewIdx)" class="flex-1 overflow-y-auto">
             <div v-for="(item, slideIdx) in overview.collageSeries" :key="item.slideId"
               class="relative mb-3 m-l-2 m-r-2 border rounded flex h-32 items-center justify-center cursor-pointer"
               :class="[
@@ -189,7 +187,7 @@ onMounted(() => {
               <div class="text-gray-400 text-2xl">+</div>
             </button>
             </div>
-          </div>
+          </transition>
         </div>
         <!-- 添加新总览按钮 -->
         <div class="flex justify-center mb-3">
@@ -208,5 +206,24 @@ onMounted(() => {
 <style scoped>
 .shadow-left {
   box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.08);
+}
+
+/* 收起/展开过渡动画 */
+.slide-fade-enter-active {
+  transition: all 0.1s ease-out;
+}
+
+.slide-fade-leave-active {
+  transition: all 0.1s ease-in;
+}
+
+.slide-fade-enter-from {
+  opacity: 0;
+  transform: translateY(-10px);
+}
+
+.slide-fade-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>

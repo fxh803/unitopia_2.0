@@ -134,14 +134,14 @@ const handleClearData = () => {
             <template v-if="item === 'width'" #header>
               <div class="flex flex-col items-center w-full gap-1 py-1">
                 <div class="text-xs font-semibold">Width</div>
-                <div class="flex items-center gap-2 w-full px-1">
+                <div class="flex items-center justify-center gap-2 w-full transform translate-x-2">
                   <input 
                     type="range" 
                     v-model.number="widthScale" 
                     min="0.1" 
                     max="5" 
                     step="0.1"
-                    class="flex-1 scale-slider"
+                    class="scale-slider w-20"
                     @click.stop
                   />
                   <span class="text-xs text-gray-600 min-w-8">{{ widthScale.toFixed(1) }}</span>
@@ -152,14 +152,14 @@ const handleClearData = () => {
             <template v-else-if="item === 'height'" #header>
               <div class="flex flex-col items-center w-full gap-1 py-1">
                 <div class="text-xs font-semibold">Height</div>
-                <div class="flex items-center gap-2 w-full px-1">
+                <div class="flex items-center justify-center gap-2 w-full transform translate-x-2">
                   <input 
                     type="range" 
                     v-model.number="heightScale" 
                     min="0.1" 
                     max="5" 
                     step="0.1"
-                    class="flex-1 scale-slider"
+                    class="scale-slider w-20"
                     @click.stop
                   />
                   <span class="text-xs text-gray-600 min-w-8">{{ heightScale.toFixed(1) }}</span>
@@ -177,6 +177,11 @@ const handleClearData = () => {
 .highlight-cell {
   background-color: rgba(166, 206, 227, 0.5);
   font-weight: bold;
+}
+
+/* 增加列标题宽度 */
+.vxe-cell--title {
+  min-width: 100% !important;
 }
 
 /* 滑动条样式 */
