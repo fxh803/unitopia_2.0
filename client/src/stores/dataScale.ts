@@ -81,7 +81,7 @@ export const useDataScaleStore = defineStore('dataScale', () => {
     objects.forEach((obj: any, i) => {
       if (obj.get('dataType') === 'marker') {
         // 获取归一化参数
-        const { data, normalize, minWidth, maxWidth, minHeight, maxHeight, minSizeValue, maxSizeValue } = getNormalizationParams(obj.get('markerId'))
+        const { data, normalize, minWidth, maxWidth, avgWidth, minHeight, maxHeight, avgHeight, minSizeValue, maxSizeValue } = getNormalizationParams(obj.get('markerId'))
          
         // 根据数据中的 width 和 height 调节对象大小
         const currentWidth = obj.width
@@ -98,8 +98,9 @@ export const useDataScaleStore = defineStore('dataScale', () => {
           const normalizedHeight = normalize(dataHeight, minHeight, maxHeight)
           const normalizedSize = !isNaN(dataSize) && dataSize > 0 ? normalize(dataSize, minSizeValue, maxSizeValue) : null
           console.log(normalizedWidth,normalizedHeight,normalizedSize,currentSize)
-          let scaleX = normalizedSize / currentSize  
-          let scaleY = normalizedSize / currentSize  
+          // 默认使用平均值/现有值
+          let scaleX = avgWidth / currentSize  
+          let scaleY = avgHeight / currentSize  
 
           // 根据当前映射通道状态应用不同的缩放逻辑
           if (currentMappingChannel.value === 'size' && normalizedSize !== null) {
@@ -180,13 +181,15 @@ export const useDataScaleStore = defineStore('dataScale', () => {
 
     // 定义归一化范围
     const minDisplaySize = 20  // 最小显示尺寸
-    const maxDisplaySize = 60  // 最大显示尺寸
+    const maxDisplaySize = 100  // 最大显示尺寸
 
     // 计算归一化参数
     const minWidth = widths.length > 0 ? Math.min(...widths) : 1
     const maxWidth = widths.length > 0 ? Math.max(...widths) : 1
+    const avgWidth = widths.length > 0 ? widths.reduce((sum, w) => sum + w, 0) / widths.length : 1
     const minHeight = heights.length > 0 ? Math.min(...heights) : 1
     const maxHeight = heights.length > 0 ? Math.max(...heights) : 1
+    const avgHeight = heights.length > 0 ? heights.reduce((sum, h) => sum + h, 0) / heights.length : 1
     const minSizeValue = sizes.length > 0 ? Math.min(...sizes) : 1
     const maxSizeValue = sizes.length > 0 ? Math.max(...sizes) : 1
 
@@ -201,8 +204,10 @@ export const useDataScaleStore = defineStore('dataScale', () => {
       normalize,
       minWidth,
       maxWidth,
+      avgWidth,
       minHeight,
       maxHeight,
+      avgHeight,
       minSizeValue,
       maxSizeValue
     }

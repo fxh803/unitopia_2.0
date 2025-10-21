@@ -261,7 +261,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 
     try {
       // 获取归一化参数
-      const { data, normalize, minWidth, maxWidth, minHeight, maxHeight, minSizeValue, maxSizeValue } = dataScaleStore.getNormalizationParams(markerId)
+      const { data, normalize, minWidth, maxWidth, minHeight, maxHeight, minSizeValue, maxSizeValue, avgWidth, avgHeight } = dataScaleStore.getNormalizationParams(markerId)
 
       for (let i = 0; i < pos.length; i++) {
         const p = pos[i]
@@ -307,8 +307,8 @@ export const useCanvasStore = defineStore('canvas', () => {
               const normalizedHeight = normalize(dataHeight, minHeight, maxHeight)
               const normalizedSize = !isNaN(dataSize) && dataSize > 0 ? normalize(dataSize, minSizeValue, maxSizeValue) : null
               console.log(normalizedWidth,normalizedHeight,normalizedSize,currentSize)
-              let scaleX = normalizedSize / currentSize  
-              let scaleY = normalizedSize / currentSize 
+              let scaleX = avgWidth / currentSize  
+              let scaleY = avgHeight / currentSize 
               
               // 根据当前映射通道状态应用不同的缩放逻辑
               if (dataScaleStore.currentMappingChannel === 'size' && normalizedSize !== null) {
