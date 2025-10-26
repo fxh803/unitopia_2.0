@@ -1,5 +1,5 @@
 import { useCollageSeriesStore } from '~/stores/collageSeries'
-import { Canvas } from 'fabric'
+import { Canvas, FabricImage } from 'fabric'
 import * as fabric from 'fabric'
 import { storeToRefs } from 'pinia'
 import { useTableStore } from '~/stores/table'
@@ -411,7 +411,8 @@ export async function sendDataToServer(): Promise<boolean> {
       }
     }
     
-    // 所有overview都处理完成后，停止拼贴处理状态
+    // 所有overview都处理完成后，停止拼贴处理状态并触发重绘
+    await renderResult()
     collaging.value = false
     return true
   } catch (error) {
@@ -484,4 +485,90 @@ export async function handleMarkerDropCanvas(markerId: string,pos: [number,numbe
   } else {
     console.error('获取处理状态失败:', response.statusText)
   }
+}
+
+ async function renderResult (){
+  const canvasStore = useCanvasStore() 
+  const animationStore = useAnimationStore()
+  const { srcArray,posArray,widthArray,heightArray,angleArray } = storeToRefs(animationStore)
+  // 先移除画布事件监听器
+  // canvasStore.removeCanvasEventListeners()
+  
+  // 获取canvas实例
+  const canvasInstance = canvasStore.canvasRef?.()
+  if (canvasInstance) {
+    // 删除所有现有对象
+    const allObjects = canvasInstance.getObjects()
+    allObjects.forEach(obj => {
+      canvasInstance.remove(obj)
+    })
+    
+    // 遍历srcArray创建新对象
+    for (let index = 0; index < srcArray.value.length; index++) {
+      const src = srcArray.value[index]
+      try {
+        const fabricImg = await FabricImage.fromURL(src, {
+          crossOrigin: 'anonymous'
+        }) 
+        
+        // 设置基本属性
+        fabricImg.set({
+          originX: 'center',
+          originY: 'center',
+          selectable: false,
+          evented: false,
+          dataType: 'marker'
+        })
+        
+        // 应用位置数据
+        if (posArray.value[index]) {
+          fabricImg.set({
+            left: posArray.value[index][0],
+            top: posArray.value[index][1]
+          })
+        }
+        // 应用尺寸数据
+        if (widthArray.value[index] && heightArray.value[index]) {
+          // 获取对象的原始尺寸
+          const originalWidth = fabricImg.width || fabricImg.getScaledWidth() / (fabricImg.scaleX || 1)
+          const originalHeight = fabricImg.height || fabricImg.getScaledHeight() / (fabricImg.scaleY || 1)
+          
+          // 计算目标尺寸：80 * size * canvas_width/1000
+          const targetWidth =  widthArray.value[index]  
+          const targetHeight =   heightArray.value[index]  
+          console.log('targetWidth',targetWidth)
+          console.log('targetHeight',targetHeight)
+          console.log('originalWidth',originalWidth)
+          console.log('originalHeight',originalHeight)
+          // 计算缩放比例
+          const scaleX = targetWidth / originalWidth
+          const scaleY = targetHeight / originalHeight
+          
+          fabricImg.set({
+            scaleX: scaleX,
+            scaleY: scaleY
+          })
+        }
+        
+        // 应用角度数据
+        if (angleArray.value[index]) {
+          fabricImg.set({
+            angle: angleArray.value[index] * (180 / Math.PI) // 转换为度数
+          })
+        }
+        
+        // 将对象添加到画布
+        canvasInstance.add(fabricImg)
+        
+      } catch (error) {
+        console.error(`加载图片失败 (${src}):`, error)
+      }
+    }
+    
+    // 重新渲染画布
+    canvasInstance.renderAll()
+  }
+  
+  // 重新添加画布事件监听器
+  // canvasStore.addCanvasEventListeners() 
 }
