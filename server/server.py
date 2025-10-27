@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
 import os
@@ -217,6 +217,15 @@ def marker_drop_api():
         "message": f"成功为{num_markers}个标记生成了{len(init_positions)}个初始位置",
         "init_pos": init_positions
     })
+
+@app.route('/workdir/<path:filename>')
+def serve_workdir(filename):
+    """提供 workdir 下的静态文件，并设置长期缓存"""
+    response = send_from_directory('./workdir', filename)
+    # 设置缓存时间为 1 小时 (3600 秒)
+    response.cache_control.max_age = 3600
+    response.cache_control.public = True
+    return response
 
 if __name__ == '__main__': 
     

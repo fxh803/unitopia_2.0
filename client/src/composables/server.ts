@@ -410,10 +410,10 @@ export async function sendDataToServer(): Promise<boolean> {
         return false
       }
     }
-    
+    collaging.value = false
     // 所有overview都处理完成后，停止拼贴处理状态并触发重绘
     await renderResult()
-    collaging.value = false
+    
     return true
   } catch (error) {
     console.error('发送数据时出错:', error)
@@ -488,6 +488,8 @@ export async function handleMarkerDropCanvas(markerId: string,pos: [number,numbe
 }
 
  async function renderResult (){
+  const collageSeriesStore = useCollageSeriesStore()
+  collageSeriesStore.addNewSlide()
   const canvasStore = useCanvasStore() 
   const animationStore = useAnimationStore()
   const { srcArray,posArray,widthArray,heightArray,angleArray } = storeToRefs(animationStore)
@@ -535,11 +537,7 @@ export async function handleMarkerDropCanvas(markerId: string,pos: [number,numbe
           
           // 计算目标尺寸：80 * size * canvas_width/1000
           const targetWidth =  widthArray.value[index]  
-          const targetHeight =   heightArray.value[index]  
-          console.log('targetWidth',targetWidth)
-          console.log('targetHeight',targetHeight)
-          console.log('originalWidth',originalWidth)
-          console.log('originalHeight',originalHeight)
+          const targetHeight =   heightArray.value[index]
           // 计算缩放比例
           const scaleX = targetWidth / originalWidth
           const scaleY = targetHeight / originalHeight
