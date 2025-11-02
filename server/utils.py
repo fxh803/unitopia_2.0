@@ -376,3 +376,119 @@ def convert_shapes_to_paths(svg_string):
         print(f"XML解析错误: {e}")
         # 如果解析失败，返回原字符串
         return svg_string
+
+
+def scale_path_coordinates(d_attribute, scale_factor):
+    """缩放path元素的d属性中的坐标"""
+    import re
+    
+    # 定义正则表达式来匹配数字（包括负数和小数）
+    # 确保匹配完整的数字，包括科学计数法
+    number_pattern = r'[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?'
+    
+    def replace_number(match):
+        num = float(match.group())
+        scaled = num * scale_factor
+        # 如果原数字是整数，输出整数格式；否则保留适当的小数位
+        if abs(scaled - round(scaled)) < 1e-6:
+            return str(int(round(scaled)))
+        else:
+            # 保留最多6位小数
+            return f"{scaled:.6f}".rstrip('0').rstrip('.')
+    
+    # 替换所有数字
+    scaled_d = re.sub(number_pattern, replace_number, d_attribute)
+    
+    return scaled_d
+
+
+def merge_svg_files(svg_paths, output_path, target_size=1000):
+    """
+    合并多个SVG文件，将所有路径缩放到指定的尺寸（1:1比例）
+    
+    参数:
+        svg_paths: SVG文件路径列表
+        output_path: 输出文件路径
+        target_size: 目标尺寸（宽高，默认1000）
+    """
+    import os
+    
+    all_paths = []
+    
+    try:
+        for svg_path in svg_paths:
+            if not os.path.exists(svg_path):
+                continue
+                
+            try:
+                # 读取SVG文件
+                with open(svg_path, 'r', encoding='utf-8') as f:
+                    svg_content = f.read()
+                
+                # 解析SVG
+                root = ET.fromstring(svg_content.encode('utf-8'))
+                
+                # 获取SVG的宽度和高度
+                width = float(root.get('width', '1000'))
+                height = float(root.get('height', '1000'))
+                
+                # 验证是否为1:1比例（允许小的误差）
+                if abs(width - height) > 0.1:
+                    print(f"警告: {svg_path} 的宽高比不是1:1 (width={width}, height={height})")
+                
+                # 计算缩放比例
+                scale_factor = target_size / width
+                
+                # 查找所有path元素
+                namespaces = {'svg': 'http://www.w3.org/2000/svg'}
+                paths = root.findall('.//svg:path', namespaces)
+                if not paths:
+                    # 如果没有命名空间，尝试不使用命名空间查找
+                    paths = root.findall('.//path')
+                
+                # 处理每个path元素
+                for path in paths:
+                    # 复制path元素的所有属性
+                    path_dict = dict(path.attrib)
+                    
+                    # 缩放d属性中的坐标
+                    if 'd' in path_dict:
+                        path_dict['d'] = scale_path_coordinates(path_dict['d'], scale_factor)
+                    
+                    # 构建新的path元素XML字符串
+                    attrs_str = ' '.join([f'{k}="{v}"' for k, v in path_dict.items()])
+                    path_xml = f'<path {attrs_str}/>'
+                    
+                    all_paths.append(path_xml)
+                    
+            except Exception as e:
+                print(f"读取或解析 {svg_path} 时出错: {e}")
+                continue
+        
+        # 如果有路径元素，创建合并后的SVG
+        if all_paths:
+            merged_svg_content = f'''<?xml version="1.0" ?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="{target_size}" height="{target_size}">
+  <defs/>
+  <g>
+'''
+            # 添加所有path元素
+            for path_xml in all_paths:
+                merged_svg_content += f'    {path_xml}\n'
+            
+            merged_svg_content += '''  </g>
+</svg>
+'''
+            # 保存合并后的SVG文件
+            with open(output_path, 'w', encoding='utf-8') as f:
+                f.write(merged_svg_content)
+            
+            print(f"已成功合并 {len(all_paths)} 个路径到 {output_path}")
+            return True
+        else:
+            print("没有找到任何路径元素，无法合并")
+            return False
+            
+    except Exception as e:
+        print(f"合并 SVG 文件时出错: {e}")
+        return False

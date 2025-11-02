@@ -505,81 +505,94 @@ export async function handleMarkerDropCanvas(markerId: string,pos: [number,numbe
   collageSeriesStore.addNewSlide()
   const canvasStore = useCanvasStore() 
   const animationStore = useAnimationStore()
-  const { srcArray,posArray,widthArray,heightArray,angleArray } = storeToRefs(animationStore)
-  // 先移除画布事件监听器
-  // canvasStore.removeCanvasEventListeners()
+  const { process_id } = storeToRefs(animationStore)
   
   // 获取canvas实例
   const canvasInstance = canvasStore.canvasRef?.()
-  if (canvasInstance) {
-    // 删除所有现有对象
-    const allObjects = canvasInstance.getObjects()
-    allObjects.forEach(obj => {
-      canvasInstance.remove(obj)
-    })
-    
-    // 遍历srcArray创建新对象
-    for (let index = 0; index < srcArray.value.length; index++) {
-      const src = srcArray.value[index]
-      try {
-        const fabricImg = await FabricImage.fromURL(src, {
-          crossOrigin: 'anonymous'
-        }) 
-        
-        // 设置基本属性
-        fabricImg.set({
-          originX: 'center',
-          originY: 'center',
-          selectable: false,
-          evented: false,
-          dataType: 'marker'
-        })
-        
-        // 应用位置数据
-        if (posArray.value[index]) {
-          fabricImg.set({
-            left: posArray.value[index][0],
-            top: posArray.value[index][1]
-          })
+  if (canvasInstance && process_id.value) {
+    try {
+      // // 删除所有现有对象
+      // const allObjects = canvasInstance.getObjects()
+      // allObjects.forEach(obj => {
+      //   canvasInstance.remove(obj)
+      // })
+      
+      // 获取 SVG 文件的 URL
+      const svgUrl = `${ip}/workdir/${process_id.value}_result.svg`
+      
+      // 从 URL 获取 SVG 内容
+      const response = await fetch(svgUrl)
+      
+      const svgString = await response.text()
+      
+      // 解析 SVG 获取原始尺寸
+      const svgParser = new DOMParser()
+      const svgDoc = svgParser.parseFromString(svgString, 'image/svg+xml')
+      const svgElement = svgDoc.documentElement
+      
+      // 获取 SVG 的宽度和高度（优先从 viewBox，其次从 width/height 属性）
+      let svgWidth = 0
+      let svgHeight = 0
+      
+      const viewBox = svgElement.getAttribute('viewBox')
+      if (viewBox) {
+        const viewBoxValues = viewBox.split(/\s+|,/).filter(v => v.trim()).map(Number)
+        if (viewBoxValues.length >= 4) {
+          // viewBox 格式: "x y width height"
+          svgWidth = viewBoxValues[2] || 0
+          svgHeight = viewBoxValues[3] || 0
         }
-        // 应用尺寸数据
-        if (widthArray.value[index] && heightArray.value[index]) {
-          // 获取对象的原始尺寸
-          const originalWidth = fabricImg.width || fabricImg.getScaledWidth() / (fabricImg.scaleX || 1)
-          const originalHeight = fabricImg.height || fabricImg.getScaledHeight() / (fabricImg.scaleY || 1)
-          
-          // 计算目标尺寸：80 * size * canvas_width/1000
-          const targetWidth =  widthArray.value[index]  
-          const targetHeight =   heightArray.value[index]
-          // 计算缩放比例
-          const scaleX = targetWidth / originalWidth
-          const scaleY = targetHeight / originalHeight
-          
-          fabricImg.set({
-            scaleX: scaleX,
-            scaleY: scaleY
-          })
-        }
-        
-        // 应用角度数据
-        if (angleArray.value[index]) {
-          fabricImg.set({
-            angle: angleArray.value[index] * (180 / Math.PI) // 转换为度数
-          })
-        }
-        
-        // 将对象添加到画布
-        canvasInstance.add(fabricImg)
-        
-      } catch (error) {
-        console.error(`加载图片失败 (${src}):`, error)
       }
+      
+      if (!svgWidth || !svgHeight) {
+        svgWidth = parseFloat(svgElement.getAttribute('width') || '0') || 0
+        svgHeight = parseFloat(svgElement.getAttribute('height') || '0') || 0
+      }
+      
+      // 如果仍然无法获取尺寸，默认使用 1000（常见的 render_size）
+      if (!svgWidth || !svgHeight) {
+        svgWidth = 1000
+        svgHeight = 1000
+      }
+      
+      // 使用 Fabric.js 加载 SVG
+      const loadedSVG = await fabric.loadSVGFromString(svgString)
+      
+      // 计算缩放比例（根据画布尺寸和 SVG 尺寸）
+      const canvasWidth = canvasInstance.width || 400
+      const canvasHeight = canvasInstance.height || 400
+      const scaleX = canvasWidth / svgWidth
+      const scaleY = canvasHeight / svgHeight
+      const scale = Math.min(scaleX, scaleY, 1) // 确保不放大，只缩小
+      
+      // 将所有 SVG 对象添加到画布，并应用统一的缩放比例，保持它们的原始相对位置
+      loadedSVG.objects.forEach((obj: any) => {
+        // 对每个对象的位置和尺寸应用缩放
+        if (obj.left !== undefined) {
+          obj.set('left', obj.left * scale)
+        }
+        if (obj.top !== undefined) {
+          obj.set('top', obj.top * scale)
+        }
+        // 应用缩放
+        const currentScaleX = (obj.scaleX || 1) * scale
+        const currentScaleY = (obj.scaleY || 1) * scale
+        obj.set({
+          scaleX: currentScaleX,
+          scaleY: currentScaleY,
+          selectable: false,
+          evented: false
+        })
+        canvasInstance.add(obj)
+      })
+      
+      // 重新渲染画布
+      canvasInstance.renderAll()
+      
+      console.log('SVG 结果已成功加载到画布')
+      
+    } catch (error) {
+      console.error('加载 SVG 结果失败:', error)
     }
-    
-    // 重新渲染画布
-    canvasInstance.renderAll()
   }
-  
-  // 重新添加画布事件监听器
-  // canvasStore.addCanvasEventListeners() 
 }

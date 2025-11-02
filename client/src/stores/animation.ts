@@ -2,6 +2,7 @@
 import { defineStore, storeToRefs } from 'pinia'
 import paper from "paper";
 import { useContainerStore } from '~/stores/container'
+import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { ref, computed, watch } from 'vue';
 
 export const useAnimationStore = defineStore('animation', () => {
@@ -127,7 +128,12 @@ export const useAnimationStore = defineStore('animation', () => {
   }
 
   function setData(now_collage, startIndex) {//对最新的数据进行整理
-    const result = result_data.value[result_data.value.length - 1] 
+    const result = result_data.value[result_data.value.length - 1]
+    // 获取当前幻灯片的 render_size
+    const collageSeriesStore = useCollageSeriesStore()
+    const { overviews, currentOverviewIndex } = storeToRefs(collageSeriesStore)
+    const renderSize = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size ?? 1000
+    
     for (let i = startIndex; i < result['pos'].length + startIndex; i++) {
       if (collage_result_type.value[now_collage] === 'svg')
         srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.svg`
@@ -145,13 +151,18 @@ export const useAnimationStore = defineStore('animation', () => {
       else {
         originSize = 500
       }
-      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / 1000);
-      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_width.value / 1000);
+      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / renderSize);
+      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_width.value / renderSize);
     }
   }
 
   function setReplayData(idx, now_collage, startIndex) {
     const result = result_data.value[idx]
+    // 获取当前幻灯片的 render_size
+    const collageSeriesStore = useCollageSeriesStore()
+    const { overviews, currentOverviewIndex } = storeToRefs(collageSeriesStore)
+    const renderSize = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size ?? 1000
+    
     for (let i = startIndex; i < result['pos'].length + startIndex; i++) {
       if (collage_result_type.value[now_collage] === 'svg')
         srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.svg`
@@ -169,8 +180,8 @@ export const useAnimationStore = defineStore('animation', () => {
       else {
         originSize = 500
       }
-      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / 1000);
-      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_width.value / 1000);
+      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / renderSize);
+      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_width.value / renderSize);
     }
   }
   function startContainerAnimation() {

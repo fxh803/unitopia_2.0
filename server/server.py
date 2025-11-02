@@ -158,11 +158,17 @@ def process_data():
         json_data["collage"][i]['iterations'] = collage_data["iterations"]
         json_data["collage"][i]['render_size'] = collage_data["render_size"]
  
-    with open(f'./workdir/{str(id)}_{i}/collage.json', 'w') as f:
+    with open(f'./workdir/{str(id)}_collage.json', 'w') as f:
         json.dump(json_data, f, indent=4)
  
     
-    unitopia.start_collage(f'./workdir/{str(id)}_{i}/collage.json',id = str(id),callback=collage_callback)
+    unitopia.start_collage(f'./workdir/{str(id)}_collage.json',id = str(id),callback=collage_callback)
+    
+    # 合并所有 final_1.svg 文件
+    svg_paths = [f'./workdir/{str(id)}_{i}/final_1.svg' for i in range(len(data))]
+    merged_svg_path = f'./workdir/{str(id)}_result.svg'
+    merge_svg_files(svg_paths, merged_svg_path, target_size=1000)
+    
     # 返回处理结果
     return jsonify({
         "success": True,
