@@ -26,6 +26,7 @@ declare module 'vue' {
     FirstToolbar: typeof import('./src/components/FirstToolbar.vue')['default']
     ForceToolbar: typeof import('./src/components/ForceToolbar.vue')['default']
     Header: typeof import('./src/components/Header.vue')['default']
+    HoverInfoPanel: typeof import('./src/components/hoverInfoPanel.vue')['default']
     MarkerCanvasArea: typeof import('./src/components/MarkerCanvasArea.vue')['default']
     MarkerMappingPanel: typeof import('./src/components/MarkerMappingPanel.vue')['default']
     MarkerObjectActionButtons: typeof import('./src/components/MarkerObjectActionButtons.vue')['default']

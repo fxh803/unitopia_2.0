@@ -241,6 +241,8 @@ onMounted(async () => {
         <paperCanvas v-if="collaging || result_data.length > 0" :key="paperCanvasKey" />
         <!-- 对象操作按钮 -->
         <ObjectActionButtons />
+        <!-- Marker 悬浮信息面板 -->
+        <hoverInfoPanel />
       </div>
       <!-- Container工具栏：仅在container模式下显示 -->
       <ContainerToolbar v-if="selectedMode === 'container'" />

@@ -8,11 +8,11 @@ import base64
 import re
 import cairosvg
 from PIL import Image
-from unitopia import Unitopia 
+# from unitopia import Unitopia 
 from utils import *
 app = Flask(__name__, template_folder='',static_folder="")
 CORS(app)  # 启用跨域支持
-unitopia = Unitopia() 
+# unitopia = Unitopia() 
 progress_data = {}
 
 @app.route('/processDataApi', methods=['POST'])
@@ -162,7 +162,7 @@ def process_data():
         json.dump(json_data, f, indent=4)
  
     
-    unitopia.start_collage(f'./workdir/{str(id)}_collage.json',id = str(id),callback=collage_callback)
+    # unitopia.start_collage(f'./workdir/{str(id)}_collage.json',id = str(id),callback=collage_callback)
     
     # 合并所有 final_1.svg 文件
     svg_paths = [f'./workdir/{str(id)}_{i}/final_1.svg' for i in range(len(data))]

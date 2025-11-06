@@ -15,7 +15,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             preview: string,
             dataTypeArray: any[],
             markerIdArray: any[],
-            forceTypeArray: any[]
+            forceTypeArray: any[],
+            dataArray: any[]
         }[]
     }
     
@@ -75,6 +76,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                     dataTypeArray: [],
                     markerIdArray: [],
                     forceTypeArray: [],
+                    dataArray: [],
                     // 每个 slide 的个性化设置
                     iterations: 150,
                     render_size: 1000,
@@ -121,18 +123,20 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             }
         })
 
-        // 保存所有对象的 dataType 和 markerId
+        // 保存所有对象的 dataType、markerId、forceType 和 data
         const objects = canvasInstance.getObjects()
         const dataTypeArray = objects.map((obj: any) => obj.get('dataType'))
         const markerIdArray = objects.map((obj: any) => obj.get('markerId'))
         const forceTypeArray = objects.map((obj: any) => obj.get('forceType'))
-        console.log(dataTypeArray, markerIdArray, forceTypeArray)
+        const dataArray = objects.map((obj: any) => obj.get('data'))
+        console.log(dataTypeArray, markerIdArray, forceTypeArray, dataArray)
         
         currentSlide.json = json
         currentSlide.preview = preview
         currentSlide.dataTypeArray = dataTypeArray
         currentSlide.markerIdArray = markerIdArray
         currentSlide.forceTypeArray = forceTypeArray
+        currentSlide.dataArray = dataArray
 
         // 生成总览的预览（合并所有幻灯片）
         generateOverviewPreview()
@@ -297,6 +301,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         let dataTypeArray: any[] = []
         let markerIdArray: any[] = []
         let forceTypeArray: any[] = []
+        let dataArray: any[] = []
 
         // 如果当前总览有背景，添加到JSON数据中
         if (currentOverviewBackground) {
@@ -335,10 +340,11 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                 // 更新JSON数据
                 json = JSON.stringify(slideData)
 
-                // 更新三个数组
+                // 更新四个数组
                 dataTypeArray.unshift('background')
                 markerIdArray.unshift(null)
                 forceTypeArray.unshift(null)
+                dataArray.unshift(null)
 
                 canvasInstance.add(fabricImg)
                 canvasInstance.renderAll()
@@ -374,6 +380,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             dataTypeArray,
             markerIdArray,
             forceTypeArray,
+            dataArray,
             // 初始化个性化设置默认值
             iterations: 150,
             render_size: 1000,
@@ -401,6 +408,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         const dataTypeArray = currentOverview.collageSeries[idx].dataTypeArray
         const markerIdArray = currentOverview.collageSeries[idx].markerIdArray || []
         const forceTypeArray = currentOverview.collageSeries[idx].forceTypeArray || []
+        const dataArray = currentOverview.collageSeries[idx].dataArray || []
         // 清空当前画布
         clearCanvas()
         if (jsonObj.objects.length > 0) {
@@ -410,8 +418,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                     canvasInstance.backgroundColor = '#ffffff'
                     canvasInstance.renderAll()
                     // 恢复自定义属性 
-                    console.log(dataTypeArray, markerIdArray, forceTypeArray)
-                    restoreCustomProperties(canvasInstance, dataTypeArray, markerIdArray, forceTypeArray)
+                    console.log(dataTypeArray, markerIdArray, forceTypeArray, dataArray)
+                    restoreCustomProperties(canvasInstance, dataTypeArray, markerIdArray, forceTypeArray, dataArray)
                     updateCurrentSlide()
                     stopListen.value = false
                 }, 0)
@@ -451,6 +459,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             dataTypeArray: [...originalSlide.dataTypeArray],
             markerIdArray: [...originalSlide.markerIdArray],
             forceTypeArray: [...originalSlide.forceTypeArray],
+            dataArray: [...(originalSlide.dataArray || [])],
             // 复制个性化设置
             iterations: (originalSlide as any).iterations ?? 150,
             render_size: (originalSlide as any).render_size ?? 1000,
@@ -501,7 +510,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
 
 
     // 恢复自定义属性
-    function restoreCustomProperties(canvasInstance: Canvas, dataTypeArray: any, markerIdArray: any[] = [], forceTypeArray: any[] = []) {
+    function restoreCustomProperties(canvasInstance: Canvas, dataTypeArray: any, markerIdArray: any[] = [], forceTypeArray: any[] = [], dataArray: any[] = []) {
         const objects = canvasInstance.getObjects()
         // 遍历画布对象和JSON对象，恢复自定义属性
         objects.forEach((obj, index) => {
@@ -537,6 +546,9 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                 else if (forceTypeArray[index] === 'pointForce') {
                     obj.hasControls = false
                 }
+            }
+            if (dataArray[index] !== undefined && dataArray[index] !== null) {
+                obj.set('data', dataArray[index])
             }
         })
     }
@@ -576,18 +588,20 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                 // 更新slide的JSON数据
                 currentOverview.collageSeries[index].json = JSON.stringify(slideData)
 
-                // 更新三个数组，确保数据一致性
+                // 更新四个数组，确保数据一致性
                 if (existingBackgroundIndex !== -1) {
                     // 如果存在背景对象，更新对应位置的数组数据
                     slide.dataTypeArray[existingBackgroundIndex] = 'background'
-                    // markerId和forceType保持为null，因为背景对象没有这些属性
+                    // markerId、forceType和data保持为null，因为背景对象没有这些属性
                     slide.markerIdArray[existingBackgroundIndex] = null
                     slide.forceTypeArray[existingBackgroundIndex] = null
+                    slide.dataArray[existingBackgroundIndex] = null
                 } else {
                     // 如果不存在背景对象，在数组开头添加对应的数据
                     slide.dataTypeArray.unshift('background')
                     slide.markerIdArray.unshift(null)
                     slide.forceTypeArray.unshift(null)
+                    slide.dataArray.unshift(null)
                 }
 
                 // 重新生成preview
@@ -635,6 +649,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                         slide.dataTypeArray.splice(backgroundIndex, 1)
                         slide.markerIdArray.splice(backgroundIndex, 1)
                         slide.forceTypeArray.splice(backgroundIndex, 1)
+                        slide.dataArray.splice(backgroundIndex, 1)
 
                         // 重新生成preview
                         await regenerateSlidePreview(index, slideData)
@@ -714,7 +729,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                     preview,
                     dataTypeArray: [],
                     markerIdArray: [],
-                    forceTypeArray: []
+                    forceTypeArray: [],
+                    dataArray: []
                 }]
         }
         

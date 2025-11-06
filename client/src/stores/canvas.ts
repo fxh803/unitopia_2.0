@@ -7,6 +7,7 @@ import { useCanvasModeStore } from '~/stores/canvasMode'
 import { useDataScaleStore } from '~/stores/dataScale'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useObjectActionsStore } from '~/stores/objectActions'
+import { useHoverInfoPanelStore } from '~/stores/hoverInfoPanel'
 import { Group } from 'fabric'
 import { handleMarkerDropCanvas, pharseData } from '~/composables/server'
 import * as fabric from 'fabric'
@@ -22,6 +23,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   const dataScaleStore = useDataScaleStore()
   const collageSeriesStore = useCollageSeriesStore()
   const objectActionsStore = useObjectActionsStore()
+  const hoverInfoPanelStore = useHoverInfoPanelStore()
 
   // 设置 canvas 引用
   function setCanvas(canvas: () => Canvas | null) {
@@ -83,6 +85,8 @@ export const useCanvasStore = defineStore('canvas', () => {
           })
           canvasInstance.renderAll()
         }
+        // 处理 marker 悬浮显示信息面板
+        hoverInfoPanelStore.handleMarkerHover(e, canvasInstance)
       },
       'mouse:out': (e) => {
         // 鼠标离开对象时恢复原始透明度
@@ -97,6 +101,12 @@ export const useCanvasStore = defineStore('canvas', () => {
           })
           canvasInstance.renderAll()
         }
+        // 处理鼠标离开 marker，隐藏信息面板
+        hoverInfoPanelStore.handleMarkerOut(e)
+      },
+      'mouse:move': (e) => {
+        // 处理画布鼠标移动，更新信息面板位置
+        hoverInfoPanelStore.handleCanvasMouseMove(e, canvasInstance)
       }
     })
   }
@@ -117,6 +127,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     canvasInstance.off('object:removed')
     canvasInstance.off('mouse:over')
     canvasInstance.off('mouse:out')
+    canvasInstance.off('mouse:move')
   }
 
   function setDrawedObjectDataType(e) {
@@ -357,6 +368,8 @@ export const useCanvasStore = defineStore('canvas', () => {
     try {
       // 获取归一化参数
       const { data, normalize, minWidth, maxWidth, minHeight, maxHeight, minSizeValue, maxSizeValue, avgWidth, avgHeight } = dataScaleStore.getNormalizationParams(markerId)
+      // 解析 markerId 对应的所有数据
+      const dataArray = pharseData(markerId)
 
       for (let i = 0; i < pos.length; i++) {
         const p = pos[i]
@@ -377,7 +390,8 @@ export const useCanvasStore = defineStore('canvas', () => {
             hasControls: false,
             originX: 'center',
             originY: 'center',
-            markerId: markerId
+            markerId: markerId,
+            data: dataArray[i]
           })
           
           if (selectedModeStore.selectedMode === null) {
