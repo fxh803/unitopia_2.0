@@ -29,6 +29,17 @@ const canvasWidth = ref(0)
 const canvasHeight = ref(0)
 let canvas: Canvas | null = null
 
+// 路径闭合确认对话框状态
+const closePathConfirm = ref<{
+  show: boolean
+  path: any
+  position: { x: number; y: number }
+}>({
+  show: false,
+  path: null,
+  position: { x: 0, y: 0 }
+})
+
 // 实时预览图
 const previewDataUrl = ref<string>('')
 const previewGroup = ref<Group | null>(null)
@@ -147,6 +158,8 @@ onMounted(async () => {
       // 其他事件监听
       canvas.on('object:added', (e) => {
         updatePreview()
+        // 询问是否闭合路径
+        askToClosePath(e.target)
       })
       canvas.on('selection:created', () => {
         setCurrentPathObj()
@@ -177,6 +190,54 @@ onMounted(async () => {
     }
   }, 200)
 })
+
+// 询问是否闭合路径
+function askToClosePath(path: any) {
+  if (!canvas || !path) return
+  
+  // 获取对象在画布上的位置
+  const zoom = canvas.getZoom()
+  const vpt = canvas.viewportTransform
+  const pathBounds = path.getBoundingRect()
+  
+  // 计算对象在页面中的位置
+  const canvasEl = canvas.getElement()
+  if (!canvasEl) return
+  
+  const canvasRect = canvasEl.getBoundingClientRect()
+  const x = (pathBounds.left * zoom) + (vpt[4] || 0) + canvasRect.left
+  const y = (pathBounds.top * zoom) + (vpt[5] || 0) + canvasRect.top
+  
+  // 设置确认对话框状态
+  closePathConfirm.value = {
+    show: true,
+    path: path,
+    position: { x, y }
+  }
+}
+
+// 处理路径闭合确认
+function handleClosePathConfirm(confirmed: boolean) {
+  const { path } = closePathConfirm.value
+  if (!path) return
+  
+  if (!canvas) return
+  
+  if (confirmed) {
+    // 闭合路径：设置 fill 为 stroke 颜色
+    const strokeColor = path.stroke || '#000'
+    path.set('fill', strokeColor)
+    path.set('stroke', 'rgba(0,0,0,0)')
+    canvas.requestRenderAll()
+  }
+  
+  // 关闭确认对话框
+  closePathConfirm.value = {
+    show: false,
+    path: null,
+    position: { x: 0, y: 0 }
+  }
+}
 
 onBeforeUnmount(() => {
   // 移除形状绘制事件监听器
@@ -221,6 +282,12 @@ onBeforeUnmount(() => {
 
     <!-- 对象操作按钮 -->
     <MarkerObjectActionButtons />
+    
+    <!-- 路径闭合确认对话框 -->
+    <ClosePathConfirm 
+      :confirm-state="closePathConfirm"
+      :on-confirm="handleClosePathConfirm"
+    />
   </div>
 </template>
 

@@ -14,6 +14,16 @@ import * as fabric from 'fabric'
 export const useCanvasStore = defineStore('canvas', () => {
   const canvasRef = ref<(() => Canvas | null) | null>(null)
   const containerColor = ref([130, 130, 130, 0.6])
+  // 路径闭合确认对话框状态
+  const closePathConfirm = ref<{
+    show: boolean
+    path: any
+    position: { x: number; y: number }
+  }>({
+    show: false,
+    path: null,
+    position: { x: 0, y: 0 }
+  })
   
   // 导入其他 store
   const selectedModeStore = useSelectedModeStore()
@@ -68,6 +78,8 @@ export const useCanvasStore = defineStore('canvas', () => {
         setDrawedObjectDataType(e)
         collageSeriesStore.updateCurrentSlide()
         adjustLayer()
+        // 询问是否闭合路径
+        askToClosePath(e.target)
       },
       'object:removed': () => {
         collageSeriesStore.updateCurrentSlide()
@@ -497,9 +509,60 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
+  // 询问是否闭合路径
+  function askToClosePath(path: any) {
+    const canvasInstance = canvasRef.value?.()
+    if (!canvasInstance || !path) return
+    
+    // 获取对象在画布上的位置
+    const zoom = canvasInstance.getZoom()
+    const vpt = canvasInstance.viewportTransform
+    const pathBounds = path.getBoundingRect()
+    
+    // 计算对象在页面中的位置
+    const canvasEl = canvasInstance.getElement()
+    if (!canvasEl) return
+    
+    const canvasRect = canvasEl.getBoundingClientRect()
+    const x = (pathBounds.left * zoom) + (vpt[4] || 0) + canvasRect.left
+    const y = (pathBounds.top * zoom) + (vpt[5] || 0) + canvasRect.top
+    
+    // 设置确认对话框状态
+    closePathConfirm.value = {
+      show: true,
+      path: path,
+      position: { x, y }
+    }
+  }
+
+  // 处理路径闭合确认
+  function handleClosePathConfirm(confirmed: boolean) {
+    const { path } = closePathConfirm.value
+    if (!path) return
+    
+    const canvasInstance = canvasRef.value?.()
+    if (!canvasInstance) return
+    
+    if (confirmed) {
+      // 闭合路径：设置 fill 为 stroke 颜色
+      const strokeColor = path.stroke || '#000'
+      path.set('fill', strokeColor)
+      path.set('stroke', 'rgba(0,0,0,0)')
+      canvasInstance.requestRenderAll()
+    }
+    
+    // 关闭确认对话框
+    closePathConfirm.value = {
+      show: false,
+      path: null,
+      position: { x: 0, y: 0 }
+    }
+  }
+
   return {
     canvasRef,
     containerColor,
+    closePathConfirm,
     setCanvas,
     addCanvasEventListeners,
     removeCanvasEventListeners,
@@ -514,6 +577,8 @@ export const useCanvasStore = defineStore('canvas', () => {
     handleEmitterDrop,
     handleMarkerDrop,
     handleDragOver,
-    handleDrop
+    handleDrop,
+    askToClosePath,
+    handleClosePathConfirm
   }
 })

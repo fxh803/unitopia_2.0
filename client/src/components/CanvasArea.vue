@@ -243,6 +243,11 @@ onMounted(async () => {
         <ObjectActionButtons />
         <!-- Marker 悬浮信息面板 -->
         <hoverInfoPanel />
+        <!-- 路径闭合确认对话框 -->
+        <ClosePathConfirm 
+          :confirm-state="canvasStore.closePathConfirm"
+          :on-confirm="canvasStore.handleClosePathConfirm"
+        />
       </div>
       <!-- Container工具栏：仅在container模式下显示 -->
       <ContainerToolbar v-if="selectedMode === 'container'" />
