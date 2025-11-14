@@ -106,7 +106,8 @@ const currentSpeedMultiplier = computed(() => {
 <template>
   <div class="relative">
     <header class="px-6 border-b border-gray-200 bg-white flex h-14 w-full shadow items-center z-20">
-      <h1 class="text-xl text-gray-800 font-bold ">
+      <h1 class="text-xl text-gray-800 font-bold flex items-center gap-2">
+        <img src="/UNITVIZ2.svg" alt="UnitoPia Logo" class="h-8 w-auto" />
         UnitoPia
       </h1>
       

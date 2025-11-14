@@ -535,6 +535,8 @@ export const useCanvasStore = defineStore('canvas', () => {
       path.set('fill', strokeColor)
       path.set('stroke', 'rgba(0,0,0,0)')
       canvasInstance.requestRenderAll()
+      //更新预览
+      collageSeriesStore.updateCurrentSlide()
     }
     
     // 关闭确认对话框

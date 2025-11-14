@@ -145,8 +145,8 @@ const handleClearData = () => {
         <vxe-table :data="tableStore.tableData" :scroll-y="{ enabled: true }" :scroll-x="{ enabled: true }" height="100%"
           @scroll="handleScrolling()" :cell-config="{ height: 30 }" :headerCellConfig="{ height: 60}" show-header-overflow show-overflow size="small" border
           :cell-class-name="cellClassName" :auto-resize="true">
-          <vxe-column v-for="(item, index) in tableStore.tableColumns" :key="index" :field="item" :title="item" row-resize
-            min-width="80">
+          <vxe-column v-for="(item, index) in tableStore.tableColumns" :key="index" :field="item" :title="item" row-resize 
+            min-width="130">
             <!-- 自定义表头：包含列名、下拉菜单和缩放滑块 -->
             <template #header>
               <div class="flex flex-col items-center w-full gap-1 py-1">

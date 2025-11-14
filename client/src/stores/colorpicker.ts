@@ -3,7 +3,7 @@ import { ref, computed } from 'vue'
 
 export const useColorPickerStore = defineStore('colorpicker', () => {
   // 颜色选择器状态
-  const selectedColor = ref('#FFD152')
+  const selectedColor = ref('#189ab4')
   // 颜色选择器是否打开
   const isColorPickerOpen = ref(false)
 
