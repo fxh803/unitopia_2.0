@@ -196,33 +196,40 @@ const handleDeleteMarker = (markerId: string) => {
                   <div v-if="filter.type === 'condition'" class="flex flex-col space-y-1">
                     <span class="text-xs font-medium text-gray-700">Condition:</span>
                     <div class="flex items-center space-x-1">
-                      <select
-                        :value="filter.column"
-                        @change="(e) => {
+                      <el-select
+                        :model-value="filter.column || ''"
+                        placeholder="Select column"
+                        size="small"
+                        class="w-19"
+                        teleported="false"
+                        @update:model-value="(value) => {
                           if (isDragging.value) return;
-                          handleConditionFilterChange(marker.id, filterIndex, (e.target as HTMLSelectElement).value, filter.operator, filter.value);
+                          handleConditionFilterChange(marker.id, filterIndex, value, filter.operator, filter.value);
                         }"
-                        @mousedown="preventInputDuringDrag"
-                        @mouseup="preventInputDuringDrag"
-                        class="w-19 px-1 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        @click.stop
                       >
-                        <option value="">Select column</option>
-                        <option v-for="col in tableColumns" :key="col" :value="col">{{ col }}</option>
-                      </select>
-                      <select
-                        :value="filter.operator"
-                        @change="(e) => {
+                        <el-option
+                          v-for="col in tableColumns"
+                          :key="col"
+                          :label="col"
+                          :value="col"
+                        />
+                      </el-select>
+                      <el-select
+                        :model-value="filter.operator"
+                        size="small"
+                        class="w-12"
+                        teleported="false"
+                        @update:model-value="(value) => {
                           if (isDragging.value) return;
-                          handleConditionFilterChange(marker.id, filterIndex, filter.column, (e.target as HTMLSelectElement).value as ConditionOperator, filter.value);
+                          handleConditionFilterChange(marker.id, filterIndex, filter.column, value as ConditionOperator, filter.value);
                         }"
-                        @mousedown="preventInputDuringDrag"
-                        @mouseup="preventInputDuringDrag"
-                        class="w-12 px-1 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        @click.stop
                       >
-                        <option value="=">=</option>
-                        <option value=">">&gt;</option>
-                        <option value="<">&lt;</option>
-                      </select>
+                        <el-option label="=" value="=" />
+                        <el-option label=">" value=">" />
+                        <el-option label="<" value="<" />
+                      </el-select>
                       <input type="text"
                         :value="filter.value"
                         @input="(e) => {

@@ -18,10 +18,6 @@ function onDrag(e: MouseEvent) {
   const rect = container.value.getBoundingClientRect()
   let newWidth = rect.right - e.clientX
   const maxRightWidth = Math.max(0, rect.width - minLeftWidth.value)
-  if (maxRightWidth <= 0) {
-    resizeHandleStore.updateRightWidth(0)
-    return
-  }
   newWidth = Math.max(minRightWidth.value, Math.min(newWidth, maxRightWidth))
   resizeHandleStore.updateRightWidth(newWidth)
 }
