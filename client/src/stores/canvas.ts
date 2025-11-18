@@ -381,8 +381,8 @@ export const useCanvasStore = defineStore('canvas', () => {
       // 使用 storeToRefs 解构 dataScaleStore 的响应式属性
       const { columnMapping, widthScale, heightScale, sizeScale } = storeToRefs(dataScaleStore)
       
-      // 获取归一化参数和处理好的数据
-      const { data, processedData } = dataScaleStore.getNormalizationParams(markerId) 
+      // 获取归一化参数
+      const { data, normalized, mappingChannel, defaultSize } = dataScaleStore.getNormalizationParams(markerId) 
 
       for (let i = 0; i < pos.length; i++) {
         const p = pos[i]
@@ -415,29 +415,27 @@ export const useCanvasStore = defineStore('canvas', () => {
           // 根据数据中的 width 和 height 调节对象大小
           const currentWidth = group.width || group.getScaledWidth()
           const currentHeight = group.height || group.getScaledHeight() 
-
-          const processedRow = processedData[i] 
-          const [normalizedWidth, normalizedHeight] = processedRow
-              
-          let scaleX = normalizedWidth / currentWidth  
-          let scaleY = normalizedHeight / currentHeight  
-
-          // 根据 dataScale store 当前的映射通道应用对应的缩放基数
-          const mappingChannel = columnMapping.value.channel
-          if (mappingChannel === 'size') {
-            scaleX *= sizeScale.value
-            scaleY *= sizeScale.value
-          } else if (mappingChannel === 'width') {
+          const normalizedValue = normalized[i]
+          const currentSize = Math.max(currentWidth, currentHeight)
+          //一开始先按比例缩放
+          let scaleX = defaultSize / currentSize
+          let scaleY = defaultSize / currentSize  
+          if (mappingChannel === 'width') {
+            scaleX = normalizedValue / currentSize 
             scaleX *= widthScale.value
           } else if (mappingChannel === 'height') {
+            scaleY = normalizedValue / currentSize 
             scaleY *= heightScale.value
+          } else if (mappingChannel === 'size') {
+            scaleX = normalizedValue / currentSize
+            scaleY = normalizedValue / currentSize
+            scaleX *= sizeScale.value
+            scaleY *= sizeScale.value
           }
-              
           group.set({
             scaleX: scaleX,
             scaleY: scaleY
           })
-
           // 添加到主画布（此时所有属性都已设置好）
           canvasInstance.add(group)
           // 强制更新对象

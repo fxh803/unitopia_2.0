@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import type { Canvas } from 'fabric'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
+import { pharseData } from '~/composables/server'
 
 export const useDataScaleStore = defineStore('dataScale', () => {
   // 宽度、高度和大小的缩放基数
@@ -83,25 +84,34 @@ export const useDataScaleStore = defineStore('dataScale', () => {
     const objects = canvas.getObjects()
     objects.forEach((obj: any, i) => {
       if (obj.get('dataType') === 'marker') {
-        // 获取归一化参数和处理好的数据
-        const { processedData } = getNormalizationParams(obj.get('markerId'))
-         
-        // 获取映射的通道
-        const mappedChannel = columnMapping.value.channel
-         
-        // 根据数据中的 width 和 height 调节对象大小
-        const currentWidth = obj.width
-        const currentHeight = obj.height 
-        const processedRow = processedData[i-1]//从1开始的
-         
-        const [normalizedWidth, normalizedHeight] = processedRow
-        
-        // 默认使用归一化后的尺寸
-        let scaleX = normalizedWidth / currentWidth  
-        let scaleY = normalizedHeight / currentHeight   
+        // 获取归一化参数
+        const { normalized, mappingChannel, defaultSize } = getNormalizationParams(obj.get('markerId'))
+
+        const currentWidth = obj.width || obj.getScaledWidth()
+        const currentHeight = obj.height || obj.getScaledHeight()
+        const normalizedValue = normalized[i - 1]
+        const currentSize = Math.max(currentWidth || 1, currentHeight || 1)
+
+        // 默认先根据 defaultSize 等比例缩放
+        let scaleX = defaultSize / currentSize
+        let scaleY = defaultSize / currentSize
+
+        if (mappingChannel === 'width') {
+          scaleX = normalizedValue / currentSize
+          scaleX *= widthScale.value
+        } else if (mappingChannel === 'height') {
+          scaleY = normalizedValue / currentSize
+          scaleY *= heightScale.value
+        } else if (mappingChannel === 'size') {
+          scaleX = normalizedValue / currentSize
+          scaleY = normalizedValue / currentSize
+          scaleX *= sizeScale.value
+          scaleY *= sizeScale.value
+        }
+
         obj.set({
-          scaleX: scaleX,
-          scaleY: scaleY
+          scaleX,
+          scaleY
         }) 
 
       }
@@ -190,34 +200,16 @@ export const useDataScaleStore = defineStore('dataScale', () => {
       return minDisplaySize + ((value - min) / (max - min)) * (maxDisplaySize - minDisplaySize)
     }
 
-    // 处理好的数据：只返回 [[w,h],[w,h],...] 格式
-    const processedData = data.map((row: any, index: number) => {
-      const columnValue = columnValues[index] || 1
-      let normalizedWidth = defaultSize
-      let normalizedHeight = defaultSize
-      
-      if (mappedChannel === 'width') {
-        // width模式：width使用归一化值，height使用defaultSize
-        normalizedWidth = normalize(columnValue, minValue, maxValue)
-        normalizedHeight = defaultSize
-      } else if (mappedChannel === 'height') {
-        // height模式：height使用归一化值，width使用defaultSize
-        normalizedWidth = defaultSize
-        normalizedHeight = normalize(columnValue, minValue, maxValue)
-      } else if (mappedChannel === 'size') {
-        // size模式：width和height都使用归一化值（不使用defaultSize）
-        const normalizedSize = normalize(columnValue, minValue, maxValue)
-        normalizedWidth = normalizedSize
-        normalizedHeight = normalizedSize
-      }
-      // 如果没有映射，使用defaultSize
-      
-      return [normalizedWidth, normalizedHeight]
+    // 归一化后的值列表
+    const normalized = columnValues.map((value: number) => {
+      return normalize(value, minValue, maxValue)
     })
 
     return {
-      data, 
-      processedData 
+      data,
+      normalized,
+      mappingChannel: mappedChannel,
+      defaultSize
     }
   }
 
