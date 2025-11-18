@@ -131,6 +131,21 @@ watch(stopListen, (newVal) => {
     removeCanvasEventListeners()
   }
 })
+
+// 获取每个工具栏的第一个按钮模式
+const getFirstButtonMode = (mode: 'container' | 'emitter' | 'force' | null): 'draw' | 'bezier' | 'force' | null => {
+  switch (mode) {
+    case 'container':
+      return 'draw'
+    case 'emitter':
+      return 'bezier'
+    case 'force':
+      return 'force'
+    default:
+      return null
+  }
+}
+
 watch(selectedMode, (newMode, oldMode) => {
   if (newMode !== oldMode || newMode === null) {
     setMode(null)
@@ -145,6 +160,14 @@ watch(selectedMode, (newMode, oldMode) => {
         canvas.selection = true;
         canvas.renderAll();
       }
+    } else {
+      // 当切换到新的工具栏时，自动激活第一个按钮
+      nextTick(() => {
+        const firstButtonMode = getFirstButtonMode(newMode)
+        if (firstButtonMode) {
+          setMode(firstButtonMode)
+        }
+      })
     }
   }
   if (newMode === 'force') {
@@ -240,6 +263,16 @@ onMounted(async () => {
     // 初始化空白幻灯片
     initializeEmptySlide()
     addCanvasEventListeners()
+    
+    // 初始化时自动激活第一个工具栏的第一个按钮
+    await nextTick()
+    const initialMode = selectedMode.value
+    if (initialMode) {
+      const firstButtonMode = getFirstButtonMode(initialMode)
+      if (firstButtonMode) {
+        setMode(firstButtonMode)
+      }
+    }
   }
 
 })

@@ -201,7 +201,7 @@ const handleDeleteMarker = (markerId: string) => {
                         placeholder="Select column"
                         size="small"
                         class="w-19"
-                        teleported="false"
+                        :teleported="false"
                         @update:model-value="(value) => {
                           if (isDragging.value) return;
                           handleConditionFilterChange(marker.id, filterIndex, value, filter.operator, filter.value);
@@ -219,7 +219,7 @@ const handleDeleteMarker = (markerId: string) => {
                         :model-value="filter.operator"
                         size="small"
                         class="w-12"
-                        teleported="false"
+                        :teleported="false"
                         @update:model-value="(value) => {
                           if (isDragging.value) return;
                           handleConditionFilterChange(marker.id, filterIndex, filter.column, value as ConditionOperator, filter.value);

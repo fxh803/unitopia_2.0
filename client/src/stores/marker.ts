@@ -83,24 +83,19 @@ export const useMarkerStore = defineStore('marker', () => {
       return
     }
     
-    // 同类型 filter 做并集，不同类型 filter 做交集
-    const rangeIndices = new Set<number>()
-    const conditionIndices = new Set<number>()
+    // 所有 filter 都做交集
+    const filterResults: Set<number>[] = []
     
-    // 处理所有 range filter（并集）
     filters.forEach(filter => {
+      const matchedIndices = new Set<number>()
+      
       if (filter.type === 'range' && filter.start !== -1 && filter.end !== -1) {
         const start = filter.start > 0 ? filter.start - 1 : 0
         const end = filter.end > 0 ? filter.end : tableData.length
         for (let i = start; i < end && i < tableData.length; i++) {
-          rangeIndices.add(i)
+          matchedIndices.add(i)
         }
-      }
-    })
-    
-    // 处理所有 condition filter（并集）
-    filters.forEach(filter => {
-      if (filter.type === 'condition' && filter.column && filter.value !== '') {
+      } else if (filter.type === 'condition' && filter.column && filter.value !== '') {
         tableData.forEach((row, index) => {
           const cellValue = row[filter.column]
           const filterValue = filter.value
@@ -132,30 +127,26 @@ export const useMarkerStore = defineStore('marker', () => {
           }
           
           if (matches) {
-            conditionIndices.add(index)
+            matchedIndices.add(index)
           }
         })
       }
+      
+      if (matchedIndices.size > 0) {
+        filterResults.push(matchedIndices)
+      }
     })
     
-    // 不同类型 filter 做交集
-    let resultIndices: Set<number>
-    const hasRange = rangeIndices.size > 0
-    const hasCondition = conditionIndices.size > 0
-    
-    if (hasRange && hasCondition) {
-      // 取交集
-      resultIndices = new Set([...rangeIndices].filter(i => conditionIndices.has(i)))
-    } else if (hasRange) {
-      resultIndices = rangeIndices
-    } else if (hasCondition) {
-      resultIndices = conditionIndices
+    // 对所有 filter 结果取交集
+    if (filterResults.length === 0) {
+      marker.cols = new Set<number>()
     } else {
-      // 没有任何有效 filter，返回空集
-      resultIndices = new Set<number>()
+      let resultIndices = filterResults[0]
+      for (let i = 1; i < filterResults.length; i++) {
+        resultIndices = new Set([...resultIndices].filter(idx => filterResults[i].has(idx)))
+      }
+      marker.cols = resultIndices
     }
-    
-    marker.cols = resultIndices
   }
   
   // 获取 marker 的筛选条件

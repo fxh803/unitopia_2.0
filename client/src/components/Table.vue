@@ -99,7 +99,7 @@ const handleClearData = () => {
         <button
           v-if="tableStore.tableData.length > 0"
           @click="handleClearData"
-          class="h-full w-8 rounded transition-colors flex items-center justify-center bg-white hover:bg-[var(--delete-color)] text-gray-600 hover:text-white opacity-0 group-hover:opacity-100"
+          class="h-8 w-8 rounded-full transition-colors flex items-center justify-center bg-white hover:bg-[var(--delete-color)] text-gray-600 hover:text-white opacity-0 group-hover:opacity-100"
           style="box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);"
           title="Clear data"
         >
@@ -131,7 +131,7 @@ const handleClearData = () => {
           :cell-config="{ height: 30 }" :headerCellConfig="{ height: 60}" show-header-overflow show-overflow size="small" border
           :cell-class-name="cellClassName" :auto-resize="true">
           <vxe-column v-for="(item, index) in tableStore.tableColumns" :key="index" :field="item" :title="item" row-resize 
-            min-width="130">
+            :min-width="item.toLowerCase() === 'index' || item.toLowerCase() === 'idx' ? 40 : 130">
             <!-- 自定义表头：包含列名、下拉菜单和缩放滑块 -->
             <template #header>
               <div class="flex flex-col items-center w-full gap-1 py-1">
@@ -139,6 +139,7 @@ const handleClearData = () => {
                 <div class="flex items-center justify-center gap-2 w-full">
                   <div class="text-xs font-semibold truncate">{{ item }}</div>
                   <el-select
+                    v-if="item.toLowerCase() !== 'index' && item.toLowerCase() !== 'idx'"
                     :model-value="getColumnMappingValue(item)"
                     @update:model-value="(value) => handleColumnMappingChange(item, value)"
                     @click.stop

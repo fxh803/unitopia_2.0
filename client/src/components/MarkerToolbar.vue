@@ -6,6 +6,7 @@ import * as fabric from 'fabric'
 import { Canvas, Group } from 'fabric'
 import { useMarkerShapeDrawingStore } from '~/stores/markerShapeDrawing'
 import { useMarkerStore } from '~/stores/marker'
+import { nextTick } from 'vue'
 
 const markerCanvasModeStore = useMarkerCanvasModeStore()
 const {mode} = storeToRefs(markerCanvasModeStore)
@@ -35,6 +36,14 @@ onMounted(() => {
     if (!target.closest('.draw-tool-menu')) {
       showDrawMenu.value = false
     }
+  })
+  
+  // 在 nextTick 后设置 mode 为 draw（第一个按钮）
+  nextTick(() => {
+    // 等待 canvas 初始化完成
+    setTimeout(() => {
+      setMode('draw')
+    }, 300)
   })
 })
 
