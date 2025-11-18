@@ -125,6 +125,9 @@ export const useDataScaleStore = defineStore('dataScale', () => {
   watch(() => columnMapping.value.channel, () => {
     changeMappingChannel()
   })
+  watch(()=>columnMapping.value.column, () => {
+    changeMappingChannel()
+  })
 
   // 设置宽度缩放基数
   function setWidthScale(scale: number) {
