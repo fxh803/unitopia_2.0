@@ -10,6 +10,7 @@ import { useCanvasModeStore } from '~/stores/canvasMode'
 import { useCanvasStore } from '~/stores/canvas'
 import { useContainerStore } from '~/stores/container'
 import { useHoverInfoPanelStore } from '~/stores/hoverInfoPanel'
+import paper from 'paper'
 // 定义数据类型接口
 interface ProcessedData {
   markers: Array<{
@@ -571,77 +572,21 @@ function getDataBinding (){
       // allObjects.forEach(obj => {
       //   canvasInstance.remove(obj)
       // })
-      
-      // 获取 SVG 文件的 URL
-      const svgUrl = `${ip}/workdir/${process_id.value}_result.svg`
-      
-      // 从 URL 获取 SVG 内容
-      const response = await fetch(svgUrl)
-      
-      const svgString = await response.text()
-      
-      // 解析 SVG 获取原始尺寸
-      const svgParser = new DOMParser()
-      const svgDoc = svgParser.parseFromString(svgString, 'image/svg+xml')
-      const svgElement = svgDoc.documentElement
-      
-      // 获取 SVG 的宽度和高度（优先从 viewBox，其次从 width/height 属性）
-      let svgWidth = 0
-      let svgHeight = 0
-      
-      const viewBox = svgElement.getAttribute('viewBox')
-      if (viewBox) {
-        const viewBoxValues = viewBox.split(/\s+|,/).filter(v => v.trim()).map(Number)
-        if (viewBoxValues.length >= 4) {
-          // viewBox 格式: "x y width height"
-          svgWidth = viewBoxValues[2] || 0
-          svgHeight = viewBoxValues[3] || 0
-        }
-      }
-      
-      if (!svgWidth || !svgHeight) {
-        svgWidth = parseFloat(svgElement.getAttribute('width') || '0') || 0
-        svgHeight = parseFloat(svgElement.getAttribute('height') || '0') || 0
-      }
-      
-      // 如果仍然无法获取尺寸，默认使用 1000（常见的 render_size）
-      if (!svgWidth || !svgHeight) {
-        svgWidth = 1000
-        svgHeight = 1000
-      }
+      // 将当前 paper.js 画布导出为 SVG
+      const paperSvgString = paper.project.exportSVG({ asString: true })
       
       // 使用 Fabric.js 加载 SVG
-      const loadedSVG = await fabric.loadSVGFromString(svgString)
-      
-      // 计算缩放比例（根据画布尺寸和 SVG 尺寸）
-      const canvasWidth = canvasInstance.width || 400
-      const canvasHeight = canvasInstance.height || 400
-      const scaleX = canvasWidth / svgWidth
-      const scaleY = canvasHeight / svgHeight
-      const scale = Math.min(scaleX, scaleY, 1) // 确保不放大，只缩小
+      const loadedSVG = await fabric.loadSVGFromString(paperSvgString)
       
       // 获取拍平的 data
       const flattenedData = getDataBinding()
       
-      // 将所有 SVG 对象添加到画布，并应用统一的缩放比例，保持它们的原始相对位置
+      // 将所有 SVG 对象添加到画布，保持原始位置和大小
       loadedSVG.objects.forEach((obj: any, index: number) => {
-        // 对每个对象的位置和尺寸应用缩放
-        if (obj.left !== undefined) {
-          obj.set('left', obj.left * scale)
-        }
-        if (obj.top !== undefined) {
-          obj.set('top', obj.top * scale)
-        }
-        // 应用缩放
-        const currentScaleX = (obj.scaleX || 1) * scale
-        const currentScaleY = (obj.scaleY || 1) * scale
-        
         // 按索引分配拍平的 data
         const data = flattenedData[index] || null
         
         obj.set({
-          scaleX: currentScaleX,
-          scaleY: currentScaleY,
           selectable: true,
           evented: true,
           dataType: 'marker',

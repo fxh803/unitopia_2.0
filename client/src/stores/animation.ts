@@ -34,6 +34,7 @@ export const useAnimationStore = defineStore('animation', () => {
   const hoverDataBinding = ref(null)
   const totalOverview = ref(0)
   const now_overview_idx = ref(0)
+  const isUpdatingAnimation = ref(false) // 锁标志，防止并发执行
 
   // 计算属性
   const progress = computed(() => {
@@ -133,10 +134,7 @@ export const useAnimationStore = defineStore('animation', () => {
     const renderSize = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size ?? 1000
     
     for (let i = startIndex; i < result['pos'].length + startIndex; i++) {
-      if (collage_result_type.value[now_collage] === 'svg')
-        srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.svg`
-      else
-        srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.png`
+      srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.txt`
 
       posArray.value[i] = [result['pos'][i - startIndex][0] * canvas_width.value, result['pos'][i - startIndex][1] * canvas_height.value];
       angleArray.value[i] = result['angle'][i - startIndex];
@@ -162,10 +160,7 @@ export const useAnimationStore = defineStore('animation', () => {
     const renderSize = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size ?? 1000
     
     for (let i = startIndex; i < result['pos'].length + startIndex; i++) {
-      if (collage_result_type.value[now_collage] === 'svg')
-        srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.svg`
-      else
-        srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.png`
+      srcArray.value[i] = `${ip.value}/workdir/${process_id.value}_${now_collage}/render_files/${i + 1 - startIndex}.txt`
 
       posArray.value[i] = [result['pos'][i - startIndex][0] * canvas_width.value, result['pos'][i - startIndex][1] * canvas_height.value];
       angleArray.value[i] = result['angle'][i - startIndex];
@@ -199,6 +194,21 @@ export const useAnimationStore = defineStore('animation', () => {
     return flattenedData.length > 0 ? flattenedData : null
   }
 
+  // 从 txt 文件获取 base64 数据
+  async function fetchBase64FromTxt(txtUrl: string): Promise<string> {
+    try {
+      const response = await fetch(txtUrl)
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`)
+      }
+      const base64Text = await response.text()
+      return base64Text.trim()
+    } catch (error) {
+      console.error('获取 base64 数据失败:', error, txtUrl)
+      throw error
+    }
+  }
+
   function startContainerAnimation() {
     const containerStore = useContainerStore()
     if (!containerAni.value) {  
@@ -208,59 +218,68 @@ export const useAnimationStore = defineStore('animation', () => {
         paper.view.on('frame', containerAni.value);  
       }
   }
-  function updateAnimation() {//每当收到进度信息，检查动画更新情况
-    const now_collage = progress.value.now_collage;
-    const type = progress.value.type;
-    if (now_collage != now_collage_idx.value && type === 1) {// 如果进行的collage变了，要绘制新的elements
-      console.log('1')
-      // paper.view.off('frame', markerAni.value); 
-      // paper.view.off('frame', containerAni.value);
-      // markerAni.value = null
-      // containerAni.value = null
-      now_start_idx.value = elements.value.length
-      setData(now_collage, now_start_idx.value)
-      for (let i = now_start_idx.value; i < posArray.value.length; i++) {
-        const raster = new paper.Raster({
-          source: srcArray.value[i],
-          position: posArray.value[i],
-          opacity: 0,
-          dataBinding: dataBindingArray.value[i],
-          imgLoaded: false,
-          dataLoaded: false,
-          collage_idx: now_collage,
-          onLoad: () => { 
-            raster.scale(new paper.Point(widthArray.value[i] / raster.width, heightArray.value[i] / raster.height));
-            raster.rotate(angleArray.value[i] * (180 / Math.PI))
-            raster.imgLoaded = true;
-          },
-          //失败提示
-          onError: (e) => {
-            console.log('onError',e)
+  async function updateAnimation() {//每当收到进度信息，检查动画更新情况
+    // 如果正在执行，直接返回，防止并发执行
+    if (isUpdatingAnimation.value) {
+      return
+    }
+    
+    isUpdatingAnimation.value = true
+    try {
+      const now_collage = progress.value.now_collage;
+      const type = progress.value.type;
+      if (now_collage != now_collage_idx.value && type === 1) {// 如果进行的collage变了，要绘制新的elements
+        console.log('1')
+        // paper.view.off('frame', markerAni.value); 
+        // paper.view.off('frame', containerAni.value);
+        // markerAni.value = null
+        // containerAni.value = null
+        now_start_idx.value = elements.value.length
+        setData(now_collage, now_start_idx.value)
+        for (let i = now_start_idx.value; i < posArray.value.length; i++) {
+          const base64Source = await fetchBase64FromTxt(srcArray.value[i])
+          const raster = new paper.Raster({
+            source: base64Source,
+            position: posArray.value[i],
+            opacity: 0,
+            dataBinding: dataBindingArray.value[i],
+            imgLoaded: false,
+            dataLoaded: false,
+            collage_idx: now_collage,
+            onLoad: () => { 
+              raster.scale(new paper.Point(widthArray.value[i] / raster.width, heightArray.value[i] / raster.height));
+              raster.rotate(angleArray.value[i] * (180 / Math.PI))
+              raster.imgLoaded = true;
+            },
+            //失败提示
+            onError: (e) => {
+              console.log('onError',e)
+            }
+          });
+          raster.onMouseEnter = (event: any) => {  
+            hoverDataBinding.value = raster.dataBinding
+            const hoverInfoPanelStore = useHoverInfoPanelStore()
+            hoverInfoPanelStore.handleRasterHover(event, raster)
           }
-        });
-        raster.onMouseEnter = (event: any) => {  
-          hoverDataBinding.value = raster.dataBinding
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterHover(event, raster)
+          raster.onMouseLeave = (event: any) => {
+            const hoverInfoPanelStore = useHoverInfoPanelStore()
+            hoverInfoPanelStore.handleRasterOut(event, raster)
+          }
+          // raster.onMouseLeave = () => {
+          //   markerToast.value.classList.add('hidden')
+          // }
+          elements.value.push(raster);
         }
-        raster.onMouseLeave = (event: any) => {
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterOut(event, raster)
-        }
-        // raster.onMouseLeave = () => {
-        //   markerToast.value.classList.add('hidden')
-        // }
-        elements.value.push(raster);
-      }
-      now_collage_idx.value = now_collage
+        now_collage_idx.value = now_collage
 
     }
     else if (elements.value.length === 0) {//一开始
       setData(now_collage, 0)
       console.log('2')
       for (let i = 0; i < posArray.value.length; i++) {
+        const base64Source = await fetchBase64FromTxt(srcArray.value[i])
         const raster = new paper.Raster({
-          source: srcArray.value[i],
+          source: base64Source,
           position: posArray.value[i],
           opacity: 0,
           dataBinding: dataBindingArray.value[i],
@@ -318,6 +337,10 @@ export const useAnimationStore = defineStore('animation', () => {
         paper.view.on('frame', markerAni.value);
       }
 
+    }
+    } finally {
+      // 无论成功还是失败，都要清除锁标志
+      isUpdatingAnimation.value = false
     }
   }
 
@@ -379,7 +402,7 @@ export const useAnimationStore = defineStore('animation', () => {
   }
 
   // 提取replay逻辑为独立方法
-  function executeReplayStep() {
+  async function executeReplayStep() {
     const now_collage = progress_data.value[replayIdx.value].now_collage;
     const now_overview = progress_data.value[replayIdx.value].now_overview_idx;
     process_id.value = progress_data.value[replayIdx.value].process_id;
@@ -395,8 +418,9 @@ export const useAnimationStore = defineStore('animation', () => {
       now_start_idx.value = elements.value.length
       setReplayData(replayIdx.value, now_collage, now_start_idx.value)
       for (let i = now_start_idx.value; i < posArray.value.length; i++) {
+        const base64Source = await fetchBase64FromTxt(srcArray.value[i])
         const raster = new paper.Raster({
-          source: srcArray.value[i],
+          source: base64Source,
           position: posArray.value[i],
           opacity: 0,
           dataBinding: dataBindingArray.value[i],
@@ -432,8 +456,9 @@ export const useAnimationStore = defineStore('animation', () => {
       console.log('5')
       setReplayData(replayIdx.value, now_collage, 0)
       for (let i = 0; i < posArray.value.length; i++) {
+        const base64Source = await fetchBase64FromTxt(srcArray.value[i])
         const raster = new paper.Raster({
-          source: srcArray.value[i],
+          source: base64Source,
           position: posArray.value[i],
           opacity: 0,
           dataBinding: dataBindingArray.value[i],
