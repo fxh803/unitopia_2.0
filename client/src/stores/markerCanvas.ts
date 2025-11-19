@@ -151,6 +151,9 @@ export const useMarkerCanvasStore = defineStore('markerCanvas', () => {
     // 跳过预览形状
     if (path.get('isPreview')) return
     
+    // 跳过上传的形状
+    if (path.get('isUploaded')) return
+    
     // 获取对象在画布上的位置
     const zoom = canvasInstance.getZoom()
     const vpt = canvasInstance.viewportTransform

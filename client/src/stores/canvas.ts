@@ -509,6 +509,9 @@ export const useCanvasStore = defineStore('canvas', () => {
     // 跳过预览形状
     if (path.get('isPreview')) return
     
+    // 跳过上传的形状
+    if (path.get('isUploaded')) return
+    
     // 只有当对象是 container 类型时才触发
     if (path.get('dataType') !== 'container') return
     
