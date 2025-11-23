@@ -101,14 +101,10 @@ def find_region_containing_point(image, pos):
     
     # 转换为numpy数组
     img_array = np.array(image) 
-    r, g, b = img_array[:, :, 0], img_array[:, :, 1], img_array[:, :, 2]
-    is_white = (r >= 250) & (g >= 250) & (b >= 250)
-    binary = np.where(is_white, 0, 255).astype(np.uint8)  # 确保是uint8类型
+    alpha = img_array[:, :, 3]
+    binary = np.where(alpha > 0, 255, 0).astype(np.uint8)  # 确保是uint8类型
     # 找到轮廓
-    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
-    
-    if not contours:
-        return None
+    contours, _ = cv2.findContours(binary, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE) 
     
     # 检查哪个轮廓包含指定的点
     # 处理pos可能是列表或字典的情况

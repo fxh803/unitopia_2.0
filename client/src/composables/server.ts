@@ -203,15 +203,29 @@ function processContainer(tempCanvas: Canvas) {
   if (containerObjs.length === 0) {
     return ''
   }
+  
+  // 保存原始背景色
+  const originalBackgroundColor = tempCanvas.backgroundColor
+  
+  // 隐藏所有非 container 对象
   for (const obj of canvasObjects) {
     if (obj.get('dataType') != 'container') {
       obj.set('visible', false)
     }
   }
+  
+  // 将背景设置为透明，避免背景被包含在导出的图像中
+  tempCanvas.backgroundColor = 'transparent'
+  
   const containerBase64 = tempCanvas.toDataURL({
     format: 'png',
     multiplier: 1
   })
+  
+  // 恢复原始背景色
+  tempCanvas.backgroundColor = originalBackgroundColor
+  
+  // 恢复所有对象的可见性
   for (const obj of canvasObjects) {
     if (obj.get('dataType') != 'container') {
       obj.set('visible', true)
