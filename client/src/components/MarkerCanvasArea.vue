@@ -65,7 +65,7 @@ watch(() => colorPickerStore.selectedColor, (color) => {
   }
 })
 // 监听画笔宽度变化
-watch(() => brushSizeStore.brushWidth, (newWidth) => {
+watch(() => brushSizeStore.markerBrushWidth, (newWidth) => {
   if (canvas && (markerCanvasModeStore.mode === 'draw' || markerCanvasModeStore.mode === 'erase')) {
     const dpr = window.devicePixelRatio || 1
     if (canvas.freeDrawingBrush) {
@@ -136,7 +136,7 @@ onMounted(async () => {
       })
       const brush = new PencilBrush(canvas)
       brush.color = '#000000'
-      brush.width = brushSizeStore.brushWidth * (window.devicePixelRatio || 1)
+      brush.width = brushSizeStore.markerBrushWidth * (window.devicePixelRatio || 1)
       canvas.freeDrawingBrush = brush
       markerCanvasModeStore.setCanvas(() => canvas)
       markerObjectActionsStore.setCanvas(() => canvas)
@@ -196,7 +196,10 @@ onBeforeUnmount(() => {
     </div>
 
     <!-- 画笔大小调节面板 - 左上角（避开预览图） -->
-    <BrushSizePanel v-if="markerCanvasModeStore.mode === 'draw' || markerCanvasModeStore.mode === 'erase'"/>
+    <BrushSizePanel
+      v-if="markerCanvasModeStore.mode === 'draw' || markerCanvasModeStore.mode === 'erase'"
+      target="marker"
+    />
 
     <!-- 对象操作按钮 -->
     <MarkerObjectActionButtons />

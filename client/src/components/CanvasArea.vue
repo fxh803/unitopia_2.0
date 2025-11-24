@@ -338,7 +338,7 @@ onBeforeUnmount(() => {
       <!-- Force工具栏：仅在force模式下显示 -->
       <ForceToolbar v-if="selectedMode === 'force'" />
       <!-- 画笔粗细调节面板，仅在绘制/擦除模式下显示 -->
-      <BrushSizePanel v-if="mode === 'draw' || mode === 'erase'" />
+      <BrushSizePanel v-if="mode === 'draw' || mode === 'erase'" target="main" />
     </div>
     <!-- 拼贴系列面板 - 移动到右侧 -->
     <CollageSeriesPanel />

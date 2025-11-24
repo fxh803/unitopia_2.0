@@ -1,10 +1,28 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useBrushSizeStore } from '~/stores/brushsize'
 
+const props = withDefaults(defineProps<{
+  target?: 'main' | 'marker'
+}>(), {
+  target: 'main'
+})
+
 const brushSizeStore = useBrushSizeStore()
-const {brushWidth} = storeToRefs(brushSizeStore)
+const { brushWidth, markerBrushWidth } = storeToRefs(brushSizeStore)
+
+// 根据 target 选择对应的画笔宽度
+const currentBrushWidth = computed({
+  get: () => props.target === 'marker' ? markerBrushWidth.value : brushWidth.value,
+  set: (value) => {
+    if (props.target === 'marker') {
+      markerBrushWidth.value = value
+    } else {
+      brushWidth.value = value
+    }
+  }
+})
 
 const min = 1
 const max = 50
@@ -29,10 +47,10 @@ const togglePanel = () => {
         type="range"
         :min="min"
         :max="max"
-        v-model="brushWidth"
+        v-model="currentBrushWidth"
         class="slider"
       />
-      <span class="value">{{ brushWidth }}</span>
+      <span class="value">{{ currentBrushWidth }}</span>
     </div>
   </div>
 </template>

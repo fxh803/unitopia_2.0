@@ -63,7 +63,7 @@ export const useMarkerCanvasModeStore = defineStore('markerCanvasMode', () => {
       if (canvasInstance.freeDrawingBrush) {
         // 使用选择的颜色
         canvasInstance.freeDrawingBrush.color = colorPickerStore.selectedColor
-        canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr
+        canvasInstance.freeDrawingBrush.width = brushSizeStore.markerBrushWidth * dpr
       }
     } else if (m === 'erase') {
       // 橡皮擦模式
@@ -76,7 +76,7 @@ export const useMarkerCanvasModeStore = defineStore('markerCanvasMode', () => {
       const dpr = window.devicePixelRatio || 1
       if (canvasInstance.freeDrawingBrush) {
         canvasInstance.freeDrawingBrush.color = '#ffffff'
-        canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr
+        canvasInstance.freeDrawingBrush.width = brushSizeStore.markerBrushWidth * dpr
       }
     } else if (m === 'move') {
       // 移动模式

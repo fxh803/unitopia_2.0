@@ -99,14 +99,14 @@ const handleClearData = () => {
   <div class="h-full border-b border-gray-200 relative flex flex-col group">
     <!-- 工具栏 - 始终显示在顶部 -->
     <div 
-      class="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50 h-10 flex-shrink-0 shadow-sm z-10"
+      class="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50 h-8 flex-shrink-0 shadow-sm z-10"
     >
-      <span class="text-sm text-gray-600">Data Table</span>
-      <div class="flex h-full gap-1">
+      <span class="text-[14px] text-gray-600 font-bold">Data Table</span>
+      <div class="flex h-full gap-1 transform translate-y--1">
         <button
           v-if="tableStore.tableData.length > 0"
           @click="handleClearData"
-          class="h-8 w-8 rounded-full transition-colors flex items-center justify-center bg-white hover:bg-[var(--delete-color)] text-gray-600 hover:text-white opacity-0 group-hover:opacity-100"
+          class="h-6 w-6 rounded-full transition-colors flex items-center justify-center bg-white hover:bg-[var(--delete-color)] text-gray-600 hover:text-white opacity-0 group-hover:opacity-100"
           style="box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);"
           title="Clear data"
         >

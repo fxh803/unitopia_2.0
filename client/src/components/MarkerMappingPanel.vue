@@ -217,8 +217,8 @@ const handleDeleteMarker = (markerId: string) => {
                   </button>
 
                   <!-- Range 筛选条件 -->
-                  <div v-if="filter.type === 'range'" class="flex flex-col space-y-1">
-                    <span class="text-xs font-medium text-gray-700">Range:</span>
+                  <div v-if="filter.type === 'range'" class="flex flex-row items-center gap-2 flex-wrap">
+                    <span class="text-xs font-medium text-gray-700 whitespace-nowrap">Range:</span>
                     <div class="flex items-center space-x-1">
                       <input type="number"
                         :value="filter.start === -1 ? '' : filter.start"
@@ -247,14 +247,14 @@ const handleDeleteMarker = (markerId: string) => {
                   </div>
 
                   <!-- Condition 筛选条件 -->
-                  <div v-if="filter.type === 'condition'" class="flex flex-col space-y-1">
-                    <span class="text-xs font-medium text-gray-700">Condition:</span>
+                  <div v-if="filter.type === 'condition'" class="flex flex-row items-center gap-2 flex-wrap">
+                    <span class="text-xs font-medium text-gray-700 whitespace-nowrap">Condition:</span>
                     <div class="flex items-center space-x-1">
                       <el-select
                         :model-value="filter.column || ''"
                         placeholder="Select column"
                         size="small"
-                        class="w-19"
+                        class="w-13"
                         :teleported="false"
                         @update:model-value="(value) => {
                           if (isDragging.value) return;
@@ -272,7 +272,7 @@ const handleDeleteMarker = (markerId: string) => {
                       <el-select
                         :model-value="filter.operator"
                         size="small"
-                        class="w-12"
+                        class="w-11"
                         :teleported="false"
                         @update:model-value="(value) => {
                           if (isDragging.value) return;
@@ -292,7 +292,7 @@ const handleDeleteMarker = (markerId: string) => {
                         }"
                         @mousedown="preventInputDuringDrag"
                         @mouseup="preventInputDuringDrag"
-                        class="w-19 px-1 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-13 px-1 py-0.5 border border-gray-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500"
                         placeholder="value" />
                     </div>
                   </div>
