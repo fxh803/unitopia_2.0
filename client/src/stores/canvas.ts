@@ -73,7 +73,14 @@ export const useCanvasStore = defineStore('canvas', () => {
     })
     canvasInstance.renderAll()
   }
-
+  function handleMarkerHover() {
+    const canvasInstance = canvasRef.value?.()
+    if (!canvasInstance) return
+    const activeObject = canvasInstance.getActiveObject()
+    if (activeObject && activeObject.get('dataType') === 'marker') {
+      updateMarkerOpacity(activeObject)
+    }
+  }
   // 添加画布事件监听器
   function addCanvasEventListeners() {
     const canvasInstance = canvasRef.value?.()
@@ -84,21 +91,13 @@ export const useCanvasStore = defineStore('canvas', () => {
         objectActionsStore.setCurrentPathObj()
         objectActionsStore.updateActionBtnVisble()
         objectActionsStore.updateActionBtnPosition()
-        // 如果选中的是marker，更新透明度
-        const activeObject = canvasInstance.getActiveObject()
-        if (activeObject && activeObject.get('dataType') === 'marker') {
-          updateMarkerOpacity(activeObject)
-        }
+        handleMarkerHover()
       },
       'selection:updated': () => {
         objectActionsStore.setCurrentPathObj()
         objectActionsStore.updateActionBtnVisble()
-        objectActionsStore.updateActionBtnPosition()
-        // 如果选中的是marker，更新透明度
-        const activeObject = canvasInstance.getActiveObject()
-        if (activeObject && activeObject.get('dataType') === 'marker') {
-          updateMarkerOpacity(activeObject)
-        }
+        objectActionsStore.updateActionBtnPosition()  
+        handleMarkerHover()
       },
       'selection:cleared': () => {
         objectActionsStore.hideBtns()
