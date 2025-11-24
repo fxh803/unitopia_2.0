@@ -73,7 +73,7 @@ onBeforeUnmount(() => {
     <!-- 右侧画布区 -->
     <div class="h-full flex flex-col" :style="{ width: `${resizeHandleStore.rightWidth}px`, minWidth: `${minRightWidth}px` }">
       <!-- 工具栏 -->
-      <div class="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50 h-12 flex-shrink-0 shadow-sm z-10">
+      <div class="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50 h-10 flex-shrink-0 shadow-sm z-10">
         <span class="text-sm text-gray-600">Canvas Editor</span>
       </div>
       <div class="flex-1 min-h-0">

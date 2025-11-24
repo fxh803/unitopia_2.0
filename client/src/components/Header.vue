@@ -105,7 +105,7 @@ const currentSpeedMultiplier = computed(() => {
 
 <template>
   <div class="relative">
-    <header class="px-6 border-b border-gray-200 bg-white flex h-14 w-full shadow items-center z-20">
+    <header class="px-6 border-b border-gray-200 bg-white flex h-12 w-full shadow items-center z-20">
       <h1 class="text-xl text-gray-800 font-bold flex items-center gap-2">
         <img src="/UNITVIZ2.svg" alt="UnitoPia Logo" class="h-8 w-auto" />
         UnitoPia
@@ -198,7 +198,7 @@ const currentSpeedMultiplier = computed(() => {
     <!-- 进度条 - 移到header外部，使用fixed定位 -->
     <div 
       v-if="collaging||replaying"
-      class="fixed top-14 left-0 w-full bg-gray-200 h-2 z-50"
+      class="fixed top-11 left-0 w-full bg-gray-200 h-2 z-50"
     >
       <div 
         class="bg-[var(--primary-color)] h-full transition-all duration-300 ease-out"

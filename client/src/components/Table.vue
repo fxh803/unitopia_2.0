@@ -99,7 +99,7 @@ const handleClearData = () => {
   <div class="h-full border-b border-gray-200 relative flex flex-col group">
     <!-- 工具栏 - 始终显示在顶部 -->
     <div 
-      class="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50 h-12 flex-shrink-0 shadow-sm z-10"
+      class="flex justify-between items-center p-2 border-b border-gray-200 bg-gray-50 h-10 flex-shrink-0 shadow-sm z-10"
     >
       <span class="text-sm text-gray-600">Data Table</span>
       <div class="flex h-full gap-1">
