@@ -72,6 +72,9 @@ const handleDrop = (e: DragEvent) => {
   }
 }
 
+// 文件输入框引用
+const fileInput = ref<HTMLInputElement>()
+
 // 处理文件选择
 const handleFileSelect = (e: Event) => {
   const target = e.target as HTMLInputElement
@@ -85,6 +88,10 @@ const handleFileSelect = (e: Event) => {
 const handleClearData = () => {
   tableStore.clearTableData()
   dataScaleStore.resetScales()
+  // 重置文件输入框，允许重新上传
+  if (fileInput.value) {
+    fileInput.value.value = ''
+  }
 }
 </script>
 
@@ -116,7 +123,7 @@ const handleClearData = () => {
         :class="{
           'border-blue-500 bg-blue-50': isDragOver,
           'hover:border-gray-400': !isDragOver
-        }" @dragover="handleDragOver" @dragleave="handleDragLeave" @drop="handleDrop" @click="$refs.fileInput.click()">
+        }" @dragover="handleDragOver" @dragleave="handleDragLeave" @drop="handleDrop" @click="fileInput?.click()">
         <span class="i-carbon-add-alt text-4xl text-gray-400"></span>
         <div class="text-sm font-medium text-gray-400">Upload Data</div>
       </div>

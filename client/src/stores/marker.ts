@@ -132,9 +132,8 @@ export const useMarkerStore = defineStore('marker', () => {
         })
       }
       
-      if (matchedIndices.size > 0) {
-        filterResults.push(matchedIndices)
-      }
+      // 将所有筛选结果都添加进去（包括空的），这样可以在取交集时正确处理空结果
+      filterResults.push(matchedIndices)
     })
     
     // 对所有 filter 结果取交集

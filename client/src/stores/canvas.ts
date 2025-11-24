@@ -15,7 +15,7 @@ import { handleMarkerDropCanvas, pharseData } from '~/composables/server'
 import * as fabric from 'fabric'
 export const useCanvasStore = defineStore('canvas', () => {
   const canvasRef = ref<(() => Canvas | null) | null>(null)
-  const containerColor = ref([130, 130, 130, 0.6])
+  const containerColor = ref([130, 130, 130, 0.8])
   // 路径闭合确认对话框状态
   const closePathConfirm = ref<{
     show: boolean

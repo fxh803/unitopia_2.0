@@ -28,7 +28,7 @@ const handleFileUpload = (event: Event) => {
   const target = event.target as HTMLInputElement
   const file = target.files?.[0]
   
-  if (file && file.type === 'image/png') {
+  if (file && (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/jpg')) {
     // 创建文件读取器
     const reader = new FileReader()
     reader.onload = (e) => {
@@ -39,7 +39,7 @@ const handleFileUpload = (event: Event) => {
     }
     reader.readAsDataURL(file)
   } else if (file) {
-    alert('请选择 PNG 格式的图片文件')
+    alert('请选择 PNG 或 JPG 格式的图片文件')
   }
   
   // 清空文件输入框，允许重复选择同一文件
@@ -166,7 +166,7 @@ const clearBackground = async () => {
     <input
       ref="fileInputRef"
       type="file"
-      accept="image/png"
+      accept=".png,.jpg,.jpeg,image/png,image/jpeg,image/jpg"
       class="hidden"
       @change="handleFileUpload"
     />

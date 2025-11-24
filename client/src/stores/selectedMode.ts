@@ -32,7 +32,7 @@ export const useSelectedModeStore = defineStore('selectedMode', () => {
                 if (objType === 'background') {
                     obj.set('opacity', 1)
                 } else {
-                    obj.set('opacity', 0.3)
+                    obj.set('opacity', 0.5)
                 }
             }
         })
