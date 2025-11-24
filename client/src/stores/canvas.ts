@@ -73,7 +73,25 @@ export const useCanvasStore = defineStore('canvas', () => {
     })
     canvasInstance.renderAll()
   }
-  function handleMarkerHover() {
+
+  function handleMarkerHoverOpacity(target: any, options: { isMouseOut?: boolean } = {}) {
+    if (!target || target.get('dataType') !== 'marker') return
+
+    const canvasInstance = canvasRef.value?.()
+    if (!canvasInstance) return
+
+    const activeObject = canvasInstance.getActiveObject()
+    const hasActiveMarker = activeObject && activeObject.get('dataType') === 'marker'
+
+    if (hasActiveMarker) {
+      updateMarkerOpacity(activeObject)
+    } else if (options.isMouseOut) {
+      restoreAllMarkerOpacity()
+    } else {
+      updateMarkerOpacity(target)
+    }
+  }
+  function handleMarkerSelect() {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
     const activeObject = canvasInstance.getActiveObject()
@@ -91,13 +109,13 @@ export const useCanvasStore = defineStore('canvas', () => {
         objectActionsStore.setCurrentPathObj()
         objectActionsStore.updateActionBtnVisble()
         objectActionsStore.updateActionBtnPosition()
-        handleMarkerHover()
+        handleMarkerSelect()
       },
       'selection:updated': () => {
         objectActionsStore.setCurrentPathObj()
         objectActionsStore.updateActionBtnVisble()
         objectActionsStore.updateActionBtnPosition()  
-        handleMarkerHover()
+        handleMarkerSelect()
       },
       'selection:cleared': () => {
         objectActionsStore.hideBtns()
@@ -130,6 +148,7 @@ export const useCanvasStore = defineStore('canvas', () => {
         collageSeriesStore.updateCurrentSlide()
       },
       'mouse:over': (e) => {
+        console.log('mouse:over',e.target)
         // 鼠标悬停在对象上时添加偏透明蓝色效果
         if (e.target && e.target.get('dataType') === 'container') {
           e.target.set('opacity', 0.7)
@@ -142,17 +161,7 @@ export const useCanvasStore = defineStore('canvas', () => {
           })
           canvasInstance.renderAll()
         }
-        if (e.target && e.target.get('dataType') === 'marker') {
-          // 检查是否有选中的marker
-          const activeObject = canvasInstance.getActiveObject()
-          if (activeObject && activeObject.get('dataType') === 'marker') {
-            // 如果有选中的marker，保持选中marker的正常透明度，其他变低
-            updateMarkerOpacity(activeObject)
-          } else {
-            // 如果没有选中的marker，当前悬停的marker保持正常透明度，其他marker变低透明度
-            updateMarkerOpacity(e.target)
-          }
-        }
+        handleMarkerHoverOpacity(e.target)
         // 处理 marker 悬浮显示信息面板
         hoverInfoPanelStore.handleMarkerHover(e, canvasInstance)
       },
@@ -169,17 +178,7 @@ export const useCanvasStore = defineStore('canvas', () => {
           })
           canvasInstance.renderAll()
         }
-        if (e.target && e.target.get('dataType') === 'marker') {
-          // 检查是否有选中的marker
-          const activeObject = canvasInstance.getActiveObject()
-          if (activeObject && activeObject.get('dataType') === 'marker') {
-            // 如果有选中的marker，保持选中marker的正常透明度，其他变低
-            updateMarkerOpacity(activeObject)
-          } else {
-            // 如果没有选中的marker，恢复所有marker的透明度
-            restoreAllMarkerOpacity()
-          }
-        }
+        handleMarkerHoverOpacity(e.target, { isMouseOut: true })
         // 处理鼠标离开 marker，隐藏信息面板
         hoverInfoPanelStore.handleMarkerOut(e)
       },
