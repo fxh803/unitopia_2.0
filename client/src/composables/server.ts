@@ -169,8 +169,8 @@ function processMarker(tempCanvas: Canvas) {
         const baseSize = Math.max(baseWidth, baseHeight)
         const scaleX = obj.scaleX || 1
         const scaleY = obj.scaleY || 1
-        widths.push(scaleX*baseSize/80) //这里传的是对于正方形bbox的缩放系数
-        heights.push(scaleY*baseSize/80)
+        widths.push(scaleX*baseSize) //这里传的是对于正方形bbox的缩放系数
+        heights.push(scaleY*baseSize)
         
         // 记录角度（Fabric.js 中 angle 是度数，转换为弧度）
         const angleDegrees = obj.get('angle') || 0

@@ -54,7 +54,6 @@ def process_data():
             marker_id = marker_data["markerId"]
             marker_string = marker_data['thumbnail']
             init_pos = [[point["x"]/canvas_width, point["y"]/canvas_height] for point in marker_data['pos']]
-            init_size = [[w, h] for w, h in zip(marker_data['width'], marker_data['height'])]
             init_angle = [angle for angle in marker_data['angle']]
             # 完善SVG字符串
             marker_string, svg_width, svg_height = complete_svg(marker_string)
@@ -63,6 +62,7 @@ def process_data():
             if contains_image_element(marker_string):
                 has_image_markers = True 
             if has_image_markers:
+                init_size = [[w/500, h/500] for w, h in zip(marker_data['width'], marker_data['height'])]
                 # 如果任何一个marker包含image元素，所有marker都保存为PNG
                 png_path = f"./workdir/{str(id)}_{i}/markers/"+str(marker_id)+".png"
                 # 使用cairosvg将SVG转换为PNG
@@ -79,6 +79,7 @@ def process_data():
                 
                 json_data["collage"][i]["marker_config"][j]["marker"] = [png_path]
             else:
+                init_size = [[w/80, h/80] for w, h in zip(marker_data['width'], marker_data['height'])]
                 # 如果没有任何marker包含image元素，检查并转换rect和ellipse元素为path元素
                 marker_string = convert_shapes_to_paths(marker_string)
                 # 保存为SVG
@@ -160,10 +161,10 @@ def process_data():
     
     unitopia.start_collage(f'./workdir/{str(id)}_collage.json',id = str(id),callback=collage_callback)
     
-    # 合并所有 final_1.svg 文件
-    svg_paths = [f'./workdir/{str(id)}_{i}/final_1.svg' for i in range(len(data))]
-    merged_svg_path = f'./workdir/{str(id)}_result.svg'
-    merge_svg_files(svg_paths, merged_svg_path, target_size=1000)
+    # # 合并所有 final_1.svg 文件
+    # svg_paths = [f'./workdir/{str(id)}_{i}/final_1.svg' for i in range(len(data))]
+    # merged_svg_path = f'./workdir/{str(id)}_result.svg'
+    # merge_svg_files(svg_paths, merged_svg_path, target_size=1000)
     
     # 返回处理结果
     return jsonify({
