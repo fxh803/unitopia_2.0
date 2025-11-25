@@ -152,7 +152,7 @@ const handleClearData = () => {
                   v-if="item.toLowerCase() !== 'index' && item.toLowerCase() !== 'idx'"
                   class="flex items-center justify-center gap-1 w-full text-[12px] text-gray-500"
                 >
-                  <span>Encoding:</span>
+                  <span class="font-normal">Encoding:</span>
                   <el-select
                     :model-value="getColumnMappingValue(item)"
                     @update:model-value="(value) => handleColumnMappingChange(item, value)"
