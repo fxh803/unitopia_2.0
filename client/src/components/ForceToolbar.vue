@@ -28,7 +28,7 @@ const handleAddFieldForce = async () => {
 
 <template>
   <div
-    class="px-2 py-4 border border-[#e6e6e6] rounded-xl bg-white flex flex-col gap-3 shadow right-6 top-1/2 absolute z-10 -translate-y-1/2">
+    class="px-2 py-4 border border-[#e6e6e6] rounded-tr-xl rounded-br-xl bg-white flex flex-col gap-3 shadow left-0 absolute z-10" style="top: 356px;">
     <button class="rounded flex h-10 w-10 items-center justify-center cursor-pointer" :class="[
         mode === 'force'
           ? 'bg-[var(--primary-color)] text-white'
