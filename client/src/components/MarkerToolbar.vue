@@ -7,6 +7,7 @@ import * as fabric from 'fabric'
 import { Canvas, Group } from 'fabric'
 import { useMarkerShapeDrawingStore } from '~/stores/markerShapeDrawing'
 import { useMarkerStore } from '~/stores/marker'
+import { useBrushSizeStore } from '~/stores/brushsize'
 
 const markerCanvasModeStore = useMarkerCanvasModeStore()
 const {mode} = storeToRefs(markerCanvasModeStore)
@@ -18,11 +19,26 @@ const markerShapeDrawingStore = useMarkerShapeDrawingStore()
 // Marker store
 const markerStore = useMarkerStore()
 
+// 画笔大小 store
+const brushSizeStore = useBrushSizeStore()
+const { markerBrushWidth } = storeToRefs(brushSizeStore)
+
 // 文件上传相关
 const fileInputRef = ref<HTMLInputElement>()
 
 // 绘制菜单控制
 const showDrawMenu = ref(false)
+
+// 画笔大小面板控制
+const showBrushSizeMenu = ref(false)
+const toggleBrushSizeMenu = () => {
+  showBrushSizeMenu.value = !showBrushSizeMenu.value
+  // 设置画笔大小面板打开状态，用于禁用画布
+  brushSizeStore.setMarkerBrushSizePanelOpen(showBrushSizeMenu.value)
+}
+
+const minBrushSize = 1
+const maxBrushSize = 50
 
 const toggleDrawMenu = () => {
   showDrawMenu.value = !showDrawMenu.value
@@ -35,6 +51,10 @@ onMounted(() => {
     const target = e.target as HTMLElement
     if (!target.closest('.draw-tool-menu')) {
       showDrawMenu.value = false
+    }
+    if (!target.closest('.brush-size-menu')) {
+      showBrushSizeMenu.value = false
+      brushSizeStore.setMarkerBrushSizePanelOpen(false)
     }
   })
   
@@ -247,6 +267,44 @@ const saveMarkers = async () => {
   <div class="flex items-center gap-2 p-1">
     <!-- 颜色选择器 -->
     <ColorPicker />
+
+     <!-- 画笔大小调节按钮 - 仅在绘制/擦除模式下显示 -->
+     <div v-if="mode === 'draw' || mode === 'erase'" class="relative brush-size-menu">
+      <button
+        class="rounded flex h-7 w-7 items-center justify-center cursor-pointer relative"
+        :class="[
+          showBrushSizeMenu
+            ? 'bg-[var(--primary-color)] text-white'
+            : 'bg-white text-black hover:bg-[#f5f5f5]'
+        ]"
+        title="Brush Size"
+        @click="toggleBrushSizeMenu"
+      >
+      <div class="i-carbon:settings-adjust"></div>
+      </button>
+      
+      <!-- 展开面板 - 在按钮上方垂直显示 -->
+      <div 
+        v-if="showBrushSizeMenu"
+        class="absolute left-0 bottom-full mb-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 brush-size-menu"
+      >
+        <div class="flex flex-col items-center gap-2">
+          <div class="flex flex-col items-center gap-1">
+            <label class="text-xs text-gray-600">Size:</label>
+            <span class="text-xs font-mono text-gray-800">{{ markerBrushWidth }}</span>
+          </div>
+          <input
+            type="range"
+            :min="minBrushSize"
+            :max="maxBrushSize"
+            v-model="markerBrushWidth"
+            class="brush-size-slider-vertical"
+            orient="vertical"
+          />
+        </div>
+      </div>
+    </div>
+    
     <!-- 自由绘制按钮 -->
     <button
       class="rounded flex h-7 w-7 items-center justify-center cursor-pointer"
@@ -401,5 +459,37 @@ const saveMarkers = async () => {
   }
 }
 
+/* 画笔大小菜单样式 */
+.brush-size-menu {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.brush-size-slider {
+  width: 100%;
+  height: 4px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+}
+
+.brush-size-slider-vertical {
+  width: 4px;
+  height: 120px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
+  writing-mode: bt-lr; /* IE */
+  -webkit-appearance: slider-vertical; /* WebKit */
+  appearance: slider-vertical;
+}
 
 </style>

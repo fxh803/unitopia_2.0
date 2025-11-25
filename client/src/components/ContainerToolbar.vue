@@ -4,14 +4,30 @@ import { useSelectedModeStore } from '~/stores/selectedMode'
 import { storeToRefs } from 'pinia'
 import { FabricImage } from 'fabric'
 import { sendUploadContainerToServer } from '~/composables/server'
+import { useBrushSizeStore } from '~/stores/brushsize'
 const canvasModeStore = useCanvasModeStore() 
 const { mode } = storeToRefs(canvasModeStore)
 const { setMode } = canvasModeStore
 
 const selectedModeStore = useSelectedModeStore()
 
+// 画笔大小 store
+const brushSizeStore = useBrushSizeStore()
+const { brushWidth } = storeToRefs(brushSizeStore)
+
 // 形状绘制菜单控制
 const showShapeMenu = ref(false)
+
+// 画笔大小面板控制
+const showBrushSizeMenu = ref(false)
+const toggleBrushSizeMenu = () => {
+  showBrushSizeMenu.value = !showBrushSizeMenu.value
+  // 设置画笔大小面板打开状态，用于禁用画布
+  brushSizeStore.setMainBrushSizePanelOpen(showBrushSizeMenu.value)
+}
+
+const minBrushSize = 1
+const maxBrushSize = 50
 
 const toggleShapeMenu = () => {
   showShapeMenu.value = !showShapeMenu.value
@@ -23,6 +39,10 @@ onMounted(() => {
     const target = e.target as HTMLElement
     if (!target.closest('.shape-tool-menu')) {
       showShapeMenu.value = false
+    }
+    if (!target.closest('.brush-size-menu')) {
+      showBrushSizeMenu.value = false
+      brushSizeStore.setMainBrushSizePanelOpen(false)
     }
   })
 }) 
@@ -130,6 +150,41 @@ const triggerFileUpload = () => {
 
 <template>
   <div class="px-2 py-4 border border-[#e6e6e6] rounded-tr-xl rounded-br-xl bg-white flex flex-col gap-3 shadow left-0 absolute z-10" style="top: 356px;">
+    <!-- 画笔大小调节按钮 - 仅在绘制/擦除模式下显示 -->
+    <div v-if="mode === 'draw' || mode === 'erase'" class="relative brush-size-menu">
+      <button
+        class="rounded flex h-10 w-10 items-center justify-center cursor-pointer relative"
+        :class="[
+          showBrushSizeMenu
+            ? 'bg-[var(--primary-color)] text-white'
+            : 'bg-white text-black hover:bg-[#f5f5f5]'
+        ]"
+        title="Brush Size"
+        @click="toggleBrushSizeMenu"
+      >
+      <div class="i-carbon:settings-adjust"></div>
+      </button>
+      
+      <!-- 展开面板 - 在按钮右侧显示 -->
+      <div 
+        v-if="showBrushSizeMenu"
+        class="absolute left-full ml-2 top-0 bg-white border border-gray-200 rounded-lg shadow-lg z-50 p-3 min-w-[180px] brush-size-menu"
+      >
+        <div class="flex flex-col gap-2">
+          <div class="flex items-center justify-between gap-2">
+            <label class="text-xs text-gray-600">Size:</label>
+            <span class="text-xs font-mono text-gray-800 min-w-[30px] text-right">{{ brushWidth }}</span>
+          </div>
+          <input
+            type="range"
+            :min="minBrushSize"
+            :max="maxBrushSize"
+            v-model="brushWidth"
+            class="brush-size-slider"
+          />
+        </div>
+      </div>
+    </div>
     <button
       class="rounded flex h-10 w-10 items-center justify-center cursor-pointer"
       :class="[
@@ -270,5 +325,28 @@ const triggerFileUpload = () => {
     opacity: 1;
     transform: translateY(0);
   }
+}
+
+/* 画笔大小菜单样式 */
+.brush-size-menu {
+  animation: slideIn 0.2s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.brush-size-slider {
+  width: 100%;
+  height: 4px;
+  accent-color: var(--primary-color);
+  cursor: pointer;
 }
 </style>

@@ -16,7 +16,7 @@ const resizeHandleStore = useResizeHandleStore()
 const markerCanvasModeStore = useMarkerCanvasModeStore()
 const markerObjectActionsStore = useMarkerObjectActionsStore()
 const brushSizeStore = useBrushSizeStore()
-
+const { isMarkerBrushSizePanelOpen } = storeToRefs(brushSizeStore)
 // 形状绘制store
 const markerShapeDrawingStore = useMarkerShapeDrawingStore()
 
@@ -74,11 +74,13 @@ watch(() => brushSizeStore.markerBrushWidth, (newWidth) => {
   }
 })
 
-// 监听颜色选择器和路径闭合确认对话框状态，临时禁用绘制
-watch([isColorPickerOpen, () => closePathConfirm.value.show], ([colorPickerOpen, pathConfirmOpen]) => {
+// 监听颜色选择器、路径闭合确认对话框和画笔大小面板状态，临时禁用绘制
+
+
+watch([isColorPickerOpen, () => closePathConfirm.value.show, isMarkerBrushSizePanelOpen], ([colorPickerOpen, pathConfirmOpen, brushSizePanelOpen]) => {
   if (!canvas) return
   
-  const shouldStopDrawing = colorPickerOpen || pathConfirmOpen
+  const shouldStopDrawing = colorPickerOpen || pathConfirmOpen || brushSizePanelOpen
   
   if (shouldStopDrawing) {
     // 保存当前的绘制模式状态
@@ -194,12 +196,6 @@ onBeforeUnmount(() => {
         <MarkerToolbar />
       </div>
     </div>
-
-    <!-- 画笔大小调节面板 - 左上角（避开预览图） -->
-    <BrushSizePanel
-      v-if="markerCanvasModeStore.mode === 'draw' || markerCanvasModeStore.mode === 'erase'"
-      target="marker"
-    />
 
     <!-- 对象操作按钮 -->
     <MarkerObjectActionButtons />

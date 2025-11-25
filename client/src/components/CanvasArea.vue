@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Canvas, PencilBrush } from 'fabric'
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useObjectActionsStore } from '~/stores/objectActions'
 import { useSelectedModeStore } from '~/stores/selectedMode'
@@ -33,7 +33,7 @@ const { selectedMode } = storeToRefs(selectedModeStore)
 const dataScaleStore = useDataScaleStore()
 
 const brushSizeStore = useBrushSizeStore()
-const { brushWidth } = storeToRefs(brushSizeStore)
+const { brushWidth, isMainBrushSizePanelOpen } = storeToRefs(brushSizeStore)
 
 const collageSeriesStore = useCollageSeriesStore()
 const { collageSeries, currentSlideIndex, stopListen } = storeToRefs(collageSeriesStore)
@@ -204,11 +204,15 @@ watch(brushWidth, (val) => {
   }
 })
 
-// 监听路径闭合确认对话框状态，临时禁用绘制
-watch(() => closePathConfirm.value.show, (pathConfirmOpen) => {
+// 监听路径闭合确认对话框和画笔大小面板状态，临时禁用绘制
+const isClosePathConfirmOpen = computed(() => closePathConfirm.value.show)
+
+watch([isClosePathConfirmOpen, isMainBrushSizePanelOpen], ([pathConfirmOpen, brushSizePanelOpen]) => {
   if (!canvas) return
   
-  if (pathConfirmOpen) {
+  const shouldStopDrawing = pathConfirmOpen || brushSizePanelOpen
+  
+  if (shouldStopDrawing) {
     // 保存当前的绘制模式状态
     const wasDrawingMode = canvas.isDrawingMode
     canvas.set('wasDrawingMode', wasDrawingMode)
@@ -337,8 +341,6 @@ onBeforeUnmount(() => {
       <EmitterToolbar v-if="selectedMode === 'emitter'" />
       <!-- Force工具栏：仅在force模式下显示 -->
       <ForceToolbar v-if="selectedMode === 'force'" />
-      <!-- 画笔粗细调节面板，仅在绘制/擦除模式下显示 -->
-      <BrushSizePanel v-if="mode === 'draw' || mode === 'erase'" target="main" />
     </div>
     <!-- 拼贴系列面板 - 移动到右侧 -->
     <CollageSeriesPanel />
