@@ -314,12 +314,12 @@ onBeforeUnmount(() => {
   <section class="bg-gray-900 flex h-full min-h-0 min-w-0 w-full">
     <!-- 主画布区域 -->
     <div ref="canvasAreaRef"
-      class="p-2 border-r border-[#e6e6e6] bg-[#f5f5f5] flex flex-1 flex-row min-h-0 min-w-0 items-center justify-center relative overflow-hidden canvas-with-grid"
+      class="p-2 pl-7 border-r border-[#e6e6e6] bg-[#f5f5f5] flex flex-1 flex-row min-h-0 min-w-0 items-center justify-center relative overflow-hidden canvas-with-grid"
       @dragover="handleDragOver" @drop="(e) => handleDrop(e, canvasEl)">
       <!-- 一级工具栏：模式选择 - 放在头部 -->
       <FirstToolbar />
       <!-- 新增canvas-wrapper，包裹canvas和button -->
-      <div ref="canvasWrapperRef" class="canvas-wrapper transform translate-x-5" style="position: relative;">
+      <div ref="canvasWrapperRef" class="canvas-wrapper" style="position: relative;">
         <!-- 画布本体 -->
         <canvas ref="canvasEl" class="border border-[#e6e6e6] rounded-2xl" />
         <paperCanvas v-if="collaging || result_data.length > 0" :key="paperCanvasKey" />
