@@ -17,6 +17,8 @@ declare module 'vue' {
     ColorPicker: typeof import('./src/components/ColorPicker.vue')['default']
     ContainerToolbar: typeof import('./src/components/ContainerToolbar.vue')['default']
     DataEditor: typeof import('./src/components/DataEditor.vue')['default']
+    DataMapping: typeof import('./src/components/DataMapping.vue')['default']
+    ElInput: typeof import('element-plus')['ElInput']
     ElOption: typeof import('element-plus')['ElOption']
     ElPopconfirm: typeof import('element-plus')['ElPopconfirm']
     ElRadio: typeof import('element-plus')['ElRadio']
@@ -32,6 +34,7 @@ declare module 'vue' {
     Header: typeof import('./src/components/Header.vue')['default']
     HoverInfoPanel: typeof import('./src/components/hoverInfoPanel.vue')['default']
     MarkerCanvasArea: typeof import('./src/components/MarkerCanvasArea.vue')['default']
+    MarkerLibrary: typeof import('./src/components/markerLibrary.vue')['default']
     MarkerMappingPanel: typeof import('./src/components/MarkerMappingPanel.vue')['default']
     MarkerObjectActionButtons: typeof import('./src/components/MarkerObjectActionButtons.vue')['default']
     MarkerToolbar: typeof import('./src/components/MarkerToolbar.vue')['default']
@@ -48,6 +51,8 @@ declare module 'vue' {
     SubMarkerToolbar: typeof import('./src/components/subMarkerToolbar.vue')['default']
     SubObjectActionButtons: typeof import('./src/components/SubObjectActionButtons.vue')['default']
     Table: typeof import('./src/components/Table.vue')['default']
+    TableData: typeof import('./src/components/TableData.vue')['default']
+    TableUploadArea: typeof import('./src/components/TableUploadArea.vue')['default']
     ToastPanel: typeof import('./src/components/ToastPanel.vue')['default']
   }
 }

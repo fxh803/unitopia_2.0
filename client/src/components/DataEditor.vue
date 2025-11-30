@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
 import { useAnimationStore } from '~/stores/animation'
-import Table from './Table.vue'
-import MarkerMappingPanel from './MarkerMappingPanel.vue'
+import Table from './Table.vue' 
 
 // 拼贴处理状态store
 const animationStore = useAnimationStore()
@@ -38,12 +37,12 @@ const { collaging ,result_data} = storeToRefs(animationStore)
         <!-- 内容区域 -->
         <div class="flex-1 min-h-0 flex">
           <!-- 左半边 -->
-          <div class="w-1/2 border-r border-gray-200">
+          <div class="flex-1 border-r border-gray-200">
             <MarkerCanvasArea />
           </div>
           <!-- 右半边 -->
-          <div class="w-1/2"> 
-            <MarkerMappingPanel />
+          <div class="w-[150px] flex-shrink-0"> 
+            <MarkerLibrary />
           </div>
         </div>
       </div>

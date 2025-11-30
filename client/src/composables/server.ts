@@ -537,21 +537,18 @@ export async function sendUploadContainerToServer(stringBase64: string) {
   return ''
 }
 export function pharseData(markerId: string) {
-  const markerStore = useMarkerStore()
   const tableStore = useTableStore()
-  const tableData = tableStore.tableData
-  const markersData = markerStore.markers.find(m => m.id === markerId)
-
-  if (!markersData) {
-    return []
+  const columnFilterCards = tableStore.columnFilterCards
+  
+  // 从 columnFilterCards 中找到对应 markerId 的 filter，返回该 filter 的 data
+  for (const card of columnFilterCards) {
+    const filter = card.filters.find(f => f.markerId === markerId)
+    if (filter && filter.data && filter.data.length > 0) {
+      return filter.data
+    }
   }
-
-  // 直接使用已计算的 cols（Set 转换为数组）
-  if (markersData.cols && markersData.cols.size > 0) {
-    return Array.from(markersData.cols).map(index => tableData[index]).filter(Boolean)
-  }
-
-  // 如果没有 cols，返回空数组（应该不会发生，因为筛选条件更新时会计算）
+  
+  // 如果没有找到对应的 marker，返回空数组
   return []
 }
 export async function handleMarkerDropCanvas(markerId: string,pos: [number,number]) {

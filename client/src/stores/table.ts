@@ -3,15 +3,37 @@ import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
 import { useMarkerStore } from '~/stores/marker'
 
-interface TableData {
+export interface TableData {
   [key: string]: any
+}
+
+export type ConditionOperator = '=' | '>' | '<'
+
+// 单个筛选条件
+export interface SingleFilter {
+  operator: ConditionOperator
+  value: string
+  markerId: string | null // 每个 filter 可以有自己的 marker
+  data: TableData[] // 该 filter 筛选后的数据
+  rows: number[] // 该 filter 筛选后的行索引
+}
+
+// Column 筛选卡片接口
+export interface ColumnFilterCard {
+  id: string
+  column: string
+  filters: SingleFilter[]
 }
 
 export const useTableStore = defineStore('table', () => {
   // 表格数据状态
   const tableData = ref<TableData[]>([])
   const tableColumns = ref<string[]>([])
+  const fileName = ref<string>('')
   const isLoading = ref(false)
+  
+  // 数据映射筛选卡片
+  const columnFilterCards = ref<ColumnFilterCard[]>([])
 
   // 解析 CSV 行
   const parseCSVLine = (line: string): string[] => {
@@ -71,6 +93,7 @@ export const useTableStore = defineStore('table', () => {
       // 更新状态
       tableData.value = data
       tableColumns.value = headers
+      fileName.value = file.name
 
       const totalRows = lines.length - 1
       const loadedRows = data.length
@@ -87,10 +110,8 @@ export const useTableStore = defineStore('table', () => {
   const clearTableData = () => {
     tableData.value = []
     tableColumns.value = []
-    
-    // 重置所有 marker 的 mapping 配置为默认值
-    const markerStore = useMarkerStore()
-    markerStore.resetAllMarkerMappings()
+    fileName.value = ''
+    columnFilterCards.value = []
   }
 
   // 设置表格数据
@@ -103,7 +124,9 @@ export const useTableStore = defineStore('table', () => {
     // 状态
     tableData,
     tableColumns,
+    fileName,
     isLoading,
+    columnFilterCards,
     
     // 方法
     handleFileUpload,

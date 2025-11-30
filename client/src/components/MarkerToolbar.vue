@@ -220,24 +220,29 @@ const saveMarkers = async () => {
     return obj.clone()
   }))
   const group = new Group(cloneObjects)
+  // 使用更大的画布尺寸以提高清晰度
+  const thumbnailSize = 200
+  const padding = 20
+  const contentSize = thumbnailSize - padding * 2
+  
   const tempCanvas = document.createElement('canvas')
-  tempCanvas.width = 60
-  tempCanvas.height = 60
+  tempCanvas.width = thumbnailSize
+  tempCanvas.height = thumbnailSize
 
   const tempFabricCanvas = new Canvas(tempCanvas, {
-    width: 60,
-    height: 60,
+    width: thumbnailSize,
+    height: thumbnailSize,
     backgroundColor: '#ffffff'
   })
   const originWidth = group.width
   const originHeight = group.height
   // 计算缩放比例，确保对象适合缩略图 
-  const scaleX = 50 / Math.max(originWidth, 1)
-  const scaleY = 50 / Math.max(originHeight, 1)
+  const scaleX = contentSize / Math.max(originWidth, 1)
+  const scaleY = contentSize / Math.max(originHeight, 1)
   const scale = Math.min(scaleX, scaleY, 1) // 不超过原始大小
   //把克隆对象放到画布正中央，做好缩放，并导出给previewDataUrl
-  group.set('left', 30)
-  group.set('top', 30)
+  group.set('left', thumbnailSize / 2)
+  group.set('top', thumbnailSize / 2)
   group.set('scaleX', scale)
   group.set('scaleY', scale)
   group.set('originX', 'center')
@@ -245,7 +250,8 @@ const saveMarkers = async () => {
   group.set('opacity', 1)
   tempFabricCanvas.add(group)
   tempFabricCanvas.renderAll()
-  const thumbnail = tempFabricCanvas.toDataURL({ format: 'png', multiplier: 1, enableRetinaScaling: false as any })
+  // 使用更高的 multiplier 提高清晰度
+  const thumbnail = tempFabricCanvas.toDataURL({ format: 'png', multiplier: 2, enableRetinaScaling: false as any })
    // 获取所有对象的 JSON 数据
    const jsonData = allObjects.map(obj => obj.toJSON())
     
@@ -492,9 +498,8 @@ const saveMarkers = async () => {
   height: 120px;
   accent-color: var(--primary-color);
   cursor: pointer;
-  writing-mode: bt-lr; /* IE */
-  -webkit-appearance: slider-vertical; /* WebKit */
-  appearance: slider-vertical;
+  writing-mode: vertical-lr;
+  direction: rtl;
 }
 
 .toolbar-divider {
