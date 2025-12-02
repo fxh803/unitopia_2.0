@@ -125,6 +125,35 @@ const handleClose = () => emit('close')
             @update:model-value="(v:boolean) => { if (currentSlide) (currentSlide as any).hole = v }"
           />
         </div>
+
+        <!-- margin: Element Plus Slider -->
+        <div class="slider-demo-block">
+          <div class="flex items-center justify-between mb-2">
+            <span class="demonstration text-gray-700 font-medium">margin</span>
+            <span class="text-gray-500">{{ currentSlide?.margin ?? 0 }}</span>
+          </div>
+          <el-slider
+            :model-value="currentSlide?.margin ?? 0"
+            :min="0"
+            :max="20"
+            :step="1"
+            @update:model-value="(v:number) => { if (currentSlide) (currentSlide as any).margin = v }"
+          />
+        </div>
+
+        <!-- emitter_type: Element Plus Radio Group -->
+        <div class="flex items-center justify-between">
+          <label class="text-gray-700 font-medium select-none">emitter_type</label>
+          <el-radio-group
+            :model-value="currentSlide?.emitter_type ?? ''"
+            size="default"
+            @update:model-value="(v: string) => { if (currentSlide) (currentSlide as any).emitter_type = v }"
+          >
+            <el-radio value="">空</el-radio>
+            <el-radio value="1D">1D</el-radio>
+            <el-radio value="2D">2D</el-radio>
+          </el-radio-group>
+        </div>
           </div>
         </div>
       </div>

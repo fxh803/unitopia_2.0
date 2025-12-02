@@ -35,6 +35,8 @@ interface ProcessedData {
   rotation?: boolean
   orientation?: 'free' | 'center'
   hole?: boolean
+  margin?: number
+  emitter_type?: string
 }
 const ip = 'http://localhost:4444'
 
@@ -97,6 +99,8 @@ export async function collectAllSlidesData(): Promise<Array<{overviewId: string,
         result.rotation = slideSettings.rotation ?? true
         result.orientation = slideSettings.orientation ?? 'free'
         result.hole = slideSettings.hole ?? false
+        result.margin = slideSettings.margin ?? 0
+        result.emitter_type = slideSettings.emitter_type ?? ''
 
         // 将container信息记录到store中
         if (result.container) {

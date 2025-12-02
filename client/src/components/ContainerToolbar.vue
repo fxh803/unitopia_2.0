@@ -247,7 +247,7 @@ const triggerFileUpload = () => {
       <!-- 形状绘制工具上拉菜单 -->
       <div 
         v-if="showShapeMenu"
-        class="absolute right-full top-0 mr-5 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px] shape-tool-menu"
+        class="absolute left-full top-0 ml-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[120px] shape-tool-menu"
       >
         <!-- 圆形 -->
         <button
