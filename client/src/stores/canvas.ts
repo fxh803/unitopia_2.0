@@ -12,6 +12,8 @@ import { useAnimationStore } from '~/stores/animation'
 import { Group } from 'fabric'
 import paper from 'paper'
 import { handleMarkerDropCanvas, pharseData } from '~/composables/server'
+import { useTableStore } from '~/stores/table'
+import { useMarkerStore } from '~/stores/marker'
 import * as fabric from 'fabric'
 export const useCanvasStore = defineStore('canvas', () => {
   const canvasRef = ref<(() => Canvas | null) | null>(null)
@@ -26,7 +28,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     path: null,
     position: { x: 0, y: 0 }
   })
-  
+
   // 导入其他 store
   const selectedModeStore = useSelectedModeStore()
   const bezierDrawingStore = useBezierDrawingStore()
@@ -58,7 +60,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   function updateMarkerOpacity(selectedMarker: any = null) {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
-    
+
     const allObjects = canvasInstance.getObjects()
     allObjects.forEach((obj: any) => {
       if (obj.get('dataType') === 'marker') {
@@ -76,7 +78,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   function restoreAllMarkerOpacity() {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
-    
+
     const allObjects = canvasInstance.getObjects()
     allObjects.forEach((obj: any) => {
       if (obj.get('dataType') === 'marker') {
@@ -126,7 +128,7 @@ export const useCanvasStore = defineStore('canvas', () => {
       'selection:updated': () => {
         objectActionsStore.setCurrentPathObj()
         objectActionsStore.updateActionBtnVisble()
-        objectActionsStore.updateActionBtnPosition()  
+        objectActionsStore.updateActionBtnPosition()
         handleMarkerSelect()
       },
       'selection:cleared': () => {
@@ -160,12 +162,11 @@ export const useCanvasStore = defineStore('canvas', () => {
         debouncedUpdateCurrentSlide()
       },
       'mouse:over': (e) => {
-        console.log('mouse:over',e.target)
         // 鼠标悬停在对象上时添加偏透明蓝色效果
         if (e.target && e.target.get('dataType') === 'container') {
           e.target.set('opacity', 0.7)
           canvasInstance.renderAll()
-        } 
+        }
         if (e.target && e.target.get('dataType') === 'emitter') {
           // emitter是group，需要遍历其中的子对象设置透明度
           e.target.getObjects().forEach((childObj: any) => {
@@ -180,7 +181,7 @@ export const useCanvasStore = defineStore('canvas', () => {
       'mouse:out': (e) => {
         // 鼠标离开对象时恢复原始透明度
         if (e.target && e.target.get('dataType') === 'container') {
-          e.target.set('opacity', 1)      
+          e.target.set('opacity', 1)
           canvasInstance.renderAll()
         }
         if (e.target && e.target.get('dataType') === 'emitter') {
@@ -223,9 +224,9 @@ export const useCanvasStore = defineStore('canvas', () => {
   function setDrawedObjectDataType(e) {
     // 监听绘制完成事件，为绘制的路径设置dataType
     const canvasInstance = canvasRef.value?.()
-    if (!canvasInstance) return 
+    if (!canvasInstance) return
     // object:added 事件中，对象在 e.target 中
-    const path = e.target; 
+    const path = e.target;
     if (path) {
       // 如果是贝塞尔模式，创建多段贝塞尔曲线
       if (canvasModeStore.mode === 'bezier') {
@@ -235,7 +236,7 @@ export const useCanvasStore = defineStore('canvas', () => {
         }
         return
       }
-      if(path.get('dataType') === undefined){ 
+      if (path.get('dataType') === undefined) {
         // 根据当前选择的模式设置dataType
         path.set('dataType', selectedModeStore.selectedMode);
         if (canvasModeStore.mode !== 'move') {
@@ -253,15 +254,15 @@ export const useCanvasStore = defineStore('canvas', () => {
   function adjustLayer() {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
-    
+
     // 获取画布上的所有对象
     const objects = canvasInstance.getObjects()
-    
+
     // 按 dataType 分组对象
     const backgroundObjects = []
     const containerObjects = []
     const otherObjects = []
-    
+
     objects.forEach(obj => {
       const dataType = obj.get('dataType')
       if (dataType === 'background') {
@@ -271,12 +272,12 @@ export const useCanvasStore = defineStore('canvas', () => {
       } else {
         otherObjects.push(obj)
       }
-    }) 
+    })
     // 将 background 对象移动到最底层
     backgroundObjects.forEach(obj => {
       canvasInstance.sendObjectToBack(obj, true)
     })
-    
+
     // 将 container 对象移动到 background 之上，其他对象之下
     // 从最后一个开始遍历，保持相对顺序
     for (let i = containerObjects.length - 1; i >= 0; i--) {
@@ -290,13 +291,13 @@ export const useCanvasStore = defineStore('canvas', () => {
         }
       }
     }
-    
+
     // 其他对象保持相对层级在顶层
     // 不需要额外操作，因为它们在 container 对象之上
-    
+
     // 重新渲染画布
     canvasInstance.renderAll()
-     
+
   }
 
   // 删除指定markerId的所有对象
@@ -318,14 +319,14 @@ export const useCanvasStore = defineStore('canvas', () => {
   function isDropOnEmitter(dropX: number, dropY: number): boolean {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return false
-    
+
     const objects = canvasInstance.getObjects()
     for (const obj of objects) {
       if (obj.get('dataType') === 'emitter') {
         // 获取emitter对象的边界框
         const bounds = obj.getBoundingRect()
         if (dropX >= bounds.left && dropX <= bounds.left + bounds.width &&
-            dropY >= bounds.top && dropY <= bounds.top + bounds.height) {
+          dropY >= bounds.top && dropY <= bounds.top + bounds.height) {
           return true
         }
       }
@@ -334,7 +335,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   // 计算贝塞尔曲线的近似长度
-  function getBezierApproxLength(p0: {x: number, y: number}, p1: {x: number, y: number}, p2: {x: number, y: number}, p3: {x: number, y: number}): number {
+  function getBezierApproxLength(p0: { x: number, y: number }, p1: { x: number, y: number }, p2: { x: number, y: number }, p3: { x: number, y: number }): number {
     // 使用控制多边形估算长度
     const d1 = Math.sqrt(Math.pow(p1.x - p0.x, 2) + Math.pow(p1.y - p0.y, 2))
     const d2 = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2))
@@ -343,13 +344,13 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   // 计算贝塞尔曲线上的点
-  function calculateBezierPoint(p0: {x: number, y: number}, p1: {x: number, y: number}, p2: {x: number, y: number}, p3: {x: number, y: number}, t: number): {x: number, y: number} {
+  function calculateBezierPoint(p0: { x: number, y: number }, p1: { x: number, y: number }, p2: { x: number, y: number }, p3: { x: number, y: number }, t: number): { x: number, y: number } {
     const t2 = t * t
     const t3 = t2 * t
     const mt = 1 - t
     const mt2 = mt * mt
     const mt3 = mt2 * mt
-    
+
     return {
       x: mt3 * p0.x + 3 * mt2 * t * p1.x + 3 * mt * t2 * p2.x + t3 * p3.x,
       y: mt3 * p0.y + 3 * mt2 * t * p1.y + 3 * mt * t2 * p2.y + t3 * p3.y
@@ -360,19 +361,19 @@ export const useCanvasStore = defineStore('canvas', () => {
   function getEmitterSampledPoints(n: number = 10): Array<{ x: number; y: number }> {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return []
-    
+
     const objects = canvasInstance.getObjects()
-    
+
     for (const obj of objects) {
       if (obj.get('dataType') === 'emitter') {
         // 收集所有贝塞尔曲线段
         const bezierSegments: Array<{
-          p0: {x: number, y: number},
-          p1: {x: number, y: number},
-          p2: {x: number, y: number},
-          p3: {x: number, y: number}
+          p0: { x: number, y: number },
+          p1: { x: number, y: number },
+          p2: { x: number, y: number },
+          p3: { x: number, y: number }
         }> = []
-        
+
         // 遍历 group 中的所有贝塞尔曲线段
         obj.getObjects().forEach((groupObj: any) => {
           if (groupObj.type === 'path' && groupObj.path) {
@@ -389,7 +390,7 @@ export const useCanvasStore = defineStore('canvas', () => {
                     const p1 = { x: cSegment[1], y: cSegment[2] } // 第一个控制点
                     const p2 = { x: cSegment[3], y: cSegment[4] } // 第二个控制点
                     const p3 = { x: cSegment[5], y: cSegment[6] } // 终点
-                    
+
                     bezierSegments.push({ p0, p1, p2, p3 })
                   }
                 }
@@ -397,31 +398,31 @@ export const useCanvasStore = defineStore('canvas', () => {
             }
           }
         })
-        
+
         if (bezierSegments.length === 0) return []
-        
+
         // 计算每个段的长度
         const segmentLengths: number[] = []
         let totalLength = 0
-        
+
         for (const segment of bezierSegments) {
           const length = getBezierApproxLength(segment.p0, segment.p1, segment.p2, segment.p3)
           segmentLengths.push(length)
           totalLength += length
         }
-        
+
         // 在整个路径上均匀分布n个采样点
         const sampledPoints: Array<{ x: number; y: number }> = []
-        
+
         for (let i = 0; i < n; i++) {
           const globalT = i / (n - 1) // 全局参数t从0到1
           const targetLength = globalT * totalLength
-          
+
           // 找到目标长度对应的贝塞尔曲线段
           let currentLength = 0
           let targetSegmentIndex = 0
           let segmentT = 0
-          
+
           for (let j = 0; j < bezierSegments.length; j++) {
             const segmentLength = segmentLengths[j]
             if (currentLength + segmentLength >= targetLength) {
@@ -431,40 +432,54 @@ export const useCanvasStore = defineStore('canvas', () => {
             }
             currentLength += segmentLength
           }
-          
+
           // 在目标贝塞尔曲线段上采样
           const targetSegment = bezierSegments[targetSegmentIndex]
           const point = calculateBezierPoint(targetSegment.p0, targetSegment.p1, targetSegment.p2, targetSegment.p3, segmentT)
           sampledPoints.push(point)
         }
-        
+
         return sampledPoints
       }
     }
-    
+
     return []
   }
 
-  async function addMarkers(groupJson: string, pos: Array<{ x: number, y: number }>, markerId: string) {
+  async function addMarkers(markerIdList: string[], pos: Array<{ x: number, y: number }>) {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
 
     try {
       // 使用 storeToRefs 解构 dataScaleStore 的响应式属性
       const { columnMapping, widthScale, heightScale, sizeScale } = storeToRefs(dataScaleStore)
-      
+
       // 获取归一化参数
-      const { data, normalized, mappingChannel, defaultSize } = dataScaleStore.getNormalizationParams(markerId) 
+      const { data, normalized, mappingChannel, defaultSize } = dataScaleStore.getNormalizationParams()
+
+      // 获取 marker store
+      const markerStore = useMarkerStore()
+      const markers = markerStore.markers
 
       for (let i = 0; i < pos.length; i++) {
         const p = pos[i]
         const currentDropX = p.x
         const currentDropY = p.y
-        const objects = await fabric.util.enlivenObjects(groupJson, 'fabric')
-        
+        //根据markerIdList中获取markerId对应的jsonData
+        const markerId = markerIdList[i]
+        if (!markerId) continue
+
+        const marker = markers.find(m => m.id === markerId)
+        if (!marker || !marker.jsonData) {
+          console.warn(`Marker not found or has no jsonData: ${markerId}`)
+          continue
+        }
+
+        const objects = await fabric.util.enlivenObjects(marker.jsonData, 'fabric')
+
         if (objects && objects.length > 0) {
           const group = new Group(objects)
-          
+
           // 先设置所有属性（包括dataType），然后再添加到画布
           group.set({
             left: currentDropX,
@@ -478,7 +493,7 @@ export const useCanvasStore = defineStore('canvas', () => {
             markerId: markerId,
             data: data[i]
           })
-          
+
           if (selectedModeStore.selectedMode === null) {
             group.selectable = true;
             group.evented = true;
@@ -486,17 +501,17 @@ export const useCanvasStore = defineStore('canvas', () => {
 
           // 根据数据中的 width 和 height 调节对象大小
           const currentWidth = group.width || group.getScaledWidth()
-          const currentHeight = group.height || group.getScaledHeight() 
+          const currentHeight = group.height || group.getScaledHeight()
           const normalizedValue = normalized[i]
           const currentSize = Math.max(currentWidth, currentHeight)
           //一开始先按比例缩放
           let scaleX = defaultSize / currentSize
-          let scaleY = defaultSize / currentSize  
+          let scaleY = defaultSize / currentSize
           if (mappingChannel === 'width') {
-            scaleX = normalizedValue / currentSize 
+            scaleX = normalizedValue / currentSize
             scaleX *= widthScale.value
           } else if (mappingChannel === 'height') {
-            scaleY = normalizedValue / currentSize 
+            scaleY = normalizedValue / currentSize
             scaleY *= heightScale.value
           } else if (mappingChannel === 'size') {
             scaleX = normalizedValue / currentSize
@@ -523,20 +538,23 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
-  // 处理拖拽到emitter上的事件
-  function handleEmitterDrop(groupJsonData: string, markerId: string, dropX: number, dropY: number) {
-    const data = pharseData(markerId)  
-    const groupJson = JSON.parse(groupJsonData)
-    const n = data.length  
-    const emitterSampledPoints = getEmitterSampledPoints(n) 
-    addMarkers(groupJson, emitterSampledPoints, markerId)
+  // 处理拖拽到emitter上的事件（统一使用marker列表）
+  function handleEmitterDrop(dropX: number, dropY: number, markerIdList: string[]) {
+    // 获取所有选中filter的数据
+    const allData = pharseData()
+
+    // 获取所有采样点（不分批，因为 getNormalizationParams 会对总数进行归一化计算）
+    const totalPoints = getEmitterSampledPoints(allData.length)
+
+    // 添加markers（使用全部采样点）
+    addMarkers(markerIdList, totalPoints)
   }
 
-  async function handleMarkerDrop(groupJsonData: string, markerId: string, dropX: number, dropY: number) {
-    const groupJson = JSON.parse(groupJsonData)
-    const result = await handleMarkerDropCanvas(markerId, [dropX, dropY])
+  async function handleMarkerDrop(dropX: number, dropY: number, markerIdList: string[]) {
+    // 对每个marker分别添加
+    const result = await handleMarkerDropCanvas([dropX, dropY])
     const pos = result.init_pos
-    addMarkers(groupJson, pos, markerId) 
+    addMarkers(markerIdList, pos)
   }
 
   // 处理拖拽预览图到主画布
@@ -549,27 +567,48 @@ export const useCanvasStore = defineStore('canvas', () => {
 
   function handleDrop(e: DragEvent, canvasEl: HTMLElement) {
     e.preventDefault()
+    const cardId = e.dataTransfer?.getData('text/plain')
+    if (!cardId) return
 
+    //把cardid对应的card 的选中的markerid进行数量倍数处理
+    const tableStore = useTableStore()
+    tableStore.currentCardId = cardId
+    const card = tableStore.columnFilterCards.find(c => c.id === cardId)
+    const markerIdList: string[] = []
+    if (card) {
+      const selectedMarkerIds = card.filters.filter(filter => filter.isSelected).map(filter => filter.markerId)
+      const selectedMarkerIdsCount = card.filters.filter(filter => filter.isSelected).map(filter => filter.rows.length)
+      for (let i = 0; i < selectedMarkerIds.length; i++) {
+        for (let j = 0; j < selectedMarkerIdsCount[i]; j++) {
+          markerIdList.push(selectedMarkerIds[i])
+        }
+      }
+      console.log(markerIdList)
+    }
     const canvasInstance = canvasRef.value?.()
-    if (!canvasInstance || !e.dataTransfer) return
-
-    const groupJsonData = e.dataTransfer.getData('application/json')
-    const markerId = e.dataTransfer.getData('text/plain')
-    if (!groupJsonData) return
+    if (!canvasInstance) return
 
     // 计算拖拽位置相对于画布的偏移
     const canvasRect = canvasEl.getBoundingClientRect()
     const dropX = e.clientX - canvasRect.left
     const dropY = e.clientY - canvasRect.top
-    // 在拖拽之前先删除相同markerId的对象
-    removeObjectsByMarkerId(markerId)
 
-    // 检查是否拖拽到emitter上
-    if (isDropOnEmitter(dropX, dropY)) {
-      handleEmitterDrop(groupJsonData, markerId, dropX, dropY)
+    if (canvasInstance) {
+      const objects = canvasInstance.getObjects().concat()
+      objects.forEach(obj => {
+        if (obj.get('dataType') === 'marker') {
+          canvasInstance.remove(obj)
+        }
+      })
+      canvasInstance.discardActiveObject()
+      canvasInstance.renderAll()
     }
-    else{
-      handleMarkerDrop(groupJsonData, markerId, dropX, dropY)
+
+    // 统一使用列表格式处理
+    if (isDropOnEmitter(dropX, dropY)) {
+      handleEmitterDrop(dropX, dropY, markerIdList)
+    } else {
+      handleMarkerDrop(dropX, dropY, markerIdList)
     }
   }
 
@@ -577,7 +616,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   function askToClosePath(path: any) {
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance || !path) return
-    
+
     // 跳过预览形状
     if (path.get('isPreview')) return
 
@@ -585,23 +624,23 @@ export const useCanvasStore = defineStore('canvas', () => {
     const canvasModeStore = useCanvasModeStore()
     if (canvasModeStore.mode !== 'draw' && canvasModeStore.mode !== 'rect' && canvasModeStore.mode !== 'ellipse') return
 
-    
+
     // 只有当对象是 container 类型时才触发
     if (path.get('dataType') !== 'container') return
-    
+
     // 获取对象在画布上的位置
     const zoom = canvasInstance.getZoom()
     const vpt = canvasInstance.viewportTransform
     const pathBounds = path.getBoundingRect()
-    
+
     // 计算对象在页面中的位置
     const canvasEl = canvasInstance.getElement()
     if (!canvasEl) return
-    
+
     const canvasRect = canvasEl.getBoundingClientRect()
     const x = (pathBounds.left * zoom) + (vpt[4] || 0) + canvasRect.left
     const y = (pathBounds.top * zoom) + (vpt[5] || 0) + canvasRect.top
-    
+
     // 设置确认对话框状态
     closePathConfirm.value = {
       show: true,
@@ -614,10 +653,10 @@ export const useCanvasStore = defineStore('canvas', () => {
   function handleClosePathConfirm(confirmed: boolean) {
     const { path } = closePathConfirm.value
     if (!path) return
-    
+
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
-    
+
     if (confirmed) {
       // 闭合路径：设置 fill 为 stroke 颜色
       const strokeColor = path.stroke || '#000'
@@ -627,7 +666,7 @@ export const useCanvasStore = defineStore('canvas', () => {
       //更新预览
       collageSeriesStore.updateCurrentSlide()
     }
-    
+
     // 关闭确认对话框
     closePathConfirm.value = {
       show: false,
@@ -635,13 +674,13 @@ export const useCanvasStore = defineStore('canvas', () => {
       position: { x: 0, y: 0 }
     }
   }
-  function getDataBinding (){
+  function getDataBinding() {
     const hoverInfoPanelStore = useHoverInfoPanelStore()
     const allData = hoverInfoPanelStore.allData
-  
+
     // 将所有 data 拍平成一维数组
     const flattenedData: Array<any> = []
-  
+
     // 遍历所有 overview
     for (const overview of allData) {
       // 遍历每个 overview 的所有 slides
@@ -655,12 +694,12 @@ export const useCanvasStore = defineStore('canvas', () => {
         }
       }
     }
-  
+
     return flattenedData
   }
 
-  async function renderResult (){
-    collageSeriesStore.addNewSlide() 
+  async function renderResult() {
+    collageSeriesStore.addNewSlide()
     const animationStore = useAnimationStore()
     const { process_id } = storeToRefs(animationStore)
     // 获取canvas实例
@@ -691,21 +730,21 @@ export const useCanvasStore = defineStore('canvas', () => {
         console.log(markerIndices)
         // 将当前 paper.js 画布导出为 SVG
         const paperSvgString = paper.project.exportSVG({ asString: true })
-  
+
         // 使用 Fabric.js 加载 SVG
         const loadedSVG = await fabric.loadSVGFromString(paperSvgString)
         console.log(loadedSVG)
         // 获取拍平的 data
         const flattenedData = getDataBinding()
-  
+
         // 遍历所有 SVG 对象，只给 marker 类型的对象设置 dataType 和 data
         let markerDataIndex = 0
         loadedSVG.objects.forEach((obj: any, index: number) => {
-          // 检查当前索引是否对应 marker 对象 
+          // 检查当前索引是否对应 marker 对象
           if (markerIndices.includes(index)) {
             console.log(index)
             const data = flattenedData[markerDataIndex] || null
-            
+
             // 先设置基本属性
             obj.set({
               selectable: true,
@@ -714,14 +753,14 @@ export const useCanvasStore = defineStore('canvas', () => {
               data: data,
               markerId: markerId
             })
-            
+
             // 添加到画布
             canvasInstance.add(obj)
             obj.setCoords()
-            
+
             // 获取对象的边界框中心点（基于当前 origin）
             const centerPoint = obj.getCenterPoint()
-            
+
             // 设置 origin 为 center，并设置位置为中心点
             // 这样对象的视觉位置不会改变
             obj.set({
@@ -730,18 +769,18 @@ export const useCanvasStore = defineStore('canvas', () => {
               left: centerPoint.x,
               top: centerPoint.y
             })
-            
+
             // 更新坐标以确保位置正确
             obj.setCoords()
-            
+
             markerDataIndex++
-          } 
-          
+          }
+
         })
-        
+
         // 重新渲染画布
         canvasInstance.renderAll()
-  
+
       } catch (error) {
         console.error('加载 SVG 结果失败:', error)
       }
@@ -752,7 +791,7 @@ export const useCanvasStore = defineStore('canvas', () => {
   async function enlivenAllContainerObjects() {
     const { currentOverviewIndex, overviews } = storeToRefs(collageSeriesStore)
     const currentOverview = overviews.value[currentOverviewIndex.value]
-    
+
     if (!currentOverview || !currentOverview.collageSeries || currentOverview.collageSeries.length === 0) {
       console.warn('当前 overview 不存在或没有 slides')
       return []
@@ -765,14 +804,14 @@ export const useCanvasStore = defineStore('canvas', () => {
       try {
         // 解析 slide 的 JSON 数据
         const slideData = typeof slide.json === 'string' ? JSON.parse(slide.json) : slide.json
-        
+
         if (!slideData.objects || !Array.isArray(slideData.objects)) {
           continue
         }
 
         // 收集所有 container 对象的 JSON
         const containerJsonArray: any[] = []
-        
+
         slide.dataTypeArray.forEach((dataType: string, index: number) => {
           if (dataType === 'container' && slideData.objects[index]) {
             containerJsonArray.push(slideData.objects[index])
@@ -799,27 +838,27 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   return {
-    canvasRef,
-    containerColor,
-    closePathConfirm,
-    setCanvas,
-    addCanvasEventListeners,
-    removeCanvasEventListeners,
-    setDrawedObjectDataType,
-    adjustLayer,
-    removeObjectsByMarkerId,
-    isDropOnEmitter,
-    getBezierApproxLength,
-    calculateBezierPoint,
-    getEmitterSampledPoints,
-    addMarkers,
-    handleEmitterDrop,
-    handleMarkerDrop,
-    handleDragOver,
-    handleDrop,
-    askToClosePath,
-    handleClosePathConfirm,
-    renderResult,
-    enlivenAllContainerObjects
-  }
+  canvasRef,
+  containerColor,
+  closePathConfirm,
+  setCanvas,
+  addCanvasEventListeners,
+  removeCanvasEventListeners,
+  setDrawedObjectDataType,
+  adjustLayer,
+  removeObjectsByMarkerId,
+  isDropOnEmitter,
+  getBezierApproxLength,
+  calculateBezierPoint,
+  getEmitterSampledPoints,
+  addMarkers,
+  handleEmitterDrop,
+  handleMarkerDrop,
+  handleDragOver,
+  handleDrop,
+  askToClosePath,
+  handleClosePathConfirm,
+  renderResult,
+  enlivenAllContainerObjects
+}
 })

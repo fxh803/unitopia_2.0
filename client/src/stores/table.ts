@@ -16,6 +16,7 @@ export interface SingleFilter {
   markerId: string | null // 每个 filter 可以有自己的 marker
   data: TableData[] // 该 filter 筛选后的数据
   rows: number[] // 该 filter 筛选后的行索引
+  isSelected?: boolean // 是否被选中
 }
 
 // Column 筛选卡片接口
@@ -31,10 +32,10 @@ export const useTableStore = defineStore('table', () => {
   const tableColumns = ref<string[]>([])
   const fileName = ref<string>('')
   const isLoading = ref(false)
-  
+
   // 数据映射筛选卡片
   const columnFilterCards = ref<ColumnFilterCard[]>([])
-
+  const currentCardId = ref<string | null>(null)
   // 解析 CSV 行
   const parseCSVLine = (line: string): string[] => {
     const result: string[] = []
@@ -127,10 +128,10 @@ export const useTableStore = defineStore('table', () => {
     fileName,
     isLoading,
     columnFilterCards,
-    
+    currentCardId,
     // 方法
     handleFileUpload,
     clearTableData,
     setTableData
   }
-}) 
+})

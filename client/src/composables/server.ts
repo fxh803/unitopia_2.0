@@ -179,7 +179,7 @@ function processMarker(tempCanvas: Canvas) {
         const scaleY = obj.scaleY || 1
         widths.push(scaleX*baseSize) //这里传的是对于正方形bbox的缩放系数
         heights.push(scaleY*baseSize)
-        
+
         // 记录角度（Fabric.js 中 angle 是度数，转换为弧度）
         const angleDegrees = obj.get('angle') || 0
         const angleRadians = angleDegrees * Math.PI / 180
@@ -220,28 +220,28 @@ function processContainer(tempCanvas: Canvas) {
   if (containerObjs.length === 0) {
     return ''
   }
-  
+
   // 保存原始背景色
   const originalBackgroundColor = tempCanvas.backgroundColor
-  
+
   // 隐藏所有非 container 对象
   for (const obj of canvasObjects) {
     if (obj.get('dataType') != 'container') {
       obj.set('visible', false)
     }
   }
-  
+
   // 将背景设置为透明，避免背景被包含在导出的图像中
   tempCanvas.backgroundColor = 'transparent'
-  
+
   const containerBase64 = tempCanvas.toDataURL({
     format: 'png',
     multiplier: 1
   })
-  
+
   // 恢复原始背景色
   tempCanvas.backgroundColor = originalBackgroundColor
-  
+
   // 恢复所有对象的可见性
   for (const obj of canvasObjects) {
     if (obj.get('dataType') != 'container') {
@@ -421,7 +421,7 @@ export async function sendDataToServer(): Promise<boolean> {
     selectedModeStore.setSelectedMode(null)
     const data = await collectAllSlidesData()
     if (data === 'has_result_marker') {
-      ElMessage.error('The unit visualization result cannot be included')  
+      ElMessage.error('The unit visualization result cannot be included')
       collaging.value = false
       return false
     }
@@ -540,28 +540,32 @@ export async function sendUploadContainerToServer(stringBase64: string) {
   }
   return ''
 }
-export function pharseData(markerId: string) {
+export function pharseData() {
   const tableStore = useTableStore()
-  const columnFilterCards = tableStore.columnFilterCards
-  
-  // 从 columnFilterCards 中找到对应 markerId 的 filter，返回该 filter 的 data
-  for (const card of columnFilterCards) {
-    const filter = card.filters.find(f => f.markerId === markerId)
-    if (filter && filter.data && filter.data.length > 0) {
-      return filter.data
+  const card = tableStore.columnFilterCards.find(c => c.id === tableStore.currentCardId)
+  const combinedData: any[] = []
+
+  if (!card) {
+    return combinedData
+  }
+
+  // 遍历所有 columnFilterCards，找出 isSelected 为 true 的 filter，收集它们的数据
+  for (const filter of card.filters) {
+    if (filter.isSelected && filter.data && filter.data.length > 0) {
+      combinedData.push(...filter.data)
     }
   }
-  
-  // 如果没有找到对应的 marker，返回空数组
-  return []
+
+  // 返回合并后的数据
+  return combinedData
 }
-export async function handleMarkerDropCanvas(markerId: string,pos: [number,number]) {
+export async function handleMarkerDropCanvas(pos: [number,number]) {
   const collageSeriesStore = useCollageSeriesStore()
   const canvas = collageSeriesStore.canvasRef?.()
   const container = processContainer(canvas)
 
 
-  const data = pharseData(markerId)
+  const data = pharseData()
   const response = await fetch(`${ip}/markerDropApi`, {
     method: 'POST',
     headers: {

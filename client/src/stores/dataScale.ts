@@ -18,7 +18,7 @@ export const useDataScaleStore = defineStore('dataScale', () => {
     column: null,
     channel: null
   })
-  
+
   const canvasRef = ref<(() => Canvas | null) | null>(null)
   const collageSeriesStore = useCollageSeriesStore()
 
@@ -64,7 +64,7 @@ export const useDataScaleStore = defineStore('dataScale', () => {
           scaleX: newScaleX,
           scaleY: newScaleY
         })
- 
+
       }
     })
 
@@ -85,7 +85,7 @@ export const useDataScaleStore = defineStore('dataScale', () => {
     objects.forEach((obj: any, i) => {
       if (obj.get('dataType') === 'marker') {
         // 获取归一化参数
-        const { normalized, mappingChannel, defaultSize } = getNormalizationParams(obj.get('markerId'))
+        const { normalized, mappingChannel, defaultSize } = getNormalizationParams()
 
         const currentWidth = obj.width || obj.getScaledWidth()
         const currentHeight = obj.height || obj.getScaledHeight()
@@ -112,7 +112,7 @@ export const useDataScaleStore = defineStore('dataScale', () => {
         obj.set({
           scaleX,
           scaleY
-        }) 
+        })
 
       }
     })
@@ -186,8 +186,8 @@ export const useDataScaleStore = defineStore('dataScale', () => {
     prevSizeScale.value = 1
   }
   // 计算归一化参数和归一化函数
-  function getNormalizationParams(markerId: string) {
-    const data = pharseData(markerId)
+  function getNormalizationParams(cardId: string) {
+    const data = pharseData()
 
     // 获取映射的列名和通道
     const mappedColumn = columnMapping.value.column
@@ -200,7 +200,7 @@ export const useDataScaleStore = defineStore('dataScale', () => {
 
     // 只用一个列表记录选中列的数据（包括非数值列全1的处理后的数据）
     const columnValues: number[] = []
-    
+
     data.forEach((row: any) => {
       if (mappedColumn && row[mappedColumn] !== undefined) {
         const value = parseFloat(row[mappedColumn])

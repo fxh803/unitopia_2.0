@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { ref, onBeforeUnmount, type Ref } from 'vue'
+import { ref, onBeforeUnmount } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useTableStore, type ConditionOperator } from '~/stores/table'
+import { useTableStore, type ConditionOperator, type SingleFilter, type ColumnFilterCard } from '~/stores/table'
 import { useMarkerStore } from '~/stores/marker'
 import { useDataScaleStore } from '~/stores/dataScale'
 
@@ -23,11 +23,8 @@ const isDraggingOverMarkerDropZone = ref<Record<string, boolean>>({})
 // 生成唯一 ID
 const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
-// 导入类型
-import type { SingleFilter, ColumnFilterCard } from '~/stores/table'
-
 // 工具函数：获取卡片
-const getCard = (cardId: string) => columnFilterCards.value.find(c => c.id === cardId)
+const getCard = (cardId: string) => columnFilterCards.value.find(c => c.id === cardId) || null
 
 // 工具函数：创建拖拽图像
 const createDragImage = (thumbnail: string) => {
@@ -186,9 +183,8 @@ const updateFilterData = (card: ColumnFilterCard, filter: SingleFilter) => {
   filter.rows = matchedRows
 }
 
-// 计算单个筛选条件匹配的实体数量（只读取，不修改数据）
-const getFilterMatchedCount = (card: ColumnFilterCard, filter: SingleFilter): number => {
-  // 直接返回已计算好的 rows 长度，不触发数据更新
+// 计算单个筛选条件匹配的实体数量
+const getFilterMatchedCount = (filter: SingleFilter): number => {
   return filter.rows?.length || 0
 }
 
@@ -208,73 +204,54 @@ const handleDrop = (e: DragEvent, cardId?: string) => {
   if (!column) return
 
   if (cardId) {
-    // 拖拽到特定卡片
-    const card = columnFilterCards.value.find(c => c.id === cardId)
+    const card = getCard(cardId)
     if (card?.column === column) {
       addFilterToCard(cardId)
     }
   } else {
-    // 拖拽到列表末尾
     const existingCard = columnFilterCards.value.find(card => card.column === column)
     if (existingCard) {
       addFilterToCard(existingCard.id)
     } else {
-      const newCard: ColumnFilterCard = {
+      columnFilterCards.value.push({
         id: generateId('card'),
         column,
         filters: [{ operator: '=', value: '', markerId: null, data: [], rows: [] }]
-      }
-      columnFilterCards.value.push(newCard)
+      })
     }
   }
 }
 
 // 通用拖拽悬停处理
-const createDragOverHandler = (stateRef: Ref<boolean>) => (e: DragEvent) => {
+const handleDragOver = (e: DragEvent) => {
   e.preventDefault()
   e.dataTransfer!.dropEffect = 'copy'
-  stateRef.value = true
+  isDraggingOverDropZone.value = true
+}
+
+const handleBottomDragOver = (e: DragEvent) => {
+  e.preventDefault()
+  e.dataTransfer!.dropEffect = 'copy'
+  isDraggingOverBottomDropZone.value = true
 }
 
 // 通用拖拽离开处理
-const createDragLeaveHandler = (stateRef: Ref<boolean>) => (e: DragEvent) => {
+const handleDragLeave = (e: DragEvent) => {
   if (isOutsideRect(e, e.currentTarget as HTMLElement)) {
-    stateRef.value = false
+    isDraggingOverDropZone.value = false
   }
 }
 
-const handleDragOver = createDragOverHandler(isDraggingOverDropZone)
-const handleBottomDragOver = createDragOverHandler(isDraggingOverBottomDropZone)
-const handleDragLeave = createDragLeaveHandler(isDraggingOverDropZone)
-const handleBottomDragLeave = createDragLeaveHandler(isDraggingOverBottomDropZone)
-
-// 处理拖拽结束
-const handleDragEnd = () => {
-  isDraggingOverDropZone.value = false
-}
-
-// 删除 Column 卡片
-const removeCard = (cardId: string) => {
-  const index = columnFilterCards.value.findIndex(c => c.id === cardId)
-  if (index !== -1) {
-    columnFilterCards.value.splice(index, 1)
+const handleBottomDragLeave = (e: DragEvent) => {
+  if (isOutsideRect(e, e.currentTarget as HTMLElement)) {
+    isDraggingOverBottomDropZone.value = false
   }
 }
+
 
 // 添加筛选条件到卡片
 const addFilterToCard = (cardId: string) => {
   getCard(cardId)?.filters.push({ operator: '=', value: '', markerId: null, data: [], rows: [] })
-}
-
-// 删除卡片中的筛选条件
-const removeFilterFromCard = (cardId: string, filterIndex: number) => {
-  const card = getCard(cardId)
-  if (!card) return
-
-  card.filters.splice(filterIndex, 1)
-  if (card.filters.length === 0) {
-    removeCard(cardId)
-  }
 }
 
 // 更新筛选条件
@@ -293,6 +270,10 @@ const assignMarkerToFilter = (cardId: string, filterIndex: number, markerId: str
   const filter = card?.filters[filterIndex]
   if (filter) {
     filter.markerId = markerId
+    // 如果删除了 marker，将 isSelected 设置为 false
+    if (!markerId) {
+      filter.isSelected = false
+    }
     updateFilterData(card, filter)
   }
 }
@@ -304,17 +285,14 @@ const handleMarkerDrop = (cardId: string, filterIndex: number, e: DragEvent) => 
   if (markerId) {
     assignMarkerToFilter(cardId, filterIndex, markerId)
   }
-  // 重置悬停状态
-  const zoneKey = `${cardId}-${filterIndex}`
-  isDraggingOverMarkerDropZone.value[zoneKey] = false
+  isDraggingOverMarkerDropZone.value[`${cardId}-${filterIndex}`] = false
 }
 
 // 处理 marker 拖拽悬停
 const handleMarkerDragOver = (cardId: string, filterIndex: number, e: DragEvent) => {
   e.preventDefault()
   e.dataTransfer!.dropEffect = 'copy'
-  const zoneKey = `${cardId}-${filterIndex}`
-  isDraggingOverMarkerDropZone.value[zoneKey] = true
+  isDraggingOverMarkerDropZone.value[`${cardId}-${filterIndex}`] = true
 }
 
 // 处理 marker 拖拽离开
@@ -324,19 +302,51 @@ const handleMarkerDragLeave = (cardId: string, filterIndex: number, e: DragEvent
   }
 }
 
-// 处理 filter 拖拽开始
-const handleFilterDragStart = (cardId: string, filterIndex: number, e: DragEvent) => {
-  const card = getCard(cardId)
-  const filter = card?.filters[filterIndex]
-  if (!filter || !filter.markerId || !filter.data?.length || !e.dataTransfer) return
+// 切换filter选中状态
+const toggleFilterSelection = (cardId: string, filterIndex: number) => {
+  const filter = getCard(cardId)?.filters[filterIndex]
+  if (filter) {
+    filter.isSelected = !filter.isSelected
+  }
+}
 
-  const marker = markers.value.find(m => m.id === filter.markerId)
-  if (marker?.jsonData) {
-    e.dataTransfer.setData('application/json', JSON.stringify(marker.jsonData))
-    e.dataTransfer.setData('text/plain', filter.markerId)
-    dragImageElement.value = createDragImage(marker.thumbnail)
+// 检查filter是否被选中
+const isFilterSelected = (cardId: string, filterIndex: number): boolean => {
+  return getCard(cardId)?.filters[filterIndex]?.isSelected || false
+}
+
+// 获取card中所有选中的filter
+const getSelectedFilters = (cardId: string) => {
+  const card = getCard(cardId)
+  if (!card) return []
+
+  return card.filters
+    .map((filter, filterIndex) => {
+      if (!filter.isSelected || !filter.markerId || !filter.data?.length) return null
+      return { filter, filterIndex, markerId: filter.markerId }
+    })
+    .filter((item): item is { filter: SingleFilter, filterIndex: number, markerId: string } => item !== null)
+}
+
+// 处理 card 拖拽开始
+const handleCardDragStart = (cardId: string, e: DragEvent) => {
+  const card = getCard(cardId)
+  if (!card || !e.dataTransfer) return
+
+  // 检查是否有选中的 filter
+  const selected = getSelectedFilters(cardId)
+  if (selected.length === 0) return
+
+  // 传递拖动的是哪个card
+  e.dataTransfer.setData('text/plain', cardId)
+
+  // 使用第一个选中 filter 的 marker 作为拖拽图像
+  const firstMarker = markers.value.find(m => m.id === selected[0].markerId)
+  if (firstMarker?.thumbnail) {
+    dragImageElement.value = createDragImage(firstMarker.thumbnail)
     e.dataTransfer.setDragImage(dragImageElement.value, -10, -10)
   }
+
   isDraggingFilter.value = true
 }
 
@@ -405,20 +415,22 @@ onBeforeUnmount(() => {
             :key="card.id"
             @drop="(e) => handleDrop(e, card.id)"
             @dragover="handleDragOver"
-            class="border border-gray-200 rounded-lg bg-white overflow-hidden"
+            :draggable="getSelectedFilters(card.id).length > 0"
+            @dragstart="(e) => handleCardDragStart(card.id, e)"
+            @dragend="handleFilterDragEnd"
+            :class="[
+              'rounded-lg bg-white overflow-hidden transition-all border',
+              getSelectedFilters(card.id).length > 0
+                ? 'cursor-move border-gray-200 hover:border-1 hover:border-blue-400'
+                : 'border-gray-200',
+              isDraggingFilter && getSelectedFilters(card.id).length > 0 ? 'border-blue-400 bg-blue-50' : ''
+            ]"
           >
             <div class="flex">
               <!-- 左侧：列名和映射设置 -->
               <div class="w-26 p-3 border-r border-gray-200 bg-gray-50 flex flex-col gap-3">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center">
                   <span class="text-sm font-bold text-gray-700">{{ card.column }}</span>
-                  <button
-                    @click="removeCard(card.id)"
-                    class="text-gray-400 hover:text-red-500 transition-colors flex-shrink-0"
-                    title="Remove column"
-                  >
-                    <span class="i-carbon-close text-sm"></span>
-                  </button>
                 </div>
                 <el-select
                   :model-value="columnMapping.column === card.column ? columnMapping.channel : ''"
@@ -453,10 +465,11 @@ onBeforeUnmount(() => {
               <!-- 右侧：表头和筛选条件行 -->
               <div class="flex-1 p-3">
                 <!-- 表头 -->
-                <div class="grid grid-cols-3 gap-4 mb-2 pb-2 border-b border-gray-200">
+                <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 mb-2 pb-2 border-b border-gray-200">
                   <div class="text-xs font-bold text-gray-700">Condition</div>
                   <div class="text-xs font-bold text-gray-700">Data</div>
                   <div class="text-xs font-bold text-gray-700 flex items-center">Mark</div>
+                  <div class="text-xs font-bold text-gray-700 flex items-center justify-center">Select</div>
                 </div>
 
               <!-- 筛选条件行 -->
@@ -465,15 +478,12 @@ onBeforeUnmount(() => {
                   v-for="(filter, filterIndex) in card.filters"
                   :key="filterIndex"
                   :class="[
-                    'grid grid-cols-3 gap-4 items-center rounded transition-all',
+                    'grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-center rounded transition-all p-1',
                     filter.markerId && filter.data && filter.data.length > 0
-                      ? 'cursor-move hover:bg-gray-50 border border-transparent hover:border-blue-300'
-                      : '',
-                    isDraggingFilter && filter.markerId && filter.data && filter.data.length > 0 ? 'border-blue-400 bg-blue-50' : ''
+                      ? 'hover:bg-gray-50 border border-transparent hover:border-blue-300'
+                      : 'border border-transparent',
+                    isFilterSelected(card.id, filterIndex) ? 'bg-blue-50 border-blue-300' : ''
                   ]"
-                  :draggable="!!(filter.markerId && filter.data && filter.data.length > 0)"
-                  @dragstart="(e) => handleFilterDragStart(card.id, filterIndex, e)"
-                  @dragend="handleFilterDragEnd"
                 >
                   <!-- Condition 列 -->
                   <div class="flex items-center gap-1">
@@ -519,7 +529,7 @@ onBeforeUnmount(() => {
                   <!-- Data 列：显示匹配的实体数量 -->
                   <div>
                     <div class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
-                      {{ getFilterMatchedCount(card, filter) }} entities
+                      {{ getFilterMatchedCount(filter) }} entities
                     </div>
                   </div>
 
@@ -565,6 +575,21 @@ onBeforeUnmount(() => {
                     >
                       <span class="i-carbon-add text-sm"></span>
                     </div>
+                  </div>
+
+                  <!-- Select 列：复选框 -->
+                  <div class="flex items-center justify-center">
+                    <input
+                      type="checkbox"
+                      :checked="isFilterSelected(card.id, filterIndex)"
+                      :disabled="!(filter.markerId && filter.data && filter.data.length > 0)"
+                      @change="toggleFilterSelection(card.id, filterIndex)"
+                      @click.stop
+                      :class="[
+                        'w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500',
+                        !(filter.markerId && filter.data && filter.data.length > 0) ? 'opacity-30 cursor-not-allowed' : ''
+                      ]"
+                    />
                   </div>
                 </div>
               </div>
