@@ -699,6 +699,22 @@ export const useCanvasStore = defineStore('canvas', () => {
   }
 
   async function renderResult() {
+    // 删除之前的旧结果 slide（结果必定在最后）
+    const collageSeriesStore = useCollageSeriesStore()
+    const { overviews, currentOverviewIndex, currentSlideIndex } = storeToRefs(collageSeriesStore)
+    const currentOverview = overviews.value[currentOverviewIndex.value]
+    if (currentOverview && currentOverview.collageSeries.length > 0) {
+      const lastSlide = currentOverview.collageSeries[currentOverview.collageSeries.length - 1]
+      // 如果最后一个 slide 是结果，删除它
+      if ((lastSlide as any).isResult === true) {
+        currentOverview.collageSeries.pop()
+        // 如果删除后当前索引超出范围，调整索引
+        if (currentSlideIndex.value >= currentOverview.collageSeries.length) {
+          currentSlideIndex.value = currentOverview.collageSeries.length - 1
+        }
+      }
+    }
+
     collageSeriesStore.addNewSlide(true)
     const animationStore = useAnimationStore()
     const { process_id } = storeToRefs(animationStore)

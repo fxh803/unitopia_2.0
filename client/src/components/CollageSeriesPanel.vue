@@ -204,7 +204,7 @@ watch(() => overviews.value.length, (newLength, oldLength) => {
               @mouseenter="handleMouseEnter(overviewIdx, slideIdx)"
               @mouseleave="handleMouseLeave">
               <!-- 删除按钮 -->
-              <button v-if="overview.collageSeries.length > 1 && hoveredOverviewIdx === overviewIdx && hoveredSlideIdx === slideIdx && !(item as any).isResult"
+              <button v-if="overview.collageSeries.length > 1 && hoveredOverviewIdx === overviewIdx && hoveredSlideIdx === slideIdx"
                 class="absolute top-1 right-1 z-10 bg-white rounded-full w-6 h-6 flex items-center justify-center shadow hover:bg-[var(--delete-color)] hover:text-white transition-colors"
                 @click.stop="handleDelete(overviewIdx, slideIdx)" title="Delete">×</button>
 

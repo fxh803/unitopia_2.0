@@ -161,6 +161,14 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         const currentOverview = overviews.value[currentOverviewIndex.value]
         if (!currentOverview || currentOverview.collageSeries.length === 0) return
 
+        // 检查是否存在结果 slide（isResult 为 true）
+        const resultSlide = currentOverview.collageSeries.find((slide: any) => slide.isResult === true)
+        if (resultSlide && resultSlide.preview) {
+            // 如果存在结果 slide，直接使用它的 preview
+            currentOverview.preview = resultSlide.preview
+            return
+        }
+
         // 合并当前总览下所有幻灯片的 JSON 对象
         const mergedObjects: any[] = []
 
@@ -383,7 +391,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
 
         const slideId = generateSlideId()
 
-        currentOverview.collageSeries.push({
+        const newSlide = {
             slideId,
             json,
             preview,
@@ -400,9 +408,28 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             margin: 0,
             emitter_type: '',
             isResult: isResult
-        })
+        }
 
-        currentSlideIndex.value = currentOverview.collageSeries.length - 1
+        // 如果不是结果 slide，需要检查是否有结果 slide，如果有则插入到结果之前
+        if (!isResult) {
+            // 查找结果 slide 的索引（结果必定在最后）
+            const lastIndex = currentOverview.collageSeries.length - 1
+            const lastSlide = currentOverview.collageSeries[lastIndex]
+            if (lastSlide && (lastSlide as any).isResult === true) {
+                // 如果最后一个 slide 是结果，在它之前插入
+                currentOverview.collageSeries.splice(lastIndex, 0, newSlide)
+                currentSlideIndex.value = lastIndex
+            } else {
+                // 没有结果 slide，直接 push
+                currentOverview.collageSeries.push(newSlide)
+                currentSlideIndex.value = currentOverview.collageSeries.length - 1
+            }
+        } else {
+            // 是结果 slide，直接 push 到最后
+            currentOverview.collageSeries.push(newSlide)
+            currentSlideIndex.value = currentOverview.collageSeries.length - 1
+        }
+
         stopListen.value = false
     }
 
