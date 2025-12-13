@@ -13,18 +13,18 @@ const { markers } = storeToRefs(markerStore)
 const { columnMapping, widthScale, heightScale, sizeScale } = storeToRefs(dataScaleStore)
 const { setColumnMapping, setWidthScale, setHeightScale, setSizeScale } = dataScaleStore
 
+// 生成唯一 ID
+const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+
 // 拖拽状态
 const isDraggingFilter = ref(false)
 const dragImageElement = ref<HTMLElement | null>(null)
-const isDraggingOverDropZone = ref(false)
-const isDraggingOverBottomDropZone = ref(false)
-const isDraggingOverMarkerDropZone = ref<Record<string, boolean>>({})
+const isDraggingOverDropZone = ref(false)//从列名拖拽到卡片悬浮高亮
+const isDraggingOverMarkerDropZone = ref<Record<string, boolean>>({}) //marker悬浮高亮
 
 // 本地存储 slider 的值（用于实时显示，不触发 store 更新）
 const localScaleValue = ref<number | null>(null)
 
-// 生成唯一 ID
-const generateId = (prefix: string) => `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
 
 // 工具函数：获取卡片
 const getCard = (cardId: string) => columnFilterCards.value.find(c => c.id === cardId) || null
@@ -208,48 +208,34 @@ const handleDrop = (e: DragEvent, cardId?: string) => {
   const column = e.dataTransfer?.getData('text/plain')
   if (!column) return
 
-  if (cardId) {
-    const card = getCard(cardId)
-    if (card?.column === column) {
-      addFilterToCard(cardId)
-    }
-  } else {
-    const existingCard = columnFilterCards.value.find(card => card.column === column)
-    if (existingCard) {
-      addFilterToCard(existingCard.id)
-    } else {
-      columnFilterCards.value.push({
-        id: generateId('card'),
-        column,
-        filters: [{ operator: '=', value: '', markerId: null, data: [], rows: [] }]
-      })
-    }
+  // 检查是否已经存在该 column 的卡片
+  const existingCard = columnFilterCards.value.find(c => c.column === column)
+  
+  if (existingCard) {
+    // 如果已存在该 column 的卡片，添加到那个卡片
+    addFilterToCard(existingCard.id)
+    return
   }
+
+  // 创建新卡片
+  columnFilterCards.value.push({
+    id: generateId('card'),
+    column,
+    filters: [{ operator: '=', value: '', markerId: null, data: [], rows: [] }]
+  })
 }
 
-// 通用拖拽悬停处理
+// 拖拽悬停处理
 const handleDragOver = (e: DragEvent) => {
   e.preventDefault()
   e.dataTransfer!.dropEffect = 'copy'
   isDraggingOverDropZone.value = true
 }
 
-const handleBottomDragOver = (e: DragEvent) => {
-  e.preventDefault()
-  e.dataTransfer!.dropEffect = 'copy'
-  isDraggingOverBottomDropZone.value = true
-}
-
-// 通用拖拽离开处理
+// 拖拽离开处理
 const handleDragLeave = (e: DragEvent) => {
   if (isOutsideRect(e, e.currentTarget as HTMLElement)) {
     isDraggingOverDropZone.value = false
-  }
-}
-
-const handleBottomDragLeave = (e: DragEvent) => {
-  if (isOutsideRect(e, e.currentTarget as HTMLElement)) {
-    isDraggingOverBottomDropZone.value = false
   }
 }
 
@@ -386,7 +372,7 @@ onBeforeUnmount(() => {
             :key="column"
             draggable="true"
             @dragstart="handleColumnDragStart(column, $event)"
-            class="flex items-center gap-2 p-2.5 rounded-lg cursor-move bg-white shadow-sm hover:shadow-md transition-all border border-gray-200 hover:border-blue-300 hover:bg-blue-50"
+            class="flex items-center gap-2 p-2.5 rounded-lg cursor-move bg-white hover:shadow-md transition-all border border-gray-200 hover:border-blue-300 hover:bg-blue-50"
           >
             <span :class="[getColumnIcon(column), 'text-xs text-gray-400']"></span>
             <span class="text-sm text-gray-700 flex-1 font-medium">{{ column }}</span>
@@ -398,28 +384,10 @@ onBeforeUnmount(() => {
     <!-- 右侧：筛选条件区域 -->
     <div class="flex-1 flex flex-col overflow-hidden">
       <!-- 筛选条件列表 -->
-      <div class="flex-1 overflow-y-auto p-3">
-        <div v-if="columnFilterCards.length === 0" class="h-full w-full flex items-center justify-center">
-          <div
-            @drop="(e) => { handleDrop(e); isDraggingOverDropZone = false }"
-            @dragover="handleDragOver"
-            @dragleave="handleDragLeave"
-            :class="[
-              'w-full h-full border-2 border-dashed rounded-lg flex items-center justify-center transition-all',
-              isDraggingOverDropZone
-                ? 'border-blue-400 bg-blue-50 text-blue-600'
-                : 'border-gray-300 text-gray-400'
-            ]"
-          >
-            <p class="text-sm">Drag attribute to filter</p>
-          </div>
-        </div>
-        <div v-else class="space-y-4">
-          <div
-            v-for="card in columnFilterCards"
-            :key="card.id"
-            @drop="(e) => handleDrop(e, card.id)"
-            @dragover="handleDragOver"
+      <div class="flex-1 overflow-y-auto p-3 space-y-4">
+        <div
+          v-for="card in columnFilterCards"
+          :key="card.id"
             :draggable="getSelectedFilters(card.id).length > 0"
             @dragstart="(e) => handleCardDragStart(card.id, e)"
             @dragend="handleFilterDragEnd"
@@ -433,7 +401,9 @@ onBeforeUnmount(() => {
           >
             <div class="flex">
               <!-- 左侧：列名和映射设置 -->
-              <div class="w-26 p-3 border-r border-gray-200 bg-gray-50 flex flex-col gap-3">
+              <div 
+                class="w-26 p-3 border-r border-gray-200 bg-gray-50 flex flex-col gap-3"
+              >
                 <div class="flex items-center">
                   <span class="text-sm font-bold text-gray-700">{{ card.column }}</span>
                 </div>
@@ -471,15 +441,15 @@ onBeforeUnmount(() => {
               <!-- 右侧：表头和筛选条件行 -->
               <div class="flex-1 p-3">
                 <!-- 表头 -->
-                <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 mb-2 pb-2 border-b border-gray-200">
-                  <div class="text-xs font-bold text-gray-700">Condition</div>
-                  <div class="text-xs font-bold text-gray-700">Data</div>
-                  <div class="text-xs font-bold text-gray-700 flex items-center">Mark</div>
-                  <div class="text-xs font-bold text-gray-700 flex items-center justify-center">Select</div>
-                </div>
+                  <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 mb-2 pb-2 border-b border-gray-200">
+                    <div class="text-xs font-bold text-gray-700">Condition</div>
+                    <div class="text-xs font-bold text-gray-700">Data</div>
+                    <div class="text-xs font-bold text-gray-700 flex items-center">Mark</div>
+                    <div class="text-xs font-bold text-gray-700 flex items-center justify-center">Select</div>
+                  </div>
 
-              <!-- 筛选条件行 -->
-              <div class="space-y-2">
+                  <!-- 筛选条件行 -->
+                  <div class="space-y-2">
                 <div
                   v-for="(filter, filterIndex) in card.filters"
                   :key="filterIndex"
@@ -598,7 +568,7 @@ onBeforeUnmount(() => {
                     />
                   </div>
                 </div>
-              </div>
+                  </div>
 
                 <!-- 添加条件按钮 -->
                 <button
@@ -612,21 +582,38 @@ onBeforeUnmount(() => {
             </div>
           </div>
 
-          <!-- 底部拖拽区域 -->
+          <!-- 空白 drop zone -->
           <div
-            @drop="(e) => { handleDrop(e); isDraggingOverBottomDropZone = false }"
-            @dragover="handleBottomDragOver"
-            @dragleave="handleBottomDragLeave"
-            :class="[
-              'border-2 border-dashed rounded-lg p-4 text-center transition-all',
-              isDraggingOverBottomDropZone
-                ? 'border-blue-400 bg-blue-50 text-blue-600'
-                : 'border-gray-300 text-gray-400'
-            ]"
+            class="rounded-lg bg-white overflow-hidden border border-gray-200"
           >
-            <p class="text-sm">Drag attribute to add new filter</p>
+            <div class="flex">
+              <div 
+                class="w-26 p-1 border-r border-gray-200 bg-gray-50 flex flex-col gap-3"
+                @drop="(e) => { handleDrop(e); isDraggingOverDropZone = false }"
+                @dragover="handleDragOver"
+                @dragleave="handleDragLeave"
+                :class="[
+                  isDraggingOverDropZone
+                    ? 'border-blue-400 bg-blue-50'
+                    : ''
+                ]"
+              >
+                <div
+                  class="flex items-center justify-center flex-1 min-h-[80px] border-2 border-dashed rounded transition-all m-2"
+                  :class="[
+                    isDraggingOverDropZone
+                      ? 'border-blue-400 bg-blue-50 text-blue-600'
+                      : 'border-gray-300 text-gray-400'
+                  ]"
+                >
+                  <span class="i-carbon-add text-2xl"></span>
+                </div>
+              </div>
+              <div class="flex-1 p-3 flex items-center justify-center h-32 text-gray-400 text-sm">
+                <p>Drop a column to start</p>
+              </div>
+            </div>
           </div>
-        </div>
       </div>
     </div>
   </div>
