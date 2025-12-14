@@ -355,12 +355,14 @@ onBeforeUnmount(() => {
 <template>
   <div class="flex-1 flex overflow-hidden">
     <!-- 左侧：列名列表 -->
-    <div class="w-48 border-r border-gray-200 bg-gray-50 flex flex-col">
+    <div class="w-38 border-r border-gray-200 bg-gray-50 flex flex-col">
       <div class="p-3 border-b border-gray-200">
-        <h3 class="text-sm font-bold text-gray-700">Columns</h3>
-        <p v-if="tableStore.fileName" class="text-xs text-gray-500 mt-1 truncate">
+        <p v-if="tableStore.fileName" class="text-sm font-bold text-gray-700
+        ">
           {{ tableStore.fileName }}
         </p>
+        <h3 class="text-xs text-gray-500 mt-1 truncate">Attributes</h3>
+        
       </div>
       <div class="flex-1 overflow-y-auto p-2">
         <div v-if="tableColumns.length === 0" class="text-center py-8 text-gray-400 text-sm">
@@ -444,8 +446,8 @@ onBeforeUnmount(() => {
                   <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 mb-2 pb-2 border-b border-gray-200">
                     <div class="text-xs font-bold text-gray-700">Condition</div>
                     <div class="text-xs font-bold text-gray-700">Data</div>
-                    <div class="text-xs font-bold text-gray-700 flex items-center">Mark</div>
-                    <div class="text-xs font-bold text-gray-700 flex items-center justify-center">Select</div>
+                    <div class="text-xs font-bold text-gray-700">Mark</div>
+                    <div class="text-xs font-bold text-gray-700">Select</div>
                   </div>
 
                   <!-- 筛选条件行 -->
@@ -511,8 +513,7 @@ onBeforeUnmount(() => {
 
                   <!-- Mark 列：分配 marker -->
                   <div
-                    class="flex items-center min-h-[32px]"
-
+                    class="flex items-center min-h-[32px] justify-center"
                   >
                     <div
                       v-if="filter.markerId"
@@ -554,7 +555,7 @@ onBeforeUnmount(() => {
                   </div>
 
                   <!-- Select 列：复选框 -->
-                  <div class="flex items-center justify-center">
+                  <div class="min-w-30px flex items-center justify-center">
                     <input
                       type="checkbox"
                       :checked="isFilterSelected(card.id, filterIndex)"
@@ -599,18 +600,32 @@ onBeforeUnmount(() => {
                 ]"
               >
                 <div
-                  class="flex items-center justify-center flex-1 min-h-[80px] border-2 border-dashed rounded transition-all m-2"
+                  class="flex items-center justify-center gap-2 p-2.5 mt-20px rounded-lg border-2 border-dashed transition-all"
                   :class="[
                     isDraggingOverDropZone
                       ? 'border-blue-400 bg-blue-50 text-blue-600'
-                      : 'border-gray-300 text-gray-400'
+                      : 'border-gray-300 text-gray-400 bg-white'
                   ]"
                 >
-                  <span class="i-carbon-add text-2xl"></span>
+                  <span class="i-carbon-add text-sm"></span>
                 </div>
+                <p class="text-xs text-gray-400 text-center px-2">Drop an attribute to start</p>
               </div>
-              <div class="flex-1 p-3 flex items-center justify-center h-32 text-gray-400 text-sm">
-                <p>Drop a column to start</p>
+              <div class="flex-1 p-3">
+                <!-- 表头 -->
+                <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 mb-2 pb-2 border-b border-gray-200">
+                  <div class="h-4 bg-gray-100 rounded skeleton-shimmer"></div>
+                  <div class="h-4 bg-gray-100 rounded skeleton-shimmer" style="animation-delay: 0.1s"></div>
+                  <div class="h-4 bg-gray-100 rounded skeleton-shimmer" style="animation-delay: 0.2s"></div>
+                  <div class="h-4 bg-gray-100 rounded skeleton-shimmer" style="animation-delay: 0.3s"></div>
+                </div>
+                <!-- 占位行 -->
+                <div class="grid grid-cols-[1fr_1fr_1fr_auto] gap-4 items-center rounded border border-gray-200 p-2">
+                  <div class="h-8 bg-gray-100 rounded skeleton-shimmer"></div>
+                  <div class="h-8 bg-gray-100 rounded skeleton-shimmer" style="animation-delay: 0.1s"></div>
+                  <div class="h-8 bg-gray-100 rounded skeleton-shimmer" style="animation-delay: 0.2s"></div>
+                  <div class="h-4 w-4 bg-gray-100 rounded skeleton-shimmer" style="animation-delay: 0.3s"></div>
+                </div>
               </div>
             </div>
           </div>
@@ -620,5 +635,25 @@ onBeforeUnmount(() => {
 </template>
 
 <style scoped>
-/* 可以添加自定义样式 */
+/* 骨架屏流动特效 */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(
+    90deg,
+    #f3f4f6 0%,
+    #e5e7eb 20%,
+    #f3f4f6 40%,
+    #f3f4f6 100%
+  );
+  background-size: 1000px 100%;
+  animation: shimmer 10s infinite;
+}
 </style>
