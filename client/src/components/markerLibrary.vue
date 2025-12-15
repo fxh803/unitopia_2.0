@@ -82,6 +82,10 @@ onBeforeUnmount(() => {
 
 <template>
   <div class="h-full flex flex-col bg-[var(--primary-light-color)] overflow-x-auto">
+    <!-- 标题 -->
+    <div class="px-4 py-2 border-b border-gray-200 bg-[var(--sub-toolbar-bg-color)]">
+      <h3 class="text-sm font-semibold text-gray-700">Marker Library</h3>
+    </div>
     <!-- Marker 图案库 -->
     <div class="overflow-y-auto p-4">
       <!-- 垂直列表展示所有 markers -->

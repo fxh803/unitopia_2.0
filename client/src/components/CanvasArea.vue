@@ -257,7 +257,7 @@ onMounted(async () => {
 
   if (canvasEl.value) {
     canvas = new Canvas(canvasEl.value, {
-      backgroundColor: '#ffffff',
+      backgroundColor: '#fffef8',
       isDrawingMode: false,
       selection: false,
       width: canvasSize.value,

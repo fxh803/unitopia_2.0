@@ -42,7 +42,7 @@ export const useMarkerCanvasStore = defineStore('markerCanvas', () => {
     const tempFabricCanvas = new FabricCanvas(tempCanvas, {
       width: 60,
       height: 60,
-      backgroundColor: '#ffffff'
+      backgroundColor: '#fffef8'
     })
     const originWidth = previewGroup.value.width
     const originHeight = previewGroup.value.height

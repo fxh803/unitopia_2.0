@@ -232,7 +232,7 @@ const saveMarkers = async () => {
   const tempFabricCanvas = new Canvas(tempCanvas, {
     width: thumbnailSize,
     height: thumbnailSize,
-    backgroundColor: '#ffffff'
+    backgroundColor: '#fffef8'
   })
   const originWidth = group.width
   const originHeight = group.height

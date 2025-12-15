@@ -455,7 +455,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             canvasInstance.loadFromJSON(json, () => {
                 setTimeout(() => {
                     // 确保背景色为白色
-                    canvasInstance.backgroundColor = '#ffffff'
+                    canvasInstance.backgroundColor = '#fffef8'
                     canvasInstance.renderAll()
                     // 恢复自定义属性
                     // console.log(dataTypeArray, markerIdArray, forceTypeArray, dataArray)
@@ -467,7 +467,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             })
         } else {
             // 确保空白画布也有白色背景
-            canvasInstance.backgroundColor = '#ffffff'
+            canvasInstance.backgroundColor = '#fffef8'
             canvasInstance.renderAll()
             stopListen.value = false
         }

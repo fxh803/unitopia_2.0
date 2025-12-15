@@ -101,6 +101,13 @@ const currentSpeedMultiplier = computed(() => {
   const baseInterval = 2000
   return (baseInterval / time_interval.value).toFixed(1)
 })
+
+// 新建 Workspace：简单刷新页面
+const handleRefresh = () => {
+  if (typeof window !== 'undefined') {
+    window.location.reload()
+  }
+}
 </script>
 
 <template>
@@ -110,6 +117,15 @@ const currentSpeedMultiplier = computed(() => {
         <img src="/UNITVIZ2.svg" alt="UnitoPia Logo" class="h-8 w-auto" />
         UnitoPia
       </h1>
+
+      <!-- 始终显示：新建 Workspace 按钮 -->
+      <button
+        class="ml-6 flex items-center gap-2 px-4 h-full bg-[var(--primary-color)] text-[var(--title-color)] transition-colors duration-200 font-medium hover:bg-[var(--primary-hover-color)] cursor-pointer"
+        @click="handleRefresh"
+      >
+        <span class="i-carbon:document-add text-base"></span>
+        <span>New Workspace</span>
+      </button>
       
       <!-- 播放按钮 -->
       <button 
@@ -133,7 +149,7 @@ const currentSpeedMultiplier = computed(() => {
       <!-- Replay 按钮 - 当result_data不为空时显示 -->
       <button 
         v-if="showReplayButton"
-        class="flex items-center gap-2 px-6 h-full bg-[var(--primary-color)] text-[var(--title-color)] transition-colors duration-200 font-medium border-l border-gray-200 hover:bg-[var(--primary-hover-color)]"
+        class="flex items-center gap-2 px-6 h-full bg-[var(--primary-color)] text-[var(--title-color)] transition-colors duration-200 font-medium  hover:bg-[var(--primary-hover-color)]"
         @click="handleReplay"
       >
         <div 
@@ -149,7 +165,7 @@ const currentSpeedMultiplier = computed(() => {
       
       <!-- Export 按钮 -->
       <button v-show="showExportButton" 
-      class="flex items-center gap-2 px-6 h-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover-color)] text-[var(--title-color)] transition-colors duration-200 font-medium border-l border-gray-200"
+      class="flex items-center gap-2 px-6 h-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover-color)] text-[var(--title-color)] transition-colors duration-200 font-medium"
       :class="[ 
           replaying ? 'opacity-50 cursor-not-allowed' : ''
         ]">
@@ -160,7 +176,7 @@ const currentSpeedMultiplier = computed(() => {
       <!-- Back to Edit 按钮 -->
       <button 
         v-show="showBackToEditButton"
-        class="flex items-center gap-2 px-6 h-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover-color)] text-[var(--title-color)] transition-colors duration-200 font-medium border-l border-gray-200"
+        class="flex items-center gap-2 px-6 h-full bg-[var(--primary-color)] hover:bg-[var(--primary-hover-color)] text-[var(--title-color)] transition-colors duration-200 font-medium"
         :class="[
           replaying ? 'opacity-50 cursor-not-allowed' : ''
         ]"
@@ -197,7 +213,7 @@ const currentSpeedMultiplier = computed(() => {
       class="fixed top-11 left-0 w-full bg-gray-200 h-2 z-50"
     >
       <div 
-        class="bg-[var(--primary-color)] h-full transition-all duration-300 ease-out"
+        class="bg-[#fb9830] h-full transition-all duration-300 ease-out"
         :style="{ width: percentage + '%' }"
       ></div>
     </div>

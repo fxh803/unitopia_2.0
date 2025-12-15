@@ -56,7 +56,7 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
       canvasInstance.selection = false;
       canvasInstance.getObjects().forEach(obj => { obj.selectable = false; obj.evented = false; });
       if (canvasInstance.freeDrawingBrush) {
-        canvasInstance.freeDrawingBrush.color = '#ffffff';
+        canvasInstance.freeDrawingBrush.color = '#fffef8';
         canvasInstance.freeDrawingBrush.width = brushSizeStore.brushWidth * dpr;
       }
     } else if (mode.value === 'move') {

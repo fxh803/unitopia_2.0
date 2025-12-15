@@ -130,7 +130,7 @@ onMounted(async () => {
       canvasWidth.value = initialWidth
       canvasHeight.value = initialHeight
       canvas = new Canvas(canvasEl.value, {
-        backgroundColor: '#ffffff',
+        backgroundColor: '#fffef8',
         isDrawingMode: false,
         selection: true,
         width: canvasWidth.value,

@@ -89,5 +89,5 @@ onUnmounted(() => {
 </script>
 
 <template>
-    <canvas ref="paperCanvasRef" class="absolute top-0 left-0 paper-canvas rounded-xl bg-white" />
+    <canvas ref="paperCanvasRef" class="absolute top-0 left-0 paper-canvas rounded-xl bg-[var(--primary-light-color)]" />
 </template>

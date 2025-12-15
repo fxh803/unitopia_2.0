@@ -75,7 +75,7 @@ export const useMarkerCanvasModeStore = defineStore('markerCanvasMode', () => {
       })
       const dpr = window.devicePixelRatio || 1
       if (canvasInstance.freeDrawingBrush) {
-        canvasInstance.freeDrawingBrush.color = '#ffffff'
+        canvasInstance.freeDrawingBrush.color = '#fffef8'
         canvasInstance.freeDrawingBrush.width = brushSizeStore.markerBrushWidth * dpr
       }
     } else if (m === 'move') {

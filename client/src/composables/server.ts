@@ -86,7 +86,7 @@ export async function collectAllSlidesData(): Promise<Array<{overviewId: string,
         })
         //加载幻灯片数据
         await tempCanvas.loadFromJSON(slide.json)
-        tempCanvas.backgroundColor = '#ffffff'
+        tempCanvas.backgroundColor = '#fffef8'
         collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.forceTypeArray, slide.dataArray || [])
         result.markers = processMarker(tempCanvas)
         result.forces = processForce(tempCanvas)
