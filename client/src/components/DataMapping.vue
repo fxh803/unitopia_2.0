@@ -465,14 +465,14 @@ onBeforeUnmount(() => {
 
                   <!-- 第一行：Condition, Data, Mark -->
                   <div>
-                    <div class="grid grid-cols-3 gap-4 mb-2 pb-2 border-b border-gray-200">
-                      <div class="text-xs font-bold text-gray-700 min-w-0">Condition</div>
-                      <div class="text-xs font-bold text-gray-700 min-w-0">Data</div>
-                      <div class="text-xs font-bold text-gray-700 min-w-0">Mark</div>
+                    <div class="flex gap-4 mb-2 pb-2 border-b border-gray-200">
+                      <div class="text-xs font-bold text-gray-700 flex-1 flex-shrink-0">Condition</div>
+                      <div class="text-xs font-bold text-gray-700 flex-1 min-w-0">Data</div>
+                      <div class="text-xs font-bold text-gray-700 w-16 flex-shrink-0 text-center">Mark</div>
                     </div>
-                    <div class="grid grid-cols-3 gap-4 items-center p-1">
+                    <div class="flex gap-4 items-center p-1">
                       <!-- Condition -->
-                      <div class="flex items-center gap-1 min-w-0">
+                      <div class="flex items-center flex-1 gap-1 flex-shrink-0">
                         <el-select
                           :model-value="filter.operator"
                           @update:model-value="(v) => updateFilter(card.id, filterIndex, { operator: v as ConditionOperator })"
@@ -491,6 +491,7 @@ onBeforeUnmount(() => {
                           size="small"
                           placeholder="Select value"
                           filterable
+                          style="flex: 1; min-width: 0;"
                           @click.stop
                         >
                           <el-option v-for="val in getColumnUniqueValues(card.column)" :key="val" :label="val" :value="val" />
@@ -502,17 +503,18 @@ onBeforeUnmount(() => {
                           size="small"
                           placeholder="Enter number"
                           type="number"
+                          style="flex: 1; min-width: 0;"
                           @click.stop
                         />
                       </div>
                       <!-- Data -->
-                      <div class="min-w-0">
+                      <div class="flex-1 min-w-0">
                         <div class="inline-flex items-center px-3 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">
                           {{ getFilterMatchedCount(filter) }} entities
                         </div>
                       </div>
                       <!-- Mark -->
-                      <div class="flex items-center min-h-[32px] justify-center min-w-0">
+                      <div class="flex items-center min-h-[32px] justify-center w-16 flex-shrink-0">
                         <div v-if="filter.markerId" class="relative w-8 h-8 group/marker">
                           <div class="w-full h-full border border-gray-300 rounded overflow-hidden cursor-pointer hover:border-blue-400 transition-colors" @click.stop>
                             <img :src="markers.find(m => m.id === filter.markerId)?.thumbnail" alt="Marker" class="w-full h-full object-contain" />
@@ -544,14 +546,14 @@ onBeforeUnmount(() => {
 
                   <!-- 第二行：Visual Attribute, Visual Encodings, Select -->
                   <div>
-                    <div class="grid grid-cols-3 gap-4 mb-2 pb-2 border-b border-gray-200">
-                      <div class="text-xs font-bold text-gray-700 min-w-0">Visual Attribute</div>
-                      <div class="text-xs font-bold text-gray-700 min-w-0">Visual Encodings</div>
-                      <div class="text-xs font-bold text-gray-700 min-w-0">Select</div>
+                    <div class="flex gap-4 mb-2 pb-2 border-b border-gray-200">
+                      <div class="text-xs font-bold text-gray-700 flex-1 min-w-0">Visual Attribute</div>
+                      <div class="text-xs font-bold text-gray-700 flex-1 flex-shrink-0">Visual Encodings</div>
+                      <div class="text-xs font-bold text-gray-700 w-16 flex-shrink-0 text-center">Select</div>
                     </div>
-                    <div class="grid grid-cols-3 gap-4 items-center p-1">
+                    <div class="flex gap-4 items-center p-1">
                       <!-- Visual Attribute -->
-                      <div class="min-w-0">
+                      <div class="flex-1 min-w-0">
                         <el-select
                           :model-value="filter.visualAttribute || ''"
                           @update:model-value="(v) => updateFilter(card.id, filterIndex, { visualAttribute: v === '' ? null : v })"
@@ -566,7 +568,7 @@ onBeforeUnmount(() => {
                         </el-select>
                       </div>
                       <!-- Visual Encodings -->
-                      <div class="flex flex-col gap-2 min-w-0">
+                      <div class="flex flex-col gap-2 flex-1 flex-shrink-0">
                         <el-select
                           :model-value="filter.encoding?.channel || ''"
                           @update:model-value="(v) => updateFilterEncoding(card.id, filterIndex, { channel: v === '' ? null : v as 'width' | 'height' | 'size' })"
@@ -594,7 +596,7 @@ onBeforeUnmount(() => {
                         </div>
                       </div>
                       <!-- Select -->
-                      <div class="flex items-center justify-center min-w-0">
+                      <div class="flex items-center justify-center w-16 flex-shrink-0">
                         <input
                           type="checkbox"
                           :checked="isFilterSelected(card.id, filterIndex)"
