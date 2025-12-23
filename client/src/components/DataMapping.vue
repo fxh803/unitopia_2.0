@@ -384,7 +384,7 @@ const getCardClasses = (cardId: string) => {
 // 获取 filter 样式类
 const getFilterClasses = (cardId: string, filterIndex: number) => {
   return [
-    'space-y-3 rounded-lg transition-all p-2 relative group',
+    'space-y-3 rounded-lg transition-all p-2 relative group/filter',
     isFilterSelected(cardId, filterIndex)
       ? 'bg-blue-50 border-2 border-blue-300'
       : 'bg-gray-50/50 border border-gray-200 hover:bg-gray-100 hover:border-gray-300'
@@ -457,7 +457,7 @@ onBeforeUnmount(() => {
                   <button
                     v-if="card.filters.length > 1"
                     @click.stop="removeFilterFromCard(card.id, filterIndex)"
-                    class="absolute top-2 right-2 w-5 h-5 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity z-10 hover:bg-red-600"
+                    class="absolute top--2 right--2 w-5 h-5 bg-white text-black rounded-full flex items-center justify-center opacity-0 group-hover/filter:opacity-100 transition-all z-10 hover:bg-red-500 hover:text-white border border-gray-300 hover:border-red-500"
                     title="Delete filter"
                   >
                     <span class="i-carbon-close text-xs"></span>
