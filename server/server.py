@@ -91,7 +91,8 @@ def process_data():
             json_data["collage"][i]["marker_config"][j]["init_pos"] = init_pos
             json_data["collage"][i]["marker_config"][j]["init_angle"] = init_angle
             json_data["collage"][i]["marker_config"][j]["init_size"] = init_size
-
+            if marker_data["colors"]:
+                json_data["collage"][i]["marker_config"][j]["color"] = marker_data["colors"]  
             visualEncoding = None
             data = None
             attribute = None

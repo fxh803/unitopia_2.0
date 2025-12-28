@@ -20,8 +20,10 @@ export interface SingleFilter {
   isSelected?: boolean // 是否被选中
   visualAttribute?: string | null // 要进行可视化的列名
   encoding?: {
-    channel: 'width' | 'height' | 'size' | null
+    channel: 'width' | 'height' | 'size' | 'color' | null
     scale: number
+    colorStart?: string // 颜色映射起始颜色
+    colorEnd?: string // 颜色映射结束颜色（用于插值）
   } // 每个 filter 的 visual encoding 设置
 }
 

@@ -198,16 +198,16 @@ const handleDrop = (e: DragEvent, cardId?: string) => {
   columnFilterCards.value.push({
     id: generateId('card'),
     column,
-    filters: [{
-      id: generateId('filter'),
-      operator: '=',
-      value: '',
-      markerId: null,
-      data: [],
-      rows: [],
-      visualAttribute: null,
-      encoding: { channel: null, scale: 1 }
-    }]
+      filters: [{
+        id: generateId('filter'),
+        operator: '=',
+        value: '',
+        markerId: null,
+        data: [],
+        rows: [],
+        visualAttribute: null,
+        encoding: { channel: null, scale: 1, colorStart: '#3b82f6', colorEnd: '#ef4444' }
+      }]
   })
 }
 
@@ -236,7 +236,7 @@ const addFilterToCard = (cardId: string) => {
     data: [],
     rows: [],
     visualAttribute: null,
-    encoding: { channel: null, scale: 1 }
+    encoding: { channel: null, scale: 1, colorStart: '#3b82f6', colorEnd: '#ef4444' }
   })
 }
 
@@ -259,7 +259,7 @@ const updateFilter = (cardId: string, filterIndex: number, updates: Partial<Sing
 }
 
 // 更新筛选条件的 encoding
-const updateFilterEncoding = (cardId: string, filterIndex: number, updates: Partial<{ channel: 'width' | 'height' | 'size' | null, scale: number }>) => {
+const updateFilterEncoding = (cardId: string, filterIndex: number, updates: Partial<{ channel: 'width' | 'height' | 'size' | 'color' | null, scale: number, colorStart?: string, colorEnd?: string }>) => {
   const card = getCard(cardId)
   const filter = card?.filters[filterIndex]
   if (filter) {
@@ -290,26 +290,26 @@ const assignMarkerToFilter = (cardId: string, filterIndex: number, markerId: str
 }
 
 // 处理从 markerLibrary 拖拽过来的 marker
-const handleMarkerDrop = (cardId: string, filterIndex: number, e: DragEvent) => {
+const handleMarkerDrop = (filterId: string, cardId: string, filterIndex: number, e: DragEvent) => {
   e.preventDefault()
   const markerId = e.dataTransfer?.getData('text/plain')
   if (markerId) {
     assignMarkerToFilter(cardId, filterIndex, markerId)
   }
-  isDraggingOverMarkerDropZone.value[`${cardId}-${filterIndex}`] = false
+  isDraggingOverMarkerDropZone.value[filterId] = false
 }
 
 // 处理 marker 拖拽悬停
-const handleMarkerDragOver = (cardId: string, filterIndex: number, e: DragEvent) => {
+const handleMarkerDragOver = (filterId: string, e: DragEvent) => {
   e.preventDefault()
   e.dataTransfer!.dropEffect = 'copy'
-  isDraggingOverMarkerDropZone.value[`${cardId}-${filterIndex}`] = true
+  isDraggingOverMarkerDropZone.value[filterId] = true
 }
 
 // 处理 marker 拖拽离开
-const handleMarkerDragLeave = (cardId: string, filterIndex: number, e: DragEvent) => {
+const handleMarkerDragLeave = (filterId: string, e: DragEvent) => {
   if (isOutsideRect(e, e.currentTarget as HTMLElement)) {
-    isDraggingOverMarkerDropZone.value[`${cardId}-${filterIndex}`] = false
+    isDraggingOverMarkerDropZone.value[filterId] = false
   }
 }
 
@@ -529,12 +529,12 @@ onBeforeUnmount(() => {
                         </div>
                         <div
                           v-else
-                          @drop="(e) => handleMarkerDrop(card.id, filterIndex, e)"
-                          @dragover="(e) => handleMarkerDragOver(card.id, filterIndex, e)"
-                          @dragleave="(e) => handleMarkerDragLeave(card.id, filterIndex, e)"
+                          @drop="(e) => handleMarkerDrop(filter.id || '', card.id, filterIndex, e)"
+                          @dragover="(e) => handleMarkerDragOver(filter.id || '', e)"
+                          @dragleave="(e) => handleMarkerDragLeave(filter.id || '', e)"
                           :class="[
                             'w-8 h-8 border-2 border-dashed rounded flex items-center justify-center transition-all',
-                            isDraggingOverMarkerDropZone[`${card.id}-${filterIndex}`] ? 'border-blue-400 text-blue-600 bg-blue-50' : 'border-gray-300 text-gray-400'
+                            filter.id && isDraggingOverMarkerDropZone[filter.id] ? 'border-blue-400 text-blue-600 bg-blue-50' : 'border-gray-300 text-gray-400'
                           ]"
                           title="Drag marker here"
                         >
@@ -571,7 +571,7 @@ onBeforeUnmount(() => {
                       <div class="flex flex-col gap-2 flex-1 flex-shrink-0">
                         <el-select
                           :model-value="filter.encoding?.channel || ''"
-                          @update:model-value="(v) => updateFilterEncoding(card.id, filterIndex, { channel: v === '' ? null : v as 'width' | 'height' | 'size' })"
+                          @update:model-value="(v) => updateFilterEncoding(card.id, filterIndex, { channel: v === '' ? null : v as 'width' | 'height' | 'size' | 'color' })"
                           size="small"
                           placeholder="Mapping"
                           style="width: 100%;"
@@ -581,8 +581,9 @@ onBeforeUnmount(() => {
                           <el-option label="Width" value="width" />
                           <el-option label="Height" value="height" />
                           <el-option label="Size" value="size" />
+                          <el-option label="Color" value="color" />
                         </el-select>
-                        <div v-if="filter.encoding?.channel" class="flex flex-col gap-1">
+                        <div v-if="filter.encoding?.channel && filter.encoding.channel !== 'color'" class="flex flex-col gap-1">
                           <el-slider
                             :model-value="filter.encoding?.scale || 1"
                             :min="0.1"
@@ -593,6 +594,45 @@ onBeforeUnmount(() => {
                             @click.stop
                           />
                           <span class="text-xs text-gray-500 font-mono text-center">{{ (filter.encoding?.scale || 1).toFixed(2) }}</span>
+                        </div>
+                        <div v-if="filter.encoding?.channel === 'color'" class="flex flex-col gap-1">
+                          <div class="flex items-center gap-1">
+                            <input
+                              type="color"
+                              :value="filter.encoding?.colorStart || '#3b82f6'"
+                              @change="(e) => updateFilterEncoding(card.id, filterIndex, { colorStart: (e.target as HTMLInputElement).value })"
+                              @click.stop
+                              class="w-6 h-6 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              :value="filter.encoding?.colorStart || '#3b82f6'"
+                              @input="(e) => updateFilterEncoding(card.id, filterIndex, { colorStart: (e.target as HTMLInputElement).value })"
+                              @click.stop
+                              class="flex-1 px-1.5 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="#3b82f6"
+                            />
+                          </div>
+                          <div class="flex items-center gap-1">
+                            <input
+                              type="color"
+                              :value="filter.encoding?.colorEnd || '#ef4444'"
+                              @change="(e) => updateFilterEncoding(card.id, filterIndex, { colorEnd: (e.target as HTMLInputElement).value })"
+                              @click.stop
+                              class="w-6 h-6 rounded border border-gray-300 cursor-pointer"
+                            />
+                            <input
+                              type="text"
+                              :value="filter.encoding?.colorEnd || '#ef4444'"
+                              @input="(e) => updateFilterEncoding(card.id, filterIndex, { colorEnd: (e.target as HTMLInputElement).value })"
+                              @click.stop
+                              class="flex-1 px-1.5 py-0.5 text-xs border border-gray-300 rounded focus:outline-none focus:ring-1 focus:ring-blue-500"
+                              placeholder="#ef4444"
+                            />
+                          </div>
+                          <div class="h-4 rounded border border-gray-300 overflow-hidden" 
+                            :style="{ background: `linear-gradient(to right, ${filter.encoding?.colorStart || '#3b82f6'}, ${filter.encoding?.colorEnd || '#ef4444'})` }"
+                          ></div>
                         </div>
                       </div>
                       <!-- Select -->

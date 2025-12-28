@@ -20,6 +20,7 @@ interface ProcessedData {
     width: number[]
     height: number[]
     angle: number[] // 弧度制
+    colors: string[] | null // 颜色数组，如果映射是color则收集，否则为null
   }> // base64 字符串数组
   container: string // 整个画布的 base64（隐藏除 container 元素以外的对象）
   emitter: Array<{ x: number; y: number }>
@@ -146,6 +147,41 @@ function processMarker(tempCanvas: Canvas) {
     }
   }
 
+  // 获取 table store 以检查 filter encoding
+  const tableStore = useTableStore()
+  
+  // 创建一个函数来根据 cluster_id 获取对应的 filter encoding
+  const getFilterEncoding = (clusterId: string) => {
+    if (!clusterId) return null
+    
+    // 遍历所有 card 的 filters，找到匹配的 filter
+    for (const card of tableStore.columnFilterCards) {
+      const filter = card.filters.find(f => f.id === clusterId)
+      if (filter && filter.encoding) {
+        return filter.encoding
+      }
+    }
+    return null
+  }
+
+  // 从 group 对象中获取颜色（优先 stroke，其次 fill）
+  const getColorFromGroup = (group: any): string | null => {
+    if (!group || typeof group.getObjects !== 'function') return null
+    
+    const objects = group.getObjects()
+    for (const obj of objects) {
+      // 优先返回 stroke 颜色
+      if (obj.stroke && obj.stroke !== 'transparent' && obj.stroke !== 'rgba(0,0,0,0)') {
+        return obj.stroke
+      }
+      // 其次返回 fill 颜色
+      if (obj.fill && obj.fill !== 'transparent' && obj.fill !== 'rgba(0,0,0,0)') {
+        return obj.fill
+      }
+    }
+    return null
+  }
+
   // 为每个唯一的markerId收集位置信息和尺寸
   const markers: Array<{
     thumbnail: string
@@ -154,6 +190,7 @@ function processMarker(tempCanvas: Canvas) {
     widths: number[]
     heights: number[]
     angles: number[]
+    colors: string[] | null
   }> = []
 
   for (const markerId of uniqueMarkerIds) {
@@ -162,7 +199,9 @@ function processMarker(tempCanvas: Canvas) {
     const widths: number[] = []
     const heights: number[] = []
     const angles: number[] = []
+    const colors: string[] = []
     let thumbnail = ''
+    let hasColorMapping = false // 标记是否有 color 映射
 
     for (const obj of canvasObjects) {
       if (obj.get('dataType') === 'marker' && obj.get('markerId') === markerId) {
@@ -186,6 +225,18 @@ function processMarker(tempCanvas: Canvas) {
         const angleRadians = angleDegrees * Math.PI / 180
         angles.push(angleRadians)
 
+        // 检查是否有 color 映射
+        const clusterId = obj.get('clusterId')
+        if (clusterId) {
+          const filterEncoding = getFilterEncoding(clusterId)
+          if (filterEncoding?.channel === 'color') {
+            hasColorMapping = true
+            // 从 group 中获取颜色
+            const color = getColorFromGroup(obj)
+            colors.push(color || '#000000') // 如果没有颜色，使用默认黑色
+          }
+        }
+
         // 只生成一次thumbnail（使用第一个对象）
         if (!thumbnail) {
           obj.set('visible', true)
@@ -205,8 +256,9 @@ function processMarker(tempCanvas: Canvas) {
       markerId,
       pos: positions,
       width: widths,
-      height:heights,
-      angle:angles
+      height: heights,
+      angle: angles,
+      colors: hasColorMapping ? colors : null
     })
   }
 

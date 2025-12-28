@@ -462,18 +462,94 @@ export const useCanvasStore = defineStore('canvas', () => {
       const markerStore = useMarkerStore()
       const markers = markerStore.markers
 
-      // 创建一个函数来根据 cluster_id 获取对应的 filter encoding
-      const getFilterEncoding = (clusterId: string) => {
+      // 创建一个函数来根据 cluster_id 获取对应的 filter 和 encoding
+      const getFilter = (clusterId: string) => {
         if (!clusterId) return null
         
         // 遍历所有 card 的 filters，找到匹配的 filter
         for (const card of tableStore.columnFilterCards) {
           const filter = card.filters.find(f => f.id === clusterId)
-          if (filter && filter.encoding) {
-            return filter.encoding
+          if (filter) {
+            return { filter, card }
           }
         }
         return null
+      }
+
+      // 判断值是否为数值型
+      const isNumericValue = (value: any): boolean => {
+        if (value === undefined || value === null || value === '') return false
+        const num = Number(value)
+        return !isNaN(num) && String(value).trim() !== ''
+      }
+
+      // 为字符串值生成颜色映射（相同值相同颜色）
+      const getStringValueColorMap = (filter: any, colorStart: string, colorEnd: string): Map<string, string> => {
+        const colorMap = new Map<string, string>()
+        if (!filter.visualAttribute || !filter.data) return colorMap
+
+        // 获取所有唯一值
+        const uniqueValues = new Set<string>()
+        filter.data.forEach((row: any) => {
+          const value = row[filter.visualAttribute]
+          if (value !== undefined && value !== null && value !== '') {
+            uniqueValues.add(String(value))
+          }
+        })
+
+        // 为每个唯一值分配颜色
+        const uniqueValuesArray = Array.from(uniqueValues).sort()
+        uniqueValuesArray.forEach((value, index) => {
+          const t = uniqueValuesArray.length > 1 ? index / (uniqueValuesArray.length - 1) : 0
+          const color = interpolateColor(colorStart, colorEnd, t)
+          colorMap.set(value, color)
+        })
+
+        return colorMap
+      }
+
+      // 十六进制颜色转 RGB
+      const hexToRgb = (hex: string): { r: number, g: number, b: number } | null => {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+        return result ? {
+          r: parseInt(result[1], 16),
+          g: parseInt(result[2], 16),
+          b: parseInt(result[3], 16)
+        } : null
+      }
+
+      // RGB 转十六进制颜色
+      const rgbToHex = (r: number, g: number, b: number): string => {
+        return '#' + [r, g, b].map(x => {
+          const hex = Math.round(x).toString(16)
+          return hex.length === 1 ? '0' + hex : hex
+        }).join('')
+      }
+
+      // 颜色插值函数
+      const interpolateColor = (colorStart: string, colorEnd: string, t: number): string => {
+        const rgbStart = hexToRgb(colorStart)
+        const rgbEnd = hexToRgb(colorEnd)
+        if (!rgbStart || !rgbEnd) return colorStart
+
+        const r = rgbStart.r + (rgbEnd.r - rgbStart.r) * t
+        const g = rgbStart.g + (rgbEnd.g - rgbStart.g) * t
+        const b = rgbStart.b + (rgbEnd.b - rgbStart.b) * t
+
+        return rgbToHex(r, g, b)
+      }
+
+      // 预生成所有 filter 的字符串颜色映射（避免在循环中重复计算）
+      const stringColorMaps = new Map<string, Map<string, string>>()
+      if (card) {
+        for (const filter of card.filters) {
+          if (filter.encoding?.channel === 'color' && filter.encoding.colorStart && filter.encoding.colorEnd) {
+            const colorMap = getStringValueColorMap(filter, filter.encoding.colorStart, filter.encoding.colorEnd)
+            if (filter.id) {
+              stringColorMaps.set(filter.id, colorMap)
+            }
+          }
+        }
       }
 
       for (let i = 0; i < pos.length; i++) {
@@ -493,7 +569,8 @@ export const useCanvasStore = defineStore('canvas', () => {
           const group = new Group(objects)
 
           // 获取该 marker 对应的 filter encoding
-          const filterEncoding = clusterId ? getFilterEncoding(clusterId) : null
+          const filterInfo = clusterId ? getFilter(clusterId) : null
+          const filterEncoding = filterInfo?.filter?.encoding ?? null
           // 先设置所有属性（包括dataType），然后再添加到画布
           group.set({
             left: currentDropX,
@@ -521,7 +598,7 @@ export const useCanvasStore = defineStore('canvas', () => {
           const currentSize = Math.max(currentWidth, currentHeight)
           
           // 使用 filter 的 encoding（每个 marker 都有对应的 filter encoding）
-          const channel: 'width' | 'height' | 'size' | null = filterEncoding?.channel ?? null
+          const channel: 'width' | 'height' | 'size' | 'color' | null = filterEncoding?.channel ?? null
           const scale = filterEncoding?.scale ?? 1
           
           //一开始先按比例缩放
@@ -534,17 +611,76 @@ export const useCanvasStore = defineStore('canvas', () => {
           } else if (channel === 'height') {
             scaleY = normalizedValue / currentSize
             scaleY *= scale
-          } else {
+          } else if (channel === 'size') {
             scaleX = normalizedValue / currentSize
             scaleY = normalizedValue / currentSize
             scaleX *= scale
             scaleY *= scale
+          } else {
+            // 默认情况（channel 为 null 或其他）
+            scaleX = defaultSize / currentSize
+            scaleY = defaultSize / currentSize
           }
           
           group.set({
             scaleX: scaleX,
             scaleY: scaleY
           })
+
+          // 如果是 color 映射，应用颜色插值
+          if (channel === 'color' && clusterId && filterEncoding?.colorStart && filterEncoding?.colorEnd) {
+            const filterInfo = getFilter(clusterId)
+            if (!filterInfo) return
+
+            const { filter } = filterInfo
+            const currentData = data[i]
+            const visualAttribute = filter.visualAttribute
+            let interpolatedColor: string
+
+            if (visualAttribute && currentData && currentData[visualAttribute] !== undefined) {
+              const value = currentData[visualAttribute]
+              
+              // 判断是否为数值型
+              if (isNumericValue(value)) {
+                // 数值型：使用 normalized 值进行插值
+                const minDisplaySize = 20
+                const maxDisplaySize = 70
+                const normalizedValue = normalized[i]
+                // 将 normalized 值从 [minDisplaySize, maxDisplaySize] 映射到 [0, 1]
+                const t = maxDisplaySize > minDisplaySize 
+                  ? (normalizedValue - minDisplaySize) / (maxDisplaySize - minDisplaySize)
+                  : 0
+                // 确保 t 在 [0, 1] 范围内
+                const clampedT = Math.max(0, Math.min(1, t))
+                interpolatedColor = interpolateColor(filterEncoding.colorStart, filterEncoding.colorEnd, clampedT)
+              } else {
+                // 字符串型：相同值使用相同颜色
+                const colorMap = stringColorMaps.get(clusterId) || getStringValueColorMap(filter, filterEncoding.colorStart, filterEncoding.colorEnd)
+                const valueStr = String(value)
+                interpolatedColor = colorMap.get(valueStr) || filterEncoding.colorStart
+              }
+            } else {
+              // 如果没有 visualAttribute 或数据，使用默认颜色
+              interpolatedColor = filterEncoding.colorStart
+            }
+            
+            // 将颜色应用到 group 中的所有子对象
+            const objects = group.getObjects()
+            objects.forEach((obj: any) => {
+              // 获取对象的原始 stroke 和 fill 状态
+              const hasStroke = obj.stroke && obj.stroke !== 'transparent' && obj.stroke !== 'rgba(0,0,0,0)'
+              const hasFill = obj.fill && obj.fill !== 'transparent' && obj.fill !== 'rgba(0,0,0,0)'
+              
+              // 如果对象原本有 stroke，应用插值颜色到 stroke
+              if (hasStroke) {
+                obj.set('stroke', interpolatedColor)
+              }
+              // 如果对象原本有 fill，应用插值颜色到 fill
+              if (hasFill) {
+                obj.set('fill', interpolatedColor)
+              }
+            })
+          }
           // 添加到主画布（此时所有属性都已设置好）
           canvasInstance.add(group)
           // 强制更新对象
