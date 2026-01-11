@@ -17,7 +17,13 @@ import { useMarkerStore } from '~/stores/marker'
 import * as fabric from 'fabric'
 export const useCanvasStore = defineStore('canvas', () => {
   const canvasRef = ref<(() => Canvas | null) | null>(null)
-  const containerColor = ref([130, 130, 130, 0.8])
+  const containerColor = ref([100, 100, 100, 0.8])
+  // Segment 加载状态
+  const isSegmentLoading = ref(false)
+  
+  function setSegmentLoading(loading: boolean) {
+    isSegmentLoading.value = loading
+  }
   // 路径闭合确认对话框状态
   const closePathConfirm = ref<{
     show: boolean
@@ -819,7 +825,7 @@ export const useCanvasStore = defineStore('canvas', () => {
 
     // 上传的图不需要
     if (path.type === 'image') return
-    
+
     const canvasModeStore = useCanvasModeStore()
     // 在其他模式下，不询问是否闭合路径
     if (canvasModeStore.mode !== 'draw' && canvasModeStore.mode !== 'rect' && canvasModeStore.mode !== 'ellipse') return
@@ -1063,6 +1069,8 @@ export const useCanvasStore = defineStore('canvas', () => {
   canvasRef,
   containerColor,
   closePathConfirm,
+  isSegmentLoading,
+  setSegmentLoading,
   setCanvas,
   addCanvasEventListeners,
   removeCanvasEventListeners,

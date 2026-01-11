@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { useCanvasModeStore } from '~/stores/canvasMode'
+import { useCanvasStore } from '~/stores/canvas'
 import { storeToRefs } from 'pinia'
 import { sendBackgroundToSegmentAll } from '~/composables/server'
 import { FabricImage } from 'fabric'
 import { ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
 
 const canvasModeStore = useCanvasModeStore()
+const canvasStore = useCanvasStore()
 const { mode } = storeToRefs(canvasModeStore)
 const { setMode } = canvasModeStore
 
@@ -96,17 +98,25 @@ const handleSegmentAll = async () => {
     return
   }
 
-  // 调用server.ts中的函数
-  const croppedMasks = await sendBackgroundToSegmentAll(canvasInstance)
-  
-  if (croppedMasks && croppedMasks.length > 0) {
-    console.log('收到cropped_masks列表:', croppedMasks)
-    // 将每个mask添加到画布，使用对应的bbox坐标
-    croppedMasks.forEach((maskData, index) => {
-      addMaskToCanvas(maskData, index)
-    })
-  } else {
-    console.warn('未收到cropped_masks列表或列表为空')
+  // 显示加载动画
+  canvasStore.setSegmentLoading(true)
+
+  try {
+    // 调用server.ts中的函数
+    const croppedMasks = await sendBackgroundToSegmentAll(canvasInstance)
+    
+    if (croppedMasks && croppedMasks.length > 0) {
+      console.log('收到cropped_masks列表:', croppedMasks)
+      // 将每个mask添加到画布，使用对应的bbox坐标
+      croppedMasks.forEach((maskData, index) => {
+        addMaskToCanvas(maskData, index)
+      })
+    } else {
+      console.warn('未收到cropped_masks列表或列表为空')
+    }
+  } finally {
+    // 隐藏加载动画
+    canvasStore.setSegmentLoading(false)
   }
 }
 

@@ -50,7 +50,7 @@ const {
 const canvasModeStore = useCanvasModeStore()
 const canvasStore = useCanvasStore()
 const { mode } = storeToRefs(canvasModeStore)
-const { closePathConfirm } = storeToRefs(canvasStore)
+const { closePathConfirm, isSegmentLoading } = storeToRefs(canvasStore)
 const { setMode } = canvasModeStore
 const {
   setDrawedObjectDataType,
@@ -206,10 +206,14 @@ function addSegmentPointListener() {
       y: e.pointer.y
     }
     
-    // 调用后端接口
-    const result = await sendPointToSegmentPoint(canvas, point)
+    // 显示加载动画
+    canvasStore.setSegmentLoading(true)
     
-    if (result) {
+    try {
+      // 调用后端接口
+      const result = await sendPointToSegmentPoint(canvas, point)
+      
+      if (result) {
       // 将返回的mask添加到画布
       const imageDataUrl = result.mask.startsWith('data:') 
         ? result.mask 
@@ -231,6 +235,10 @@ function addSegmentPointListener() {
       }).catch((error) => {
         console.error('Mask加载失败:', error)
       })
+      }
+    } finally {
+      // 隐藏加载动画
+      canvasStore.setSegmentLoading(false)
     }
   }
   
@@ -407,7 +415,7 @@ onBeforeUnmount(() => {
       <!-- Segment Buttons 面板 - 独立于工具栏，可拖拽 -->
       <div 
         v-if="selectedMode === 'container' && hasBackground" 
-        class="absolute inset-0 z-10 pointer-events-none"
+        class="absolute inset-0 z-[60] pointer-events-none"
       >
         <SegmentButtons />
       </div>
@@ -426,6 +434,16 @@ onBeforeUnmount(() => {
           :confirm-state="canvasStore.closePathConfirm"
           :on-confirm="canvasStore.handleClosePathConfirm"
         />
+        
+        <!-- Segment 加载动画 -->
+        <div 
+          v-if="isSegmentLoading" 
+          class="absolute inset-0 bg-black/20 rounded-2xl flex items-center justify-center z-50 pointer-events-auto"
+        >
+          <div class="segment-loading-grid">
+            <div v-for="i in 100" :key="i" class="segment-loading-dot" :style="{ animationDelay: `${(i % 10) * 0.1 + Math.floor(i / 10) * 0.1}s` }"></div>
+          </div>
+        </div>
       </div>
     </div>
     <!-- 拼贴系列面板 - 移动到右侧 -->
@@ -440,5 +458,39 @@ onBeforeUnmount(() => {
   background-size: 500px 500px;
   background-repeat: repeat;
   background-position: 0 0;
+}
+
+/* Segment 加载动画 */
+.segment-loading-grid {
+  display: grid;
+  grid-template-columns: repeat(10, 1fr);
+  grid-template-rows: repeat(10, 1fr);
+  gap: 2px;
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+}
+
+.segment-loading-dot {
+  width: 100%;
+  height: 100%;
+  max-width: 6px;
+  max-height: 6px;
+  background-color: white;
+  border-radius: 50%;
+  animation: segmentDotBlink 1.5s ease-in-out infinite;
+  opacity: 0.3;
+  margin: auto;
+}
+
+@keyframes segmentDotBlink {
+  0%, 100% {
+    opacity: 0.3;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.2);
+  }
 }
 </style>
