@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, watch, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { ref, watch, onMounted, onBeforeUnmount, nextTick, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTutorialStore } from '~/stores/tutorial'
 
@@ -10,12 +10,12 @@ const steps = [
   {
     id: 'data-table',
     title: 'Data Table',
-    desc: '在此上传与管理数据。支持表格视图与映射视图，为可视化提供数据源。'
+    desc: '在此上传与管理数据。支持表格视图(data table)与映射视图(mapping view)。在映射视图中可以对数据进行筛选操作，选中目标数据。'
   },
   {
     id: 'mark-editor',
     title: 'Mark Editor',
-    desc: '在画布上绘制标记图形，保存到标记库后可在主画布中复用，用于数据绑定。'
+    desc: '在画布上绘制图形，保存到标记库（Marker Library）后可拖动到data table的筛选好的数据，实现数据与图形的关联。'
   },
   {
     id: 'canvas-editor',
@@ -25,11 +25,25 @@ const steps = [
   {
     id: 'visualization-gallery',
     title: 'Visualization Gallery',
-    desc: '管理单元可视化与拼贴序列，预览并运行动画，支持多总览与导出。'
+    desc: '管理单元可视化序列，可删除，复制场景以及自定义每个场景的渲染参数，系统将根据选中场景所属序列进行多轮渲染。'
+  },
+  {
+    id: 'run-button',
+    title: 'Render',
+    desc: '点击 Run 按钮启动渲染流程，生成当前场景的可视化结果。'
   }
 ]
 
 const currentStep = ref(0)
+// 每个步骤单独配置卡片宽度
+const stepWidths = [
+  'w-[600px]', // 第一步
+  'w-[600px]', // 第二步
+  'w-[900px]', // 第三步
+  'w-[400px]', // 第四步
+  'w-[360px]'  // 第五步：Run 按钮小提示
+]
+const stepWidthClass = computed(() => stepWidths[currentStep.value] ?? 'w-[300px]')
 const spotlightRect = ref<{ top: number; left: number; width: number; height: number } | null>(null)
 const PADDING = 8
 
@@ -122,8 +136,57 @@ onBeforeUnmount(() => {
         />
         <!-- 说明卡片 -->
         <div
-          class="tutorial-card pointer-events-auto absolute left-1/2 bottom-16 -translate-x-1/2 w-[320px] max-w-[90vw] bg-white rounded-xl shadow-xl border border-gray-200 p-5"
+          class="tutorial-card pointer-events-auto absolute left-1/2 bottom-16 -translate-x-1/2 max-w-[90vw] bg-white rounded-xl shadow-xl border border-gray-200 p-5"
+          :class="stepWidthClass"
         >
+          <!-- 第一步：Data Table 演示视频（按视频自身比例，无黑边） -->
+          <div v-if="currentStep === 0" class="tutorial-video-wrap mb-4 rounded-lg overflow-hidden bg-black">
+            <video
+              src="/data Table演示.mp4"
+              class="tutorial-video w-full h-auto block"
+              controls
+              autoplay
+              muted
+              loop
+              playsinline
+            />
+          </div>
+          <!-- 第二步：Mark Editor 演示视频（按视频自身比例，无黑边） -->
+          <div v-if="currentStep === 1" class="tutorial-video-wrap mb-4 rounded-lg overflow-hidden bg-black">
+            <video
+              src="/markereditor演示2.mp4"
+              class="tutorial-video w-full h-auto block"
+              controls
+              autoplay
+              muted
+              loop
+              playsinline
+            />
+          </div>
+          <!-- 第三步：Canvas Editor 演示视频（按视频自身比例，无黑边） -->
+          <div v-if="currentStep === 2" class="tutorial-video-wrap mb-4 rounded-lg overflow-hidden bg-black">
+            <video
+              src="/canvas演示.mp4"
+              class="tutorial-video w-full h-auto block"
+              controls
+              autoplay
+              muted
+              loop
+              playsinline
+            />
+          </div>
+          <!-- 第四步：Visualization Gallery 演示视频（按视频自身比例，无黑边） -->
+          <div v-if="currentStep === 3" class="tutorial-video-wrap mb-4 rounded-lg overflow-hidden bg-black">
+            <video
+              src="/gallery演示.mp4"
+              class="tutorial-video w-full h-auto block"
+              controls
+              autoplay
+              muted
+              loop
+              playsinline
+            />
+          </div>
           <div class="flex items-center justify-between mb-3">
             <h3 class="text-lg font-bold text-gray-800">
               {{ steps[currentStep].title }}

@@ -136,6 +136,7 @@ const handleHelp = () => {
       
       <!-- 播放按钮 -->
       <button 
+        data-tutorial="run-button"
         class="ml-50px flex items-center gap-2 px-6 h-full bg-[var(--primary-color)] text-[var(--title-color)] transition-colors duration-200 font-medium hover:bg-[var(--primary-hover-color)]"
         :class="[replaying ? 'opacity-50 cursor-not-allowed' : '']"
         :disabled="replaying"

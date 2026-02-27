@@ -397,7 +397,9 @@ onBeforeUnmount(() => {
 <template>
   <section class="bg-gray-900 flex h-full min-h-0 min-w-0 w-full">
     <!-- 主画布区域 -->
-    <div ref="canvasAreaRef"
+    <div
+      ref="canvasAreaRef"
+      data-tutorial="canvas-editor"
       class="p-2 pl-7 border-r border-[#e6e6e6] bg-[#f5f5f5] flex flex-1 flex-row min-h-0 min-w-0 items-center justify-center relative overflow-hidden canvas-with-grid"
       @dragover="handleDragOver" @drop="(e) => handleDrop(e, canvasEl)">
       <!-- 工具栏容器：垂直居中，包含所有工具栏 -->
