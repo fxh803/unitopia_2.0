@@ -12,6 +12,9 @@ const { tableData, tableColumns, isLoading } = storeToRefs(tableStore)
 const isExpanded = ref(true)
 const activeTab = ref<'fields' | 'table'>('fields')
 
+// 当前正在被拖拽的字段（用 column 作为唯一 key）
+const draggingFieldKey = ref<string | null>(null)
+
 const fileInput = ref<HTMLInputElement>()
 const isDragOver = ref(false)
 
@@ -31,9 +34,7 @@ const fieldTags = computed(() =>
   tableColumns.value.map(col => {
     const prefix = getFieldPrefix(col)
     const isNumeric = prefix.startsWith('#')
-    const isGroup = col.endsWith(' Group')
-    const name = isGroup ? col.slice(0, -6) : col
-    return { column: col, prefix, isNumeric, isGroup, name }
+    return { column: col, prefix, isNumeric }
   })
 )
 
@@ -56,6 +57,44 @@ function handleDrop(e: DragEvent) {
   isDragOver.value = false
   const files = e.dataTransfer?.files
   if (files?.length) tableStore.handleFileUpload(files[0])
+}
+
+function onFieldDragStart(e: DragEvent, tag: { column: string }, type: 'numeric' | 'categorical') {
+  if (!e.dataTransfer) return
+
+  // 1. 设置拖拽携带的数据
+  e.dataTransfer.effectAllowed = 'copy'
+  e.dataTransfer.setData('text/plain', tag.column)
+  e.dataTransfer.setData('field-type', type)
+  e.dataTransfer.setData('entities', String(tableData.value.length))
+
+  // 2. 自定义拖拽时跟随鼠标的“影像”，保持 pill 原本样式
+  const target = e.target as HTMLElement | null
+  if (target) {
+    const rect = target.getBoundingClientRect()
+    const dragImage = target.cloneNode(true) as HTMLElement
+    dragImage.style.position = 'absolute'
+    dragImage.style.top = '-9999px'
+    dragImage.style.left = '-9999px'
+    dragImage.style.pointerEvents = 'none'
+    dragImage.classList.remove('data-field-placeholder')
+    dragImage.querySelectorAll<HTMLElement>('*').forEach(el => {
+      el.style.visibility = '' // 确保内部内容可见
+    })
+    document.body.appendChild(dragImage)
+    e.dataTransfer.setDragImage(dragImage, rect.width / 2, rect.height / 2)
+    // 拖拽开始后再异步移除临时节点
+    requestAnimationFrame(() => {
+      document.body.removeChild(dragImage)
+    })
+  }
+
+  // 3. 标记当前字段为“正在被拖拽”，让原位置显示为灰色洞
+  draggingFieldKey.value = tag.column
+}
+
+function onFieldDragEnd() {
+  draggingFieldKey.value = null
 }
 
 function handleFileSelect(e: Event) {
@@ -150,8 +189,8 @@ function clearData() {
           <div
             class="data-upload-area h-full min-h-[100px] w-full border-2 border-dashed rounded-lg transition-colors cursor-pointer flex flex-col justify-center items-center gap-2"
             :class="{
-              'border-[var(--primary-color)] bg-[var(--border-color)]/10': isDragOver,
-              'border-[var(--border-color)] hover:border-[var(--text-muted-light)]': !isDragOver,
+              'border-[var(--text-muted-light)] bg-[var(--border-color)]/10': isDragOver,
+              'border-[var(--border-color)]': !isDragOver,
             }"
           >
             <img src="/table upload.svg" alt="" class="w-5 h-5 text-[var(--text-muted)]" />
@@ -179,16 +218,14 @@ function clearData() {
             <span
               v-for="tag in numericTags"
               :key="`num-${tag.column}`"
-              class="data-field-pill inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium"
+              class="data-field-pill inline-flex items-center rounded-full px-4 py-1.5 text-[13px] font-medium cursor-move"
+              :class="{ 'data-field-placeholder': draggingFieldKey === tag.column }"
+              draggable="true"
+              @dragstart="onFieldDragStart($event, tag, 'numeric')"
+              @dragend="onFieldDragEnd"
             >
               <span class="data-field-prefix-num mr-1">#</span>
-              <span class="data-field-name">{{ tag.name }}</span>
-              <span
-                v-if="tag.isGroup"
-                class="data-field-group ml-1.5 rounded-full pl-2 pr-2 py-0.5 text-[10px] font-medium"
-              >
-                Group
-              </span>
+              <span class="data-field-name">{{ tag.column }}</span>
             </span>
 
             <!-- 类型行之间的换行（只有两种类型都存在时才加） -->
@@ -202,16 +239,14 @@ function clearData() {
             <span
               v-for="tag in categoricalTags"
               :key="`cat-${tag.column}`"
-              class="data-field-pill inline-flex items-center rounded-full px-3 py-1.5 text-xs font-medium"
+              class="data-field-pill inline-flex items-center rounded-full px-4 py-1.5 text-[13px] font-medium cursor-move"
+              :class="{ 'data-field-placeholder': draggingFieldKey === tag.column }"
+              draggable="true"
+              @dragstart="onFieldDragStart($event, tag, 'categorical')"
+              @dragend="onFieldDragEnd"
             >
               <span class="data-field-prefix-abc mr-1">abc</span>
-              <span class="data-field-name">{{ tag.name }}</span>
-              <span
-                v-if="tag.isGroup"
-                class="data-field-group ml-1.5 rounded-full pl-2 pr-2 py-0.5 text-[10px] font-medium"
-              >
-                Group
-              </span>
+              <span class="data-field-name">{{ tag.column }}</span>
             </span>
           </div>
         </div>
@@ -242,6 +277,15 @@ function clearData() {
   background-color: #fbf8f6;
   color: #444;
   border: none;
+}
+
+.data-field-placeholder {
+  background-color: #d4d1cf;
+  border-radius: 9999px;
+}
+
+.data-field-placeholder > * {
+  visibility: hidden;
 }
 
 .data-field-prefix-num {

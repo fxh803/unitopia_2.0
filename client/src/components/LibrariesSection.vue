@@ -4,7 +4,7 @@ import { useMarkerStore } from '~/stores/marker'
 import { useContainerStore } from '~/stores/container'
 import { sendUploadContainerToServer } from '~/composables/server'
 
-const isExpanded = ref(false)
+const isExpanded = ref(true)
 
 // 子分组折叠
 const isMarkExpanded = ref(true)
@@ -198,7 +198,7 @@ async function handleContainerFileSelect(e: Event) {
                 <span class="i-carbon-add-alt text-xl text-[var(--text-muted)]" />
               </div>
               <span class="mt-1 text-[11px] text-[var(--text-muted)] truncate w-full text-center">
-                上传 / 拖拽 Mark
+                upload Mark
               </span>
               <input
                 ref="markFileInput"
@@ -266,7 +266,7 @@ async function handleContainerFileSelect(e: Event) {
                 <span class="i-carbon-add-alt text-xl text-[var(--text-muted)]" />
               </div>
               <span class="mt-1 text-[11px] text-[var(--text-muted)] truncate w-full text-center">
-                上传 / 拖拽 Container
+                upload Container
               </span>
               <input
                 ref="containerFileInput"
