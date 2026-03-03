@@ -157,7 +157,7 @@ function clearData() {
       <div class="flex items-center gap-4">
         <button
           type="button"
-          class="px-0 py-1.5 text-[14px] transition-colors cursor-pointer"
+          class="px-0 py-0 text-[14px] transition-colors cursor-pointer"
           :class="activeTab === 'fields' ? 'font-bold text-[var(--title-color)]' : 'font-normal text-[var(--text-muted)] hover:text-[var(--title-color)]'"
           @click="activeTab = 'fields'"
         >
@@ -165,7 +165,7 @@ function clearData() {
         </button>
         <button
           type="button"
-          class="px-0 py-1.5 text-[14px] transition-colors cursor-pointer"
+          class="px-0 py-0 text-[14px] transition-colors cursor-pointer"
           :class="activeTab === 'table' ? 'font-bold text-[var(--title-color)]' : 'font-normal text-[var(--text-muted)] hover:text-[var(--title-color)]'"
           @click="activeTab = 'table'"
         >

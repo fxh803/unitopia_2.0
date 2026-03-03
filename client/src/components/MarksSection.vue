@@ -58,16 +58,11 @@ function handleGroupValueChange(parentId: string, childId: string, value: string
     }
   })
 
-  // 父的 entityIndices / entities = 所有子实例索引的并集
-  const parentIndices = Array.from(
-    new Set(newChildren.flatMap(c => c.entityIndices)),
-  )
-
   markInstanceStore.updateMarkInstance(parentId, {
     children: newChildren,
     entityIndices: null,
     entitiesDetail: null,
-    entities: parentIndices.length,
+    entities: 0,
   })
 }
 
@@ -167,7 +162,7 @@ function handleFieldDropOnMark(e: DragEvent, markId: string) {
       children,
       entityIndices: null,
       entitiesDetail: null,
-      entities: children.reduce((sum, c) => sum + c.entities, 0),
+      entities: 0,
     })
   }
 }
@@ -267,18 +262,13 @@ function handleDrop(e: DragEvent) {
       }
     })
 
-    const entities = Math.min(
-      children.reduce((sum, c) => sum + c.entities, 0),
-      baseEntities,
-    )
-
     markInstanceStore.addMarkInstance({
       name: `Mark Group ${markInstances.value.length + 1}`,
       fieldName,
       fieldType,
       isGroup: true,
       children,
-      entities,
+      entities: 0,
       entityIndices: null,
       entitiesDetail: null,
     })
