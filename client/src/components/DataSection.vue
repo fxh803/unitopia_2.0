@@ -2,11 +2,11 @@
 import { ref, computed } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTableStore } from '~/stores/table'
-import { useDataScaleStore } from '~/stores/dataScale'
+// import { useDataScaleStore } from '~/stores/dataScale'
 import TableDataView from './TableData.vue'
 
 const tableStore = useTableStore()
-const dataScaleStore = useDataScaleStore()
+// const dataScaleStore = useDataScaleStore()
 const { tableData, tableColumns, isLoading } = storeToRefs(tableStore)
 
 const isExpanded = ref(true)
@@ -112,7 +112,7 @@ function handleFileSelect(e: Event) {
 
 function clearData() {
   tableStore.clearTableData()
-  dataScaleStore.resetScales()
+  // dataScaleStore.resetScales()
 }
 </script>
 

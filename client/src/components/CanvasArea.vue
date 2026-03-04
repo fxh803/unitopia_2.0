@@ -13,7 +13,6 @@ import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useForceDrawingStore } from '~/stores/forceDrawing'
 import { useAnimationStore } from '~/stores/animation'
 import { useBackgroundStore } from '~/stores/background'
-import { useDataScaleStore } from '~/stores/dataScale'
 import { sendPointToSegmentPoint } from '~/composables/server'
 import { FabricImage } from 'fabric'
 const animationStore = useAnimationStore()
@@ -32,7 +31,6 @@ watch(collaging, (newVal, oldVal) => {
 
 const selectedModeStore = useSelectedModeStore()
 const { selectedMode } = storeToRefs(selectedModeStore)
-const dataScaleStore = useDataScaleStore()
 
 const brushSizeStore = useBrushSizeStore()
 const { brushWidth, isMainBrushSizePanelOpen } = storeToRefs(brushSizeStore)
@@ -362,7 +360,7 @@ onMounted(async () => {
     forceDrawingStore.setCanvas(() => canvas)
     backgroundStore.setCanvas(() => canvas)
     canvasStore.setCanvas(() => canvas)
-    dataScaleStore.setCanvas(() => canvas)
+    // dataScaleStore.setCanvas(() => canvas)
 
     // 初始化空白幻灯片
     initializeEmptySlide()

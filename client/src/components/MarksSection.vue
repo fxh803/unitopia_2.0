@@ -40,6 +40,7 @@ function onMarkDragStart(e: DragEvent, mark: any) {
   if (!e.dataTransfer) return
   e.dataTransfer.effectAllowed = 'copy'
   e.dataTransfer.setData('mark-instance-id', mark.id)
+  e.dataTransfer.setData('mark-kind', mark.isGroup ? 'group' : 'instance')
 }
 
 function handleGroupValueChange(parentId: string, childId: string, value: string) {

@@ -1,38 +1,38 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useMarkerStore } from '~/stores/marker'
+// import { useMarkerStore } from '~/stores/marker'
 
 export interface TableData {
   [key: string]: any
 }
 
-export type ConditionOperator = '=' | '>' | '<'
+// export type ConditionOperator = '=' | '>' | '<'
 
-// 单个筛选条件
-export interface SingleFilter {
-  id?: string // filter 的唯一 ID，用作 cluster_id
-  operator: ConditionOperator
-  value: string
-  markerId: string | null // 每个 filter 可以有自己的 marker
-  data: TableData[] // 该 filter 筛选后的数据
-  rows: number[] // 该 filter 筛选后的行索引
-  isSelected?: boolean // 是否被选中
-  visualAttribute?: string | null // 要进行可视化的列名
-  encoding?: {
-    channel: 'width' | 'height' | 'size' | 'color' | null
-    scale: number
-    colorStart?: string // 颜色映射起始颜色
-    colorEnd?: string // 颜色映射结束颜色（用于插值）
-  } // 每个 filter 的 visual encoding 设置
-}
+// // 单个筛选条件
+// export interface SingleFilter {
+//   id?: string // filter 的唯一 ID，用作 cluster_id
+//   operator: ConditionOperator
+//   value: string
+//   markerId: string | null // 每个 filter 可以有自己的 marker
+//   data: TableData[] // 该 filter 筛选后的数据
+//   rows: number[] // 该 filter 筛选后的行索引
+//   isSelected?: boolean // 是否被选中
+//   visualAttribute?: string | null // 要进行可视化的列名
+//   encoding?: {
+//     channel: 'width' | 'height' | 'size' | 'color' | null
+//     scale: number
+//     colorStart?: string // 颜色映射起始颜色
+//     colorEnd?: string // 颜色映射结束颜色（用于插值）
+//   } // 每个 filter 的 visual encoding 设置
+// }
 
-// Column 筛选卡片接口
-export interface ColumnFilterCard {
-  id: string
-  column: string
-  filters: SingleFilter[]
-}
+// // Column 筛选卡片接口
+// export interface ColumnFilterCard {
+//   id: string
+//   column: string
+//   filters: SingleFilter[]
+// }
 
 export const useTableStore = defineStore('table', () => {
   // 表格数据状态
@@ -42,7 +42,7 @@ export const useTableStore = defineStore('table', () => {
   const isLoading = ref(false)
 
   // 数据映射筛选卡片
-  const columnFilterCards = ref<ColumnFilterCard[]>([])
+  // const columnFilterCards = ref<ColumnFilterCard[]>([])
   const currentCardId = ref<string | null>(null)
   // 解析 CSV 行
   const parseCSVLine = (line: string): string[] => {
@@ -120,7 +120,7 @@ export const useTableStore = defineStore('table', () => {
     tableData.value = []
     tableColumns.value = []
     fileName.value = ''
-    columnFilterCards.value = []
+    // columnFilterCards.value = []
   }
 
   // 设置表格数据
@@ -135,7 +135,7 @@ export const useTableStore = defineStore('table', () => {
     tableColumns,
     fileName,
     isLoading,
-    columnFilterCards,
+    // columnFilterCards,
     currentCardId,
     // 方法
     handleFileUpload,

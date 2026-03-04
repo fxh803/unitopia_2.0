@@ -4,7 +4,6 @@ import { useSelectedModeStore } from '~/stores/selectedMode'
 import { useBezierDrawingStore } from '~/stores/bezierDrawing'
 import { useBackgroundStore } from '~/stores/background'
 import { useCanvasModeStore } from '~/stores/canvasMode'
-import { useDataScaleStore } from '~/stores/dataScale'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useObjectActionsStore } from '~/stores/objectActions'
 import { useHoverInfoPanelStore } from '~/stores/hoverInfoPanel'
@@ -41,7 +40,6 @@ export const useCanvasStore = defineStore('canvas', () => {
   const bezierDrawingStore = useBezierDrawingStore()
   const backgroundStore = useBackgroundStore()
   const canvasModeStore = useCanvasModeStore()
-  const dataScaleStore = useDataScaleStore()
   const collageSeriesStore = useCollageSeriesStore()
   const objectActionsStore = useObjectActionsStore()
   const hoverInfoPanelStore = useHoverInfoPanelStore()
@@ -304,20 +302,20 @@ export const useCanvasStore = defineStore('canvas', () => {
 
   }
 
-  // 删除指定markerId的所有对象
-  function removeObjectsByMarkerId(markerId: string) {
-    const canvasInstance = canvasRef.value?.()
-    if (!canvasInstance) return
+  // // 删除指定markerId的所有对象
+  // function removeObjectsByMarkerId(markerId: string) {
+  //   const canvasInstance = canvasRef.value?.()
+  //   if (!canvasInstance) return
 
-    const objects = canvasInstance.getObjects().concat()
-    objects.forEach(obj => {
-      if (obj.get('dataType') === 'marker' && obj.get('markerId') === markerId) {
-        canvasInstance.remove(obj)
-      }
-    })
-    canvasInstance.discardActiveObject()
-    canvasInstance.renderAll()
-  }
+  //   const objects = canvasInstance.getObjects().concat()
+  //   objects.forEach(obj => {
+  //     if (obj.get('dataType') === 'marker' && obj.get('markerId') === markerId) {
+  //       canvasInstance.remove(obj)
+  //     }
+  //   })
+  //   canvasInstance.discardActiveObject()
+  //   canvasInstance.renderAll()
+  // }
 
   // 检测拖拽位置是否在emitter上
   function isDropOnEmitter(dropX: number, dropY: number): boolean {
@@ -450,269 +448,538 @@ export const useCanvasStore = defineStore('canvas', () => {
     return []
   }
 
-  async function addMarkers(markerIdList: string[], pos: Array<{ x: number, y: number }>, clusterIdList: string[] = [], card: ColumnFilterCard | null = null) {
-    console.log('addMarkers', markerIdList, pos, clusterIdList, card)
-    const canvasInstance = canvasRef.value?.()
-    if (!canvasInstance) return
+  // async function addMarkers(markerIdList: string[], pos: Array<{ x: number, y: number }>, clusterIdList: string[] = [], card: ColumnFilterCard | null = null) {
+  //   console.log('addMarkers', markerIdList, pos, clusterIdList, card)
+  //   const canvasInstance = canvasRef.value?.()
+  //   if (!canvasInstance) return
 
-    try {
-      // 获取 table store 以访问 filter 信息
-      const tableStore = useTableStore()
+  //   try {
+  //     // 获取 table store 以访问 filter 信息
+  //     const tableStore = useTableStore()
 
-      // 获取归一化参数
-      const { data, normalized, defaultSize } = dataScaleStore.getNormalizationParams(card)
+  //     // 获取归一化参数
+  //     const { data, normalized, defaultSize } = dataScaleStore.getNormalizationParams(card)
 
-      // 获取 marker store
-      const markerStore = useMarkerStore()
-      const markers = markerStore.markers
+  //     // 获取 marker store
+  //     const markerStore = useMarkerStore()
+  //     const markers = markerStore.markers
 
-      // 创建一个函数来根据 cluster_id 获取对应的 filter 和 encoding
-      const getFilter = (clusterId: string) => {
-        if (!clusterId) return null
+  //     // 创建一个函数来根据 cluster_id 获取对应的 filter 和 encoding
+  //     const getFilter = (clusterId: string) => {
+  //       if (!clusterId) return null
         
-        // 遍历所有 card 的 filters，找到匹配的 filter
-        for (const card of tableStore.columnFilterCards) {
-          const filter = card.filters.find(f => f.id === clusterId)
-          if (filter) {
-            return { filter, card }
-          }
-        }
-        return null
-      }
+  //       // 遍历所有 card 的 filters，找到匹配的 filter
+  //       for (const card of tableStore.columnFilterCards) {
+  //         const filter = card.filters.find(f => f.id === clusterId)
+  //         if (filter) {
+  //           return { filter, card }
+  //         }
+  //       }
+  //       return null
+  //     }
 
-      // 判断值是否为数值型
-      const isNumericValue = (value: any): boolean => {
-        if (value === undefined || value === null || value === '') return false
-        const num = Number(value)
-        return !isNaN(num) && String(value).trim() !== ''
-      }
+  //     // 判断值是否为数值型
+  //     const isNumericValue = (value: any): boolean => {
+  //       if (value === undefined || value === null || value === '') return false
+  //       const num = Number(value)
+  //       return !isNaN(num) && String(value).trim() !== ''
+  //     }
 
-      // 为字符串值生成颜色映射（相同值相同颜色）
-      const getStringValueColorMap = (filter: any, colorStart: string, colorEnd: string): Map<string, string> => {
-        const colorMap = new Map<string, string>()
-        if (!filter.visualAttribute || !filter.data) return colorMap
+  //     // 为字符串值生成颜色映射（相同值相同颜色）
+  //     const getStringValueColorMap = (filter: any, colorStart: string, colorEnd: string): Map<string, string> => {
+  //       const colorMap = new Map<string, string>()
+  //       if (!filter.visualAttribute || !filter.data) return colorMap
 
-        // 获取所有唯一值
-        const uniqueValues = new Set<string>()
-        filter.data.forEach((row: any) => {
-          const value = row[filter.visualAttribute]
-          if (value !== undefined && value !== null && value !== '') {
-            uniqueValues.add(String(value))
-          }
-        })
+  //       // 获取所有唯一值
+  //       const uniqueValues = new Set<string>()
+  //       filter.data.forEach((row: any) => {
+  //         const value = row[filter.visualAttribute]
+  //         if (value !== undefined && value !== null && value !== '') {
+  //           uniqueValues.add(String(value))
+  //         }
+  //       })
 
-        // 为每个唯一值分配颜色
-        const uniqueValuesArray = Array.from(uniqueValues).sort()
-        uniqueValuesArray.forEach((value, index) => {
-          const t = uniqueValuesArray.length > 1 ? index / (uniqueValuesArray.length - 1) : 0
-          const color = interpolateColor(colorStart, colorEnd, t)
-          colorMap.set(value, color)
-        })
+  //       // 为每个唯一值分配颜色
+  //       const uniqueValuesArray = Array.from(uniqueValues).sort()
+  //       uniqueValuesArray.forEach((value, index) => {
+  //         const t = uniqueValuesArray.length > 1 ? index / (uniqueValuesArray.length - 1) : 0
+  //         const color = interpolateColor(colorStart, colorEnd, t)
+  //         colorMap.set(value, color)
+  //       })
 
-        return colorMap
-      }
+  //       return colorMap
+  //     }
 
-      // 十六进制颜色转 RGB
-      const hexToRgb = (hex: string): { r: number, g: number, b: number } | null => {
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
-        return result ? {
-          r: parseInt(result[1], 16),
-          g: parseInt(result[2], 16),
-          b: parseInt(result[3], 16)
-        } : null
-      }
+  //     // 十六进制颜色转 RGB
+  //     const hexToRgb = (hex: string): { r: number, g: number, b: number } | null => {
+  //       const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex)
+  //       return result ? {
+  //         r: parseInt(result[1], 16),
+  //         g: parseInt(result[2], 16),
+  //         b: parseInt(result[3], 16)
+  //       } : null
+  //     }
 
-      // RGB 转十六进制颜色
-      const rgbToHex = (r: number, g: number, b: number): string => {
-        return '#' + [r, g, b].map(x => {
-          const hex = Math.round(x).toString(16)
-          return hex.length === 1 ? '0' + hex : hex
-        }).join('')
-      }
+  //     // RGB 转十六进制颜色
+  //     const rgbToHex = (r: number, g: number, b: number): string => {
+  //       return '#' + [r, g, b].map(x => {
+  //         const hex = Math.round(x).toString(16)
+  //         return hex.length === 1 ? '0' + hex : hex
+  //       }).join('')
+  //     }
 
-      // 颜色插值函数
-      const interpolateColor = (colorStart: string, colorEnd: string, t: number): string => {
-        const rgbStart = hexToRgb(colorStart)
-        const rgbEnd = hexToRgb(colorEnd)
-        if (!rgbStart || !rgbEnd) return colorStart
+  //     // 颜色插值函数
+  //     const interpolateColor = (colorStart: string, colorEnd: string, t: number): string => {
+  //       const rgbStart = hexToRgb(colorStart)
+  //       const rgbEnd = hexToRgb(colorEnd)
+  //       if (!rgbStart || !rgbEnd) return colorStart
 
-        const r = rgbStart.r + (rgbEnd.r - rgbStart.r) * t
-        const g = rgbStart.g + (rgbEnd.g - rgbStart.g) * t
-        const b = rgbStart.b + (rgbEnd.b - rgbStart.b) * t
+  //       const r = rgbStart.r + (rgbEnd.r - rgbStart.r) * t
+  //       const g = rgbStart.g + (rgbEnd.g - rgbStart.g) * t
+  //       const b = rgbStart.b + (rgbEnd.b - rgbStart.b) * t
 
-        return rgbToHex(r, g, b)
-      }
+  //       return rgbToHex(r, g, b)
+  //     }
 
-      // 预生成所有 filter 的字符串颜色映射（避免在循环中重复计算）
-      const stringColorMaps = new Map<string, Map<string, string>>()
-      if (card) {
-        for (const filter of card.filters) {
-          if (filter.encoding?.channel === 'color' && filter.encoding.colorStart && filter.encoding.colorEnd) {
-            const colorMap = getStringValueColorMap(filter, filter.encoding.colorStart, filter.encoding.colorEnd)
-            if (filter.id) {
-              stringColorMaps.set(filter.id, colorMap)
-            }
-          }
-        }
-      }
+  //     // 预生成所有 filter 的字符串颜色映射（避免在循环中重复计算）
+  //     const stringColorMaps = new Map<string, Map<string, string>>()
+  //     if (card) {
+  //       for (const filter of card.filters) {
+  //         if (filter.encoding?.channel === 'color' && filter.encoding.colorStart && filter.encoding.colorEnd) {
+  //           const colorMap = getStringValueColorMap(filter, filter.encoding.colorStart, filter.encoding.colorEnd)
+  //           if (filter.id) {
+  //             stringColorMaps.set(filter.id, colorMap)
+  //           }
+  //         }
+  //       }
+  //     }
 
-      for (let i = 0; i < pos.length; i++) {
-        const p = pos[i]
-        const currentDropX = p.x
-        const currentDropY = p.y
-        //根据markerIdList中获取markerId对应的jsonData
-        const markerId = markerIdList[i]
-        if (!markerId) continue
+  //     for (let i = 0; i < pos.length; i++) {
+  //       const p = pos[i]
+  //       const currentDropX = p.x
+  //       const currentDropY = p.y
+  //       //根据markerIdList中获取markerId对应的jsonData
+  //       const markerId = markerIdList[i]
+  //       if (!markerId) continue
 
-        // 获取对应的 cluster_id
-        const clusterId = clusterIdList[i] || null
-        const marker = markers.find(m => m.id === markerId)
-        const objects = await fabric.util.enlivenObjects(marker.jsonData, 'fabric')
+  //       // 获取对应的 cluster_id
+  //       const clusterId = clusterIdList[i] || null
+  //       const marker = markers.find(m => m.id === markerId)
+  //       const objects = await fabric.util.enlivenObjects(marker.jsonData, 'fabric')
 
-        if (objects && objects.length > 0) {
-          const group = new Group(objects)
+  //       if (objects && objects.length > 0) {
+  //         const group = new Group(objects)
 
-          // 获取该 marker 对应的 filter encoding
-          const filterInfo = clusterId ? getFilter(clusterId) : null
-          const filterEncoding = filterInfo?.filter?.encoding ?? null
-          // 先设置所有属性（包括dataType），然后再添加到画布
-          group.set({
-            left: currentDropX,
-            top: currentDropY,
-            selectable: false,
-            evented: false,
-            dataType: 'marker',
-            hasControls: false,
-            originX: 'center',
-            originY: 'center',
-            markerId: markerId,
-            clusterId: clusterId, // 设置 cluster_id
-            data: data[i]
-          })
+  //         // 获取该 marker 对应的 filter encoding
+  //         const filterInfo = clusterId ? getFilter(clusterId) : null
+  //         const filterEncoding = filterInfo?.filter?.encoding ?? null
+  //         // 先设置所有属性（包括dataType），然后再添加到画布
+  //         group.set({
+  //           left: currentDropX,
+  //           top: currentDropY,
+  //           selectable: false,
+  //           evented: false,
+  //           dataType: 'marker',
+  //           hasControls: false,
+  //           originX: 'center',
+  //           originY: 'center',
+  //           markerId: markerId,
+  //           clusterId: clusterId, // 设置 cluster_id
+  //           data: data[i]
+  //         })
 
-          if (selectedModeStore.selectedMode === null) {
-            group.selectable = true;
-            group.evented = true;
-          }
+  //         if (selectedModeStore.selectedMode === null) {
+  //           group.selectable = true;
+  //           group.evented = true;
+  //         }
 
-          // 根据数据中的 width 和 height 调节对象大小
-          const currentWidth = group.width || group.getScaledWidth()
-          const currentHeight = group.height || group.getScaledHeight()
-          const normalizedValue = normalized[i]
-          const currentSize = Math.max(currentWidth, currentHeight)
+  //         // 根据数据中的 width 和 height 调节对象大小
+  //         const currentWidth = group.width || group.getScaledWidth()
+  //         const currentHeight = group.height || group.getScaledHeight()
+  //         const normalizedValue = normalized[i]
+  //         const currentSize = Math.max(currentWidth, currentHeight)
           
-          // 使用 filter 的 encoding（每个 marker 都有对应的 filter encoding）
-          const channel: 'width' | 'height' | 'size' | 'color' | null = filterEncoding?.channel ?? null
-          const scale = filterEncoding?.scale ?? 1
+  //         // 使用 filter 的 encoding（每个 marker 都有对应的 filter encoding）
+  //         const channel: 'width' | 'height' | 'size' | 'color' | null = filterEncoding?.channel ?? null
+  //         const scale = filterEncoding?.scale ?? 1
           
-          //一开始先按比例缩放
-          let scaleX = defaultSize / currentSize
-          let scaleY = defaultSize / currentSize
+  //         //一开始先按比例缩放
+  //         let scaleX = defaultSize / currentSize
+  //         let scaleY = defaultSize / currentSize
           
-          if (channel === 'width') {
-            scaleX = normalizedValue / currentSize
-            scaleX *= scale
-          } else if (channel === 'height') {
-            scaleY = normalizedValue / currentSize
-            scaleY *= scale
-          } else if (channel === 'size') {
-            scaleX = normalizedValue / currentSize
-            scaleY = normalizedValue / currentSize
-            scaleX *= scale
-            scaleY *= scale
-          } else {
-            // 默认情况（channel 为 null 或其他）
-            scaleX = defaultSize / currentSize
-            scaleY = defaultSize / currentSize
-          }
+  //         if (channel === 'width') {
+  //           scaleX = normalizedValue / currentSize
+  //           scaleX *= scale
+  //         } else if (channel === 'height') {
+  //           scaleY = normalizedValue / currentSize
+  //           scaleY *= scale
+  //         } else if (channel === 'size') {
+  //           scaleX = normalizedValue / currentSize
+  //           scaleY = normalizedValue / currentSize
+  //           scaleX *= scale
+  //           scaleY *= scale
+  //         } else {
+  //           // 默认情况（channel 为 null 或其他）
+  //           scaleX = defaultSize / currentSize
+  //           scaleY = defaultSize / currentSize
+  //         }
           
-          group.set({
-            scaleX: scaleX,
-            scaleY: scaleY
-          })
+  //         group.set({
+  //           scaleX: scaleX,
+  //           scaleY: scaleY
+  //         })
 
-          // 如果是 color 映射，应用颜色插值
-          if (channel === 'color' && clusterId && filterEncoding?.colorStart && filterEncoding?.colorEnd) {
-            const filterInfo = getFilter(clusterId)
-            if (!filterInfo) return
+  //         // 如果是 color 映射，应用颜色插值
+  //         if (channel === 'color' && clusterId && filterEncoding?.colorStart && filterEncoding?.colorEnd) {
+  //           const filterInfo = getFilter(clusterId)
+  //           if (!filterInfo) return
 
-            const { filter } = filterInfo
-            const currentData = data[i]
-            const visualAttribute = filter.visualAttribute
-            let interpolatedColor: string
+  //           const { filter } = filterInfo
+  //           const currentData = data[i]
+  //           const visualAttribute = filter.visualAttribute
+  //           let interpolatedColor: string
 
-            if (visualAttribute && currentData && currentData[visualAttribute] !== undefined) {
-              const value = currentData[visualAttribute]
+  //           if (visualAttribute && currentData && currentData[visualAttribute] !== undefined) {
+  //             const value = currentData[visualAttribute]
               
-              // 判断是否为数值型
-              if (isNumericValue(value)) {
-                // 数值型：使用 normalized 值进行插值
-                const minDisplaySize = 20
-                const maxDisplaySize = 70
-                const normalizedValue = normalized[i]
-                // 将 normalized 值从 [minDisplaySize, maxDisplaySize] 映射到 [0, 1]
-                const t = maxDisplaySize > minDisplaySize 
-                  ? (normalizedValue - minDisplaySize) / (maxDisplaySize - minDisplaySize)
-                  : 0
-                // 确保 t 在 [0, 1] 范围内
-                const clampedT = Math.max(0, Math.min(1, t))
-                interpolatedColor = interpolateColor(filterEncoding.colorStart, filterEncoding.colorEnd, clampedT)
-              } else {
-                // 字符串型：相同值使用相同颜色
-                const colorMap = stringColorMaps.get(clusterId) || getStringValueColorMap(filter, filterEncoding.colorStart, filterEncoding.colorEnd)
-                const valueStr = String(value)
-                interpolatedColor = colorMap.get(valueStr) || filterEncoding.colorStart
-              }
-            } else {
-              // 如果没有 visualAttribute 或数据，使用默认颜色
-              interpolatedColor = filterEncoding.colorStart
-            }
+  //             // 判断是否为数值型
+  //             if (isNumericValue(value)) {
+  //               // 数值型：使用 normalized 值进行插值
+  //               const minDisplaySize = 20
+  //               const maxDisplaySize = 70
+  //               const normalizedValue = normalized[i]
+  //               // 将 normalized 值从 [minDisplaySize, maxDisplaySize] 映射到 [0, 1]
+  //               const t = maxDisplaySize > minDisplaySize 
+  //                 ? (normalizedValue - minDisplaySize) / (maxDisplaySize - minDisplaySize)
+  //                 : 0
+  //               // 确保 t 在 [0, 1] 范围内
+  //               const clampedT = Math.max(0, Math.min(1, t))
+  //               interpolatedColor = interpolateColor(filterEncoding.colorStart, filterEncoding.colorEnd, clampedT)
+  //             } else {
+  //               // 字符串型：相同值使用相同颜色
+  //               const colorMap = stringColorMaps.get(clusterId) || getStringValueColorMap(filter, filterEncoding.colorStart, filterEncoding.colorEnd)
+  //               const valueStr = String(value)
+  //               interpolatedColor = colorMap.get(valueStr) || filterEncoding.colorStart
+  //             }
+  //           } else {
+  //             // 如果没有 visualAttribute 或数据，使用默认颜色
+  //             interpolatedColor = filterEncoding.colorStart
+  //           }
             
-            // 将颜色应用到 group 中的所有子对象
-            const objects = group.getObjects()
-            objects.forEach((obj: any) => {
-              // 获取对象的原始 stroke 和 fill 状态
-              const hasStroke = obj.stroke && obj.stroke !== 'transparent' && obj.stroke !== 'rgba(0,0,0,0)'
-              const hasFill = obj.fill && obj.fill !== 'transparent' && obj.fill !== 'rgba(0,0,0,0)'
+  //           // 将颜色应用到 group 中的所有子对象
+  //           const objects = group.getObjects()
+  //           objects.forEach((obj: any) => {
+  //             // 获取对象的原始 stroke 和 fill 状态
+  //             const hasStroke = obj.stroke && obj.stroke !== 'transparent' && obj.stroke !== 'rgba(0,0,0,0)'
+  //             const hasFill = obj.fill && obj.fill !== 'transparent' && obj.fill !== 'rgba(0,0,0,0)'
               
-              // 如果对象原本有 stroke，应用插值颜色到 stroke
-              if (hasStroke) {
-                obj.set('stroke', interpolatedColor)
-              }
-              // 如果对象原本有 fill，应用插值颜色到 fill
-              if (hasFill) {
-                obj.set('fill', interpolatedColor)
-              }
-            })
-          }
-          // 添加到主画布（此时所有属性都已设置好）
-          canvasInstance.add(group)
-          // 强制更新对象
-          group.setCoords()
-          canvasInstance.renderAll()
+  //             // 如果对象原本有 stroke，应用插值颜色到 stroke
+  //             if (hasStroke) {
+  //               obj.set('stroke', interpolatedColor)
+  //             }
+  //             // 如果对象原本有 fill，应用插值颜色到 fill
+  //             if (hasFill) {
+  //               obj.set('fill', interpolatedColor)
+  //             }
+  //           })
+  //         }
+  //         // 添加到主画布（此时所有属性都已设置好）
+  //         canvasInstance.add(group)
+  //         // 强制更新对象
+  //         group.setCoords()
+  //         canvasInstance.renderAll()
 
-        } else {
-          console.warn('enlivenObjects返回的对象为空或无效')
-        }
+  //       } else {
+  //         console.warn('enlivenObjects返回的对象为空或无效')
+  //       }
+  //     }
+  //   } catch (enlivenError) {
+  //     console.error('使用enlivenObjects创建对象时出错:', enlivenError)
+  //   }
+  // }
+
+  // // 处理拖拽到emitter上的事件（统一使用marker列表）
+  // function handleEmitterDrop(dropX: number, dropY: number, markerIdList: string[], clusterIdList: string[], card: ColumnFilterCard | null = null) { 
+  //   // 获取所有采样点（不分批，因为 getNormalizationParams 会对总数进行归一化计算）
+  //   const totalPoints = getEmitterSampledPoints(markerIdList.length)
+  //   // 添加markers（使用全部采样点）
+  //   addMarkers(markerIdList, totalPoints, clusterIdList, card)
+  // }
+
+  // async function handleMarkerDrop(dropX: number, dropY: number, markerIdList: string[], clusterIdList: string[], card: ColumnFilterCard | null = null) {
+  //   // 对每个marker分别添加
+  //   const result = await handleMarkerDropCanvas([dropX, dropY], card)
+  //   const pos = result.init_pos
+  //   addMarkers(markerIdList, pos, clusterIdList, card)
+  // }
+
+  // 基于单个 mark 实例的 drop 处理（非 group）
+  async function handleSingleInstanceDrop(
+    mark: MarkInstance,
+    dropX: number,
+    dropY: number,
+    dropOnEmitter: boolean,
+    canvasInstance: any,
+    tableStore: ReturnType<typeof useTableStore>
+  ) {
+    if (!mark.markerJsonData) return
+
+    // 构造参与归一化的数据集合（使用该实例覆盖的实体）
+    const indices = mark.entityIndices ?? []
+
+    // 当前约束：encoding 只会选一个 channel，这里取出 channel 和对应字段名
+    let channelKey: MarkEncodingChannel | null = null
+    let fieldForEncoding: string | undefined
+    if (mark.encoding) {
+      const entries = Object.entries(mark.encoding)
+      if (entries.length > 0) {
+        channelKey = entries[0][0] as MarkEncodingChannel
+        fieldForEncoding = entries[0][1] as string
       }
-    } catch (enlivenError) {
-      console.error('使用enlivenObjects创建对象时出错:', enlivenError)
+    }
+
+    const rows: any[] = []
+    const values: number[] = []
+
+    indices.forEach(idx => {
+      const row = tableStore.tableData[idx] as any
+      rows.push(row)
+      if (fieldForEncoding && row && row[fieldForEncoding] != null) {
+        const v = Number(row[fieldForEncoding])
+        values.push(!isNaN(v) && v > 0 ? v : 1)
+      } else {
+        values.push(1)
+      }
+    })
+
+    // 基于 dataScale 的规则做简单归一化（20~70）
+    const minDisplaySize = 20
+    const maxDisplaySize = 70
+    const defaultSize = 45
+    const minValue = values.length ? Math.min(...values) : 1
+    const maxValue = values.length ? Math.max(...values) : 1
+    const normalize = (value: number, min: number, max: number) => {
+      if (max === min) return (minDisplaySize + maxDisplaySize) / 2
+      return minDisplaySize + ((value - min) / (max - min)) * (maxDisplaySize - minDisplaySize)
+    }
+    const normalized = values.map(v => normalize(v, minValue, maxValue))
+
+    // 计算用于放置的点位：
+    // - 如果丢在 emitter 上，沿 emitter 采样
+    // - 否则使用后端的布局服务（容器区域）
+    let pos: Array<{ x: number; y: number }> = []
+    const markerCount = indices.length || values.length || 1
+
+    if (dropOnEmitter) {
+      pos = getEmitterSampledPoints(markerCount)
+    } else {
+      const result = await handleMarkerDropCanvas([dropX, dropY], markerCount, null)
+      pos = (result.init_pos as Array<{ x: number; y: number }>) || []
+    }
+
+    for (let i = 0; i < pos.length; i++) {
+      const object = await fabric.util.enlivenObjects(mark.markerJsonData, 'fabric')
+      const group = new Group(object)
+      group.set({
+        left: pos[i].x,
+        top: pos[i].y,
+        selectable: false,
+        evented: false,
+        dataType: 'marker',
+        hasControls: false,
+        originX: 'center',
+        originY: 'center',
+        markerId: mark.id,
+        data: rows[i]
+      })
+
+      if (selectedModeStore.selectedMode === null) {
+        group.selectable = true
+        group.evented = true
+      }
+      // 根据数据中的 width 和 height 调节对象大小
+      const currentWidth = group.width || group.getScaledWidth()
+      const currentHeight = group.height || group.getScaledHeight()
+      const normalizedValue = normalized[i]
+      const currentSize = Math.max(currentWidth, currentHeight)
+
+      //一开始先按比例缩放
+      let scaleX = defaultSize / currentSize
+      let scaleY = defaultSize / currentSize
+
+      if (channelKey === 'width') {
+        scaleX = normalizedValue / currentSize
+      } else if (channelKey === 'height') {
+        scaleY = normalizedValue / currentSize
+      } else if (channelKey === 'size') {
+        scaleX = normalizedValue / currentSize
+        scaleY = normalizedValue / currentSize
+      } else { 
+        scaleX = defaultSize / currentSize
+        scaleY = defaultSize / currentSize
+      }
+
+      group.set({
+        scaleX: scaleX,
+        scaleY: scaleY
+      })
+
+      // 添加到主画布（此时所有属性都已设置好）
+      canvasInstance.add(group)
+      // 强制更新对象
+      group.setCoords()
+      canvasInstance.renderAll()
     }
   }
 
-  // 处理拖拽到emitter上的事件（统一使用marker列表）
-  function handleEmitterDrop(dropX: number, dropY: number, markerIdList: string[], clusterIdList: string[], card: ColumnFilterCard | null = null) { 
-    // 获取所有采样点（不分批，因为 getNormalizationParams 会对总数进行归一化计算）
-    const totalPoints = getEmitterSampledPoints(markerIdList.length)
-    // 添加markers（使用全部采样点）
-    addMarkers(markerIdList, totalPoints, clusterIdList, card)
-  }
+  // 基于 group mark 实例的 drop 处理
+  async function handleGroupInstanceDrop(
+    mark: MarkInstance,
+    dropX: number,
+    dropY: number,
+    dropOnEmitter: boolean,
+    canvasInstance: any,
+    tableStore: ReturnType<typeof useTableStore>
+  ) {
+    // 1. 找出「合格」的子实例：有实体且有可用的 marker 形状
+    const qualifiedChildren = (mark.children || []).filter(child =>
+      child &&
+      child.entities > 0 &&
+      Array.isArray(child.entityIndices) &&
+      child.entityIndices.length > 0 &&
+      child.markerJsonData
+    )
 
-  async function handleMarkerDrop(dropX: number, dropY: number, markerIdList: string[], clusterIdList: string[], card: ColumnFilterCard | null = null) {
-    // 对每个marker分别添加
-    const result = await handleMarkerDropCanvas([dropX, dropY], card)
-    const pos = result.init_pos
-    addMarkers(markerIdList, pos, clusterIdList, card)
+    if (qualifiedChildren.length === 0) {
+      console.warn('[handleGroupInstanceDrop] no qualified children for group mark', mark.id)
+      return
+    }
+
+    // 2. 计算所有合格子实例的实体总数，用于计算布局位置
+    const totalEntities = qualifiedChildren.reduce((sum, child) => {
+      return sum + (child.entityIndices?.length || child.entities || 0)
+    }, 0)
+
+    if (totalEntities <= 0) {
+      console.warn('[handleGroupInstanceDrop] totalEntities is 0 for group mark', mark.id)
+      return
+    }
+
+    // 3. 根据总数量计算位置：如果在 emitter 上就沿 emitter 采样，否则调用后端布局
+    let pos: Array<{ x: number; y: number }> = []
+    if (dropOnEmitter) {
+      pos = getEmitterSampledPoints(totalEntities)
+    } else {
+      const result = await handleMarkerDropCanvas([dropX, dropY], totalEntities, null)
+      pos = (result.init_pos as Array<{ x: number; y: number }>) || []
+    }
+
+    if (!pos || pos.length === 0) {
+      console.warn('[handleGroupInstanceDrop] no positions returned for group mark', mark.id)
+      return
+    }
+
+    // 4. 依次遍历每个合格子实例，把它覆盖的实体映射到全局 pos 上
+    const minDisplaySize = 20
+    const maxDisplaySize = 70
+    const defaultSize = 45
+
+    let globalIndex = 0
+
+    for (const child of qualifiedChildren) {
+      const indices = child.entityIndices || []
+      if (indices.length === 0) continue
+
+      // 编码：优先使用子实例自己的 encoding，否则回落到父实例 encoding
+      const encoding = child.encoding || mark.encoding || {}
+      let channelKey: MarkEncodingChannel | null = null
+      let fieldForEncoding: string | undefined
+      const entries = Object.entries(encoding)
+      if (entries.length > 0) {
+        channelKey = entries[0][0] as MarkEncodingChannel
+        fieldForEncoding = entries[0][1] as string
+      }
+
+      const rows: any[] = []
+      const values: number[] = []
+
+      indices.forEach(idx => {
+        const row = tableStore.tableData[idx] as any
+        rows.push(row)
+        if (fieldForEncoding && row && row[fieldForEncoding] != null) {
+          const v = Number(row[fieldForEncoding])
+          values.push(!isNaN(v) && v > 0 ? v : 1)
+        } else {
+          values.push(1)
+        }
+      })
+
+      // 对该子实例内部做简单归一化（20~70）
+      const minValue = values.length ? Math.min(...values) : 1
+      const maxValue = values.length ? Math.max(...values) : 1
+      const normalize = (value: number, min: number, max: number) => {
+        if (max === min) return (minDisplaySize + maxDisplaySize) / 2
+        return minDisplaySize + ((value - min) / (max - min)) * (maxDisplaySize - minDisplaySize)
+      }
+      const normalized = values.map(v => normalize(v, minValue, maxValue))
+
+      // 为该子实例的每个实体添加一个 mark
+      for (let i = 0; i < indices.length; i++) {
+        if (globalIndex >= pos.length) break
+
+        const p = pos[globalIndex]
+        globalIndex += 1
+
+        const object = await fabric.util.enlivenObjects(child.markerJsonData, 'fabric')
+        const group = new Group(object)
+        group.set({
+          left: p.x,
+          top: p.y,
+          selectable: false,
+          evented: false,
+          dataType: 'marker',
+          hasControls: false,
+          originX: 'center',
+          originY: 'center',
+          markerId: child.id,
+          data: rows[i]
+        })
+
+        if (selectedModeStore.selectedMode === null) {
+          group.selectable = true
+          group.evented = true
+        }
+
+        const currentWidth = group.width || group.getScaledWidth()
+        const currentHeight = group.height || group.getScaledHeight()
+        const normalizedValue = normalized[i]
+        const currentSize = Math.max(currentWidth, currentHeight)
+
+        let scaleX = defaultSize / currentSize
+        let scaleY = defaultSize / currentSize
+
+        if (channelKey === 'width') {
+          scaleX = normalizedValue / currentSize
+        } else if (channelKey === 'height') {
+          scaleY = normalizedValue / currentSize
+        } else if (channelKey === 'size') {
+          scaleX = normalizedValue / currentSize
+          scaleY = normalizedValue / currentSize
+        } else {
+          scaleX = defaultSize / currentSize
+          scaleY = defaultSize / currentSize
+        }
+
+        group.set({
+          scaleX,
+          scaleY
+        })
+
+        canvasInstance.add(group)
+        group.setCoords()
+        canvasInstance.renderAll()
+      }
+    }
   }
 
   // 处理拖拽预览图到主画布
@@ -743,115 +1010,14 @@ export const useCanvasStore = defineStore('canvas', () => {
     const tableStore = useTableStore()
 
     const mark = markInstances.find((m: MarkInstance) => m.id === markInstanceId)
-    if (!mark || !mark.markerJsonData) return
+    if (!mark) return
 
-    // 构造参与归一化的数据集合（使用该实例覆盖的实体）
-    const indices = mark.entityIndices ?? []
-
-    // 当前约束：encoding 只会选一个 channel，这里取出 channel 和对应字段名
-    let channelKey: MarkEncodingChannel | null = null
-    let fieldForEncoding: string | undefined
-    if (mark.encoding) {
-      const entries = Object.entries(mark.encoding)
-      if (entries.length > 0) {
-        channelKey = entries[0][0] as MarkEncodingChannel
-        fieldForEncoding = entries[0][1] as string
-      }
+    if (mark.isGroup) {
+      await handleGroupInstanceDrop(mark, dropX, dropY, dropOnEmitter, canvasInstance, tableStore)
+      return
     }
 
-    const rows: any[] = []
-    const values: number[] = []
-
-    indices.forEach(idx => {
-      const row = tableStore.tableData[idx] as any
-      rows.push(row)
-      if (fieldForEncoding && row && row[fieldForEncoding] != null) {
-        const v = Number(row[fieldForEncoding])
-        values.push(!isNaN(v) && v > 0 ? v : 1)
-      } else {
-        values.push(1)
-      }
-    })
-    console.log('values', values)
-    console.log('mark', mark)
-    // 基于 dataScale 的规则做简单归一化（20~70）
-    const minDisplaySize = 20
-    const maxDisplaySize = 70
-    const defaultSize = 45
-    const minValue = values.length ? Math.min(...values) : 1
-    const maxValue = values.length ? Math.max(...values) : 1
-    const normalize = (value: number, min: number, max: number) => {
-      if (max === min) return (minDisplaySize + maxDisplaySize) / 2
-      return minDisplaySize + ((value - min) / (max - min)) * (maxDisplaySize - minDisplaySize)
-    }
-    const normalized = values.map(v => normalize(v, minValue, maxValue))
-    console.log('normalized', normalized)
-    // 计算用于放置的点位：
-    // - 如果丢在 emitter 上，沿 emitter 采样
-    // - 否则使用后端的布局服务（容器区域）
-    let pos: Array<{ x: number; y: number }> = []
-    const markerCount = indices.length || values.length || 1
-
-    if (dropOnEmitter) {
-      pos = getEmitterSampledPoints(markerCount)
-    } else {
-      const result = await handleMarkerDropCanvas([dropX, dropY], markerCount, null)
-      pos = (result.init_pos as Array<{ x: number; y: number }>) || []
-    }
-    console.log('pos', pos)
-    for (let i = 0; i < pos.length; i++) {
-      const object = await fabric.util.enlivenObjects(mark.markerJsonData, 'fabric')
-      const group = new Group(object)
-      group.set({
-        left: pos[i].x,
-        top: pos[i].y,
-        selectable: false,
-        evented: false,
-        dataType: 'marker',
-        hasControls: false,
-        originX: 'center',
-        originY: 'center',
-        markerId: mark.id,
-        data: rows[i]
-      })
-
-      if (selectedModeStore.selectedMode === null) {
-        group.selectable = true;
-        group.evented = true;
-      }
-      // 根据数据中的 width 和 height 调节对象大小
-      const currentWidth = group.width || group.getScaledWidth()
-      const currentHeight = group.height || group.getScaledHeight()
-      const normalizedValue = normalized[i]
-      const currentSize = Math.max(currentWidth, currentHeight)
-      
-      //一开始先按比例缩放
-      let scaleX = defaultSize / currentSize
-      let scaleY = defaultSize / currentSize
-      
-      if (channelKey === 'width') {
-        scaleX = normalizedValue / currentSize
-      } else if (channelKey === 'height') {
-        scaleY = normalizedValue / currentSize
-      } else if (channelKey === 'size') {
-        scaleX = normalizedValue / currentSize
-        scaleY = normalizedValue / currentSize
-      } else { 
-        scaleX = defaultSize / currentSize
-        scaleY = defaultSize / currentSize
-      }
-      
-      group.set({
-        scaleX: scaleX,
-        scaleY: scaleY
-      })
-
-      // 添加到主画布（此时所有属性都已设置好）
-      canvasInstance.add(group)
-      // 强制更新对象
-      group.setCoords()
-      canvasInstance.renderAll()
-    }
+    await handleSingleInstanceDrop(mark, dropX, dropY, dropOnEmitter, canvasInstance, tableStore)
   }
 
   // 获取路径的起点和终点

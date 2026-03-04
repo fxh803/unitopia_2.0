@@ -3,8 +3,8 @@ import { ref } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useTableStore } from '~/stores/table'
 
-const tableStore = useTableStore()
-const { columnFilterCards } = storeToRefs(tableStore)
+// const tableStore = useTableStore()
+// const { columnFilterCards } = storeToRefs(tableStore)
 const cellClasses = ref<Record<number, Record<number, string>>>({})
 
 // 获取 filter 的颜色索引（每个 card 独立从 0 开始）
@@ -14,23 +14,23 @@ const getFilterColorIndex = (filterIndex: number): number => {
 
 // 单元格类名处理
 const cellClassName = ({ rowIndex, column, columnIndex }: any) => {
-  // 遍历所有卡片和它们的 filter，检查当前行索引是否在某个 filter 的 rows 中
-  for (const card of columnFilterCards.value) {
-    for (let filterIndex = 0; filterIndex < card.filters.length; filterIndex++) {
-      const filter = card.filters[filterIndex]
-      if (filter.rows && filter.rows.includes(rowIndex)) {
-        // 每个 card 内的 filter 索引独立，从 0 开始
-        const colorIndex = getFilterColorIndex(filterIndex)
-        const className = `highlight-cell-${colorIndex}`
-        // 确保 rowIndex 存在，如果不存在则创建
-        if (!cellClasses.value[rowIndex]) {
-          cellClasses.value[rowIndex] = {}
-        }
-        cellClasses.value[rowIndex][columnIndex] = className
-        return className
-      }
-    }
-  }
+  // // 遍历所有卡片和它们的 filter，检查当前行索引是否在某个 filter 的 rows 中
+  // for (const card of columnFilterCards.value) {
+  //   for (let filterIndex = 0; filterIndex < card.filters.length; filterIndex++) {
+  //     const filter = card.filters[filterIndex]
+  //     if (filter.rows && filter.rows.includes(rowIndex)) {
+  //       // 每个 card 内的 filter 索引独立，从 0 开始
+  //       const colorIndex = getFilterColorIndex(filterIndex)
+  //       const className = `highlight-cell-${colorIndex}`
+  //       // 确保 rowIndex 存在，如果不存在则创建
+  //       if (!cellClasses.value[rowIndex]) {
+  //         cellClasses.value[rowIndex] = {}
+  //       }
+  //       cellClasses.value[rowIndex][columnIndex] = className
+  //       return className
+  //     }
+  //   }
+  // }
 
   return ''
 }

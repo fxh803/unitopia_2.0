@@ -150,19 +150,19 @@ function processMarker(tempCanvas: Canvas) {
   // 获取 table store 以检查 filter encoding
   const tableStore = useTableStore()
 
-  // 创建一个函数来根据 cluster_id 获取对应的 filter encoding
-  const getFilterEncoding = (clusterId: string) => {
-    if (!clusterId) return null
+  // // 创建一个函数来根据 cluster_id 获取对应的 filter encoding
+  // const getFilterEncoding = (clusterId: string) => {
+  //   if (!clusterId) return null
 
-    // 遍历所有 card 的 filters，找到匹配的 filter
-    for (const card of tableStore.columnFilterCards) {
-      const filter = card.filters.find(f => f.id === clusterId)
-      if (filter && filter.encoding) {
-        return filter.encoding
-      }
-    }
-    return null
-  }
+  //   // 遍历所有 card 的 filters，找到匹配的 filter
+  //   for (const card of tableStore.columnFilterCards) {
+  //     const filter = card.filters.find(f => f.id === clusterId)
+  //     if (filter && filter.encoding) {
+  //       return filter.encoding
+  //     }
+  //   }
+  //   return null
+  // }
 
   // 从 group 对象中获取颜色（优先 stroke，其次 fill）
   const getColorFromGroup = (group: any): string | null => {
@@ -588,23 +588,23 @@ export async function sendUploadContainerToServer(stringBase64: string) {
   }
   return ''
 }
-export function pharseData(card: ColumnFilterCard | null) {
-  const combinedData: any[] = []
+// export function pharseData(card: ColumnFilterCard | null) {
+//   const combinedData: any[] = []
 
-  if (!card) {
-    return combinedData
-  }
+//   if (!card) {
+//     return combinedData
+//   }
 
-  // 遍历所有 columnFilterCards，找出 isSelected 为 true 的 filter，收集它们的数据
-  for (const filter of card.filters) {
-    if (filter.isSelected && filter.data && filter.data.length > 0) {
-      combinedData.push(...filter.data)
-    }
-  }
+//   // 遍历所有 columnFilterCards，找出 isSelected 为 true 的 filter，收集它们的数据
+//   for (const filter of card.filters) {
+//     if (filter.isSelected && filter.data && filter.data.length > 0) {
+//       combinedData.push(...filter.data)
+//     }
+//   }
 
-  // 返回合并后的数据
-  return combinedData
-}
+//   // 返回合并后的数据
+//   return combinedData
+// }
 // 处理背景对象，转换为base64（在临时canvas上操作，不影响原canvas）
 function processBackground(tempCanvas: Canvas) {
   const canvasObjects = tempCanvas.getObjects()

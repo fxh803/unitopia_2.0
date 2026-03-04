@@ -45,7 +45,7 @@ function loadCurrentMarkCanvas() {
     return
   }
 
-  // 根据选中的类型，决定使用父实例还是子实例的画布数据（完整 JSON 对象）
+  // 根据选中的类型，决定使用父实例还是子实例的画布数据
   let markerJson: any | null = null
 
   if (sel.type === 'instance') {
@@ -70,7 +70,12 @@ function loadCurrentMarkCanvas() {
   }
   // 批量恢复对象时不弹出闭合路径确认对话框
   setSuppressClosePath(true)
-  canvas.loadFromJSON(markerJson, () => {
+  // 我们在 store 里保存的是 objects 数组，这里组装成 Fabric 需要的 JSON
+  const jsonForLoad = Array.isArray(markerJson)
+    ? { version: '5.0.0', objects: markerJson }
+    : markerJson
+
+  canvas.loadFromJSON(jsonForLoad, () => {
     setTimeout(() => {
       if (!canvas) return
       canvas.backgroundColor = '#fffef8'
