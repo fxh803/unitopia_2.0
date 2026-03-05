@@ -8,6 +8,15 @@ export interface MarkEncoding {
   size?: string
   width?: string
   height?: string
+  // 仅针对 Color 通道：当前颜色映射模式（数值渐变 / 分类型）
+  colorMode?: 'numeric' | 'categorical'
+}
+
+// 数值型颜色映射用的颜色停靠点
+export interface ColorStop {
+  position: number // 0 ~ 1 的相对位置
+  color: string // 十六进制颜色
+  opacity: number // 0 ~ 1 的不透明度
 }
 
 export interface MarkChildInstance {
@@ -24,6 +33,10 @@ export interface MarkChildInstance {
   markerJsonData?: any | null
   // 子实例自身的编码（目前预留，默认复用父实例 encoding）
   encoding?: MarkEncoding
+  // 数值型颜色映射的停靠点配置（如果缺省则回退到父级或全局默认）
+  colorStops?: ColorStop[]
+  // 分类型颜色映射：类别值 -> 颜色
+  categoricalColors?: Record<string, string>
 }
 
 export interface MarkInstance {
@@ -42,9 +55,10 @@ export interface MarkInstance {
   // 当前 mark 对应的 marker 可视化（可选）
   markerThumbnail?: string | null
   markerJsonData?: any | null
-  // 颜色通道使用时的线性插值起止颜色（十六进制）
-  colorStart?: string | null
-  colorEnd?: string | null
+  // 数值型颜色映射的停靠点配置
+  colorStops?: ColorStop[]
+  // 分类型颜色映射：类别值 -> 颜色
+  categoricalColors?: Record<string, string>
   // 当前 mark 的可视编码设置（Color / Size / Width / Height）
   encoding?: MarkEncoding
 }
@@ -76,6 +90,8 @@ export const useMarkInstanceStore = defineStore('markInstance', () => {
       markerThumbnail: mark.markerThumbnail ?? null,
       markerJsonData: mark.markerJsonData ?? null,
       encoding: mark.encoding ?? {},
+      colorStops: mark.colorStops,
+      categoricalColors: mark.categoricalColors,
     })
   }
 

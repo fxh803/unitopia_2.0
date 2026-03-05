@@ -10,6 +10,7 @@ declare module 'vue' {
   export interface GlobalComponents {
     BackgroundUploader: typeof import('./src/components/BackgroundUploader.vue')['default']
     CanvasArea: typeof import('./src/components/CanvasArea.vue')['default']
+    CategoricalColorEditor: typeof import('./src/components/CategoricalColorEditor.vue')['default']
     ClosePathConfirm: typeof import('./src/components/ClosePathConfirm.vue')['default']
     CollageSeriesPanel: typeof import('./src/components/CollageSeriesPanel.vue')['default']
     ColorPicker: typeof import('./src/components/ColorPicker.vue')['default']
@@ -39,6 +40,7 @@ declare module 'vue' {
     MarkerObjectActionButtons: typeof import('./src/components/MarkerObjectActionButtons.vue')['default']
     MarkerToolbar: typeof import('./src/components/MarkerToolbar.vue')['default']
     MarksSection: typeof import('./src/components/MarksSection.vue')['default']
+    NumericColorStopsEditor: typeof import('./src/components/NumericColorStopsEditor.vue')['default']
     ObjectActionButtons: typeof import('./src/components/ObjectActionButtons.vue')['default']
     ObjectColorPicker: typeof import('./src/components/ObjectColorPicker.vue')['default']
     PaperCanvas: typeof import('./src/components/paperCanvas.vue')['default']

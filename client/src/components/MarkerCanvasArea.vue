@@ -23,7 +23,7 @@ const markerShapeDrawingStore = useMarkerShapeDrawingStore()
 
 // Marker Canvas store
 const markerCanvasStore = useMarkerCanvasStore()
-const { closePathConfirm, previewDataUrl } = storeToRefs(markerCanvasStore)
+const { closePathConfirm } = storeToRefs(markerCanvasStore)
 const { askToClosePath, handleClosePathConfirm, addMarkerCanvasEventListeners, removeMarkerCanvasEventListeners, setSuppressClosePath } =
   markerCanvasStore
 
@@ -331,13 +331,6 @@ onBeforeUnmount(() => {
     @drop.stop.prevent="handleLibraryMarkerDrop"
   >
     <canvas ref="canvasEl" class="w-full h-full border-r border-gray-200" />
-
-    <!-- 实时预览图 - 左上角 -->
-    <!-- <div v-if="previewDataUrl"
-      draggable="false"
-      class="absolute top-5 left-5 z-10 bg-white/80 border border-gray-300 rounded shadow-sm p-1">
-      <img :src="previewDataUrl" alt="" class="block w-30px h-30px h-auto rounded" />
-    </div> -->
 
     <!-- 对象操作按钮 -->
     <MarkerObjectActionButtons />

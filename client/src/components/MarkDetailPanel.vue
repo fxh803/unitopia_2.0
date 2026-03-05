@@ -1,12 +1,18 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import { storeToRefs } from 'pinia'
-import { useMarkInstanceStore } from '~/stores/markInstance'
+import { useMarkInstanceStore, type ColorStop } from '~/stores/markInstance'
+import { useTableStore } from '~/stores/table'
 import MarkerCanvasArea from './MarkerCanvasArea.vue'
 import MarkerToolbar from './MarkerToolbar.vue'
+import NumericColorStopsEditor from './NumericColorStopsEditor.vue'
+import CategoricalColorEditor from './CategoricalColorEditor.vue'
 
 const markInstanceStore = useMarkInstanceStore()
 const { markInstances, selectedMarkForDetail } = storeToRefs(markInstanceStore)
+
+const tableStore = useTableStore()
+const { tableData } = storeToRefs(tableStore)
 
 const currentMark = computed(() => {
   const sel = selectedMarkForDetail.value
@@ -56,56 +62,111 @@ const encodingChannelKey: Record<string, 'color' | 'size' | 'width' | 'height'> 
   Height: 'height',
 }
 
-const colorStart = computed<string>({
+// 判断某个字段在当前数据中是否数值型（逻辑与 DataSection 保持一致）
+function isNumericField(fieldName: string | undefined | null): boolean {
+  if (!fieldName) return false
+  if (!tableData.value.length) return false
+  const sample = tableData.value
+    .slice(0, 50)
+    .map(row => (row as any)[fieldName])
+    .filter(v => v != null && String(v).trim() !== '')
+  if (sample.length === 0) return false
+  const allNumeric = sample.every(v => /^-?\d+(\.\d+)?$/.test(String(v).trim()))
+  return allNumeric
+}
+
+const currentColorFieldName = computed(() => {
+  const enc = currentEncoding.value as any
+  return enc?.color ?? null
+})
+
+// 当前 Color 通道是否绑定了数值型字段
+const isColorNumeric = computed(() => isNumericField(currentColorFieldName.value))
+
+// 数值型颜色映射的颜色停靠点（如果没有显式配置，则使用固定默认色带）
+const colorStops = computed<ColorStop[]>({
   get() {
+    const defaultStops: ColorStop[] = [
+      { position: 0, color: '#A7C8FB', opacity: 1 },
+      { position: 1, color: '#5592F9', opacity: 1 },
+    ]
+
     const sel = selectedMarkForDetail.value
-    if (sel?.type === 'childInstance') {
-      const child = currentChild.value as any
-      if (child && child.colorStart) {
-        return child.colorStart as string
-      }
+    if (!sel) {
+      return defaultStops
     }
-    const m = currentMark.value as any
-    return (m?.colorStart as string | null) || '#FF6B6B'
+
+    let rawStops: ColorStop[] | undefined
+    if (sel.type === 'childInstance') {
+      const parent = markInstances.value.find(x => x.id === sel.parentMarkId) as any
+      const child = parent?.children?.find((c: any) => c.id === sel.childId)
+      rawStops = (child?.colorStops as ColorStop[] | undefined) || (parent?.colorStops as ColorStop[] | undefined)
+    } else {
+      const m = markInstances.value.find(x => x.id === sel.markId) as any
+      rawStops = m?.colorStops as ColorStop[] | undefined
+    }
+
+    if (!rawStops || rawStops.length === 0) {
+      return defaultStops
+    }
+
+    return [...rawStops]
+      .map(stop => ({
+        position: Math.min(1, Math.max(0, stop.position)),
+        color: stop.color || '#ffffff',
+        opacity: stop.opacity == null ? 1 : Math.min(1, Math.max(0, stop.opacity)),
+      }))
+      .sort((a, b) => a.position - b.position)
   },
-  set(value: string) {
+  set(nextStops: ColorStop[]) {
     const sel = selectedMarkForDetail.value
     if (!sel) return
+
+    const sanitized = [...nextStops]
+      .map(stop => ({
+        position: Math.min(1, Math.max(0, stop.position)),
+        color: stop.color || '#ffffff',
+        opacity: stop.opacity == null ? 1 : Math.min(1, Math.max(0, stop.opacity)),
+      }))
+      .sort((a, b) => a.position - b.position)
+
     if (sel.type === 'childInstance') {
       markInstanceStore.updateChildInstance(sel.parentMarkId, sel.childId, {
-        colorStart: value,
-      })
+        colorStops: sanitized,
+      } as any)
     } else {
       markInstanceStore.updateMarkInstance(sel.markId, {
-        colorStart: value,
-      })
+        colorStops: sanitized,
+      } as any)
     }
   },
 })
 
-const colorEnd = computed<string>({
+const categoricalColors = computed<Record<string, string> | null>({
   get() {
     const sel = selectedMarkForDetail.value
-    if (sel?.type === 'childInstance') {
-      const child = currentChild.value as any
-      if (child && child.colorEnd) {
-        return child.colorEnd as string
-      }
+    if (!sel) return null
+    if (sel.type === 'childInstance') {
+      const parent = markInstances.value.find(x => x.id === sel.parentMarkId) as any
+      const child = parent?.children?.find((c: any) => c.id === sel.childId)
+      return (child?.categoricalColors as Record<string, string> | undefined) ||
+        (parent?.categoricalColors as Record<string, string> | undefined) ||
+        null
     }
-    const m = currentMark.value as any
-    return (m?.colorEnd as string | null) || '#4E79FF'
+    const m = markInstances.value.find(x => x.id === sel.markId) as any
+    return (m?.categoricalColors as Record<string, string> | undefined) || null
   },
-  set(value: string) {
+  set(next) {
     const sel = selectedMarkForDetail.value
     if (!sel) return
     if (sel.type === 'childInstance') {
       markInstanceStore.updateChildInstance(sel.parentMarkId, sel.childId, {
-        colorEnd: value,
-      })
+        categoricalColors: next || undefined,
+      } as any)
     } else {
       markInstanceStore.updateMarkInstance(sel.markId, {
-        colorEnd: value,
-      })
+        categoricalColors: next || undefined,
+      } as any)
     }
   },
 })
@@ -127,13 +188,19 @@ function handleEncodingDrop(e: DragEvent, channelLabel: 'Color' | 'Size' | 'Widt
 
   const key = encodingChannelKey[channelLabel]
   // 目前约束：同一 Mark / 子实例 只允许一个 channel 生效
-  const nextEncoding = {
+  const isColorChannel = channelLabel === 'Color'
+  // 对 Color 通道，根据字段数据类型预先写入 colorMode，数值型 -> numeric，其他 -> categorical
+  const nextEncoding: any = {
     [key]: column,
   }
+  if (isColorChannel) {
+    nextEncoding.colorMode = isNumericField(column) ? 'numeric' : 'categorical'
+  }
 
-  const isColorChannel = channelLabel === 'Color'
-  const defaultColorStart = '#FF6B6B'
-  const defaultColorEnd = '#4E79FF'
+  const defaultStops: ColorStop[] = [
+    { position: 0, color: '#A7C8FB', opacity: 1 },
+    { position: 1, color: '#5592F9', opacity: 1 },
+  ]
 
   if (sel.type === 'childInstance') {
     // 子实例：单独管理 encoding
@@ -142,10 +209,9 @@ function handleEncodingDrop(e: DragEvent, channelLabel: 'Color' | 'Size' | 'Widt
     const payload: any = {
       encoding: nextEncoding,
     }
-    // 如果是 Color 通道且还没有设置过色带，则写入默认 start / end，保证 drop 时有颜色
-    if (isColorChannel) {
-      if (!child?.colorStart) payload.colorStart = defaultColorStart
-      if (!child?.colorEnd) payload.colorEnd = defaultColorEnd
+    // 如果是 Color 通道且还没有设置过色带，则写入默认色带，保证 drop 时有颜色
+    if (isColorChannel && !child?.colorStops) {
+      payload.colorStops = defaultStops
     }
     markInstanceStore.updateChildInstance(sel.parentMarkId, sel.childId, payload)
   } else {
@@ -154,9 +220,8 @@ function handleEncodingDrop(e: DragEvent, channelLabel: 'Color' | 'Size' | 'Widt
     const payload: any = {
       encoding: nextEncoding,
     }
-    if (isColorChannel) {
-      if (!mark?.colorStart) payload.colorStart = defaultColorStart
-      if (!mark?.colorEnd) payload.colorEnd = defaultColorEnd
+    if (isColorChannel && !mark?.colorStops) {
+      payload.colorStops = defaultStops
     }
     markInstanceStore.updateMarkInstance(sel.markId, payload)
   }
@@ -211,34 +276,33 @@ function close() {
             </div>
           </div>
 
-          <!-- 颜色通道下方的线性插值颜色选择器 -->
-          <div
-            v-if="channel === 'Color' && currentEncoding && currentEncoding[encodingChannelKey[channel]]"
-            class="pl-16 pr-2 pb-1 flex flex-col gap-1"
-          >
-            <div class="flex items-center justify-between text-[10px] text-[var(--text-muted)]">
-              <span>Start</span>
-              <span>End</span>
-            </div>
-            <div class="flex items-center justify-between gap-4">
-              <input
-                v-model="colorStart"
-                type="color"
-                class="h-7 w-14 rounded border border-[var(--border-color)] bg-white cursor-pointer"
-              />
-              <input
-                v-model="colorEnd"
-                type="color"
-                class="h-7 w-14 rounded border border-[var(--border-color)] bg-white cursor-pointer"
+          <!-- 颜色通道下方：根据字段类型切换不同取色器 -->
+          <template v-if="channel === 'Color' && currentEncoding && currentEncoding[encodingChannelKey[channel]]">
+            <!-- 数值型字段：多色阶渐变编辑器（独立组件） -->
+            <div v-if="isColorNumeric" class="pl-1 pr-1 pb-1">
+              <NumericColorStopsEditor
+                :stops="colorStops"
+                @update:stops="colorStops = $event"
               />
             </div>
-          </div>
+
+            <!-- 分类型字段：类别列表取色（独立组件） -->
+            <div v-else class="pl-1 pr-1 pb-1">
+              <CategoricalColorEditor
+                v-if="currentColorFieldName"
+                :field-name="currentColorFieldName"
+                :table-data="tableData"
+                :value-colors="categoricalColors || undefined"
+                @update:valueColors="categoricalColors = $event"
+              />
+            </div>
+          </template>
         </div>
       </div>
     </div>
 
     <!-- Mark 编辑面板 -->
-    <div class="flex-1 bg-[var(--primary-light-color)] px-4 py-3 flex flex-col gap-3">
+    <div class="flex-1 min-h-0 bg-[var(--primary-light-color)] px-4 py-3 flex flex-col gap-3 overflow-hidden">
       <!-- 顶部标题 + 工具栏 -->
       <div class="flex items-center justify-between">
         <span class="text-sm font-semibold text-[var(--title-color)] truncate">
@@ -250,7 +314,7 @@ function close() {
       </div>
 
       <!-- 画布区域 -->
-      <div class="flex-1 rounded-2xl bg-white border border-[#f3e9e3] overflow-hidden">
+      <div class="flex-1 min-h-0 rounded-2xl bg-white border border-[#f3e9e3] overflow-hidden">
         <MarkerCanvasArea :show-toolbar="false" class="h-full w-full" />
       </div>
     </div>

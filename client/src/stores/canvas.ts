@@ -12,7 +12,7 @@ import { useAnimationStore } from '~/stores/animation'
 import { Group } from 'fabric'
 import paper from 'paper'
 import { handleMarkerDropCanvas } from '~/composables/server'
-import { useMarkInstanceStore, type MarkInstance } from '~/stores/markInstance'
+import { useMarkInstanceStore, type MarkInstance, type ColorStop } from '~/stores/markInstance'
 import { useMarkerStore } from '~/stores/marker'
 import * as fabric from 'fabric'
 export const useCanvasStore = defineStore('canvas', () => {
@@ -493,12 +493,39 @@ export const useCanvasStore = defineStore('canvas', () => {
     return rgbToHex(r, g, b)
   }
 
-  // 为字符串值生成颜色映射（相同值相同颜色）
+  // 基于多停靠点的颜色和透明度插值
+  const interpolateColorFromStops = (stops: ColorStop[], t: number): { color: string; opacity: number } => {
+    if (!stops.length) {
+      return { color: '#ffffff', opacity: 1 }
+    }
+    const sorted = [...stops].sort((a, b) => a.position - b.position)
+    if (t <= sorted[0].position) {
+      return { color: sorted[0].color, opacity: sorted[0].opacity }
+    }
+    if (t >= sorted[sorted.length - 1].position) {
+      const last = sorted[sorted.length - 1]
+      return { color: last.color, opacity: last.opacity }
+    }
+    for (let i = 0; i < sorted.length - 1; i++) {
+      const a = sorted[i]
+      const b = sorted[i + 1]
+      if (t >= a.position && t <= b.position) {
+        const span = b.position - a.position || 1
+        const localT = (t - a.position) / span
+        const color = interpolateColor(a.color, b.color, localT)
+        const opacity = a.opacity + (b.opacity - a.opacity) * localT
+        return { color, opacity }
+      }
+    }
+    const fallback = sorted[sorted.length - 1]
+    return { color: fallback.color, opacity: fallback.opacity }
+  }
+
+  // 为字符串值生成颜色映射（相同值相同颜色），基于色带停靠点
   const getStringValueColorMapForRows = (
     rows: any[],
     field: string,
-    colorStart: string,
-    colorEnd: string
+    stops: ColorStop[]
   ): Map<string, string> => {
     const colorMap = new Map<string, string>()
     if (!rows || rows.length === 0) return colorMap
@@ -514,7 +541,7 @@ export const useCanvasStore = defineStore('canvas', () => {
     const uniqueValuesArray = Array.from(uniqueValues).sort()
     uniqueValuesArray.forEach((value, index) => {
       const t = uniqueValuesArray.length > 1 ? index / (uniqueValuesArray.length - 1) : 0
-      const color = interpolateColor(colorStart, colorEnd, t)
+      const { color } = interpolateColorFromStops(stops, t)
       colorMap.set(value, color)
     })
 
@@ -535,11 +562,16 @@ export const useCanvasStore = defineStore('canvas', () => {
     // 构造参与归一化的数据集合（使用该实例覆盖的实体）
     const indices = mark.entityIndices ?? []
 
-    // 当前约束：encoding 只会选一个 channel，这里取出 channel 和对应字段名
+    // 当前约束：encoding 只会选一个 channel，这里取出 channel、对应字段名以及颜色模式
     let channelKey: MarkEncodingChannel | null = null
     let fieldForEncoding: string | undefined
+    let colorMode: 'numeric' | 'categorical' | undefined
     if (mark.encoding) {
-      const entries = Object.entries(mark.encoding)
+      const encoding: any = mark.encoding
+      if (encoding.colorMode) {
+        colorMode = encoding.colorMode
+      }
+      const entries = Object.entries(encoding).filter(([k]) => k !== 'colorMode')
       if (entries.length > 0) {
         channelKey = entries[0][0] as MarkEncodingChannel
         fieldForEncoding = entries[0][1] as string
@@ -572,35 +604,55 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
     const normalized = values.map(v => normalize(v, minValue, maxValue))
 
-    // 如果是颜色编码，预先为每个实体计算好颜色
+    // 如果是颜色编码，预先为每个实体计算好颜色（仅依赖色带 colorStops）
     let colors: string[] | null = null
-    if (channelKey === 'color' && fieldForEncoding && mark.colorStart && mark.colorEnd) {
+    let opacities: number[] | null = null
+    if (channelKey === 'color' && fieldForEncoding) {
       colors = []
-      const colorStart = mark.colorStart
-      const colorEnd = mark.colorEnd
+      opacities = []
+      const rawStops = (mark as any).colorStops as ColorStop[] | undefined
+      const stops: ColorStop[] =
+        rawStops && rawStops.length >= 2
+          ? rawStops
+          : [
+              { position: 0, color: '#A7C8FB', opacity: 1 },
+              { position: 1, color: '#5592F9', opacity: 1 },
+            ]
 
-      // 判断该字段是否为数值型
+      // 判断该字段是否为数值型（当 colorMode 未显式指定时用于自动推断）
       const firstRow = rows[0]
       const firstValue = firstRow && fieldForEncoding in firstRow ? firstRow[fieldForEncoding] : undefined
       const treatAsNumeric = isNumericValue(firstValue)
 
-      if (treatAsNumeric) {
+      const useNumeric = colorMode === 'numeric' || (!colorMode && treatAsNumeric)
+      const useCategorical = colorMode === 'categorical' || (!colorMode && !treatAsNumeric)
+
+      if (useNumeric) {
+        const numericValues = values.length ? values : [1]
+        const minVal = Math.min(...numericValues)
+        const maxVal = Math.max(...numericValues)
+        const span = maxVal - minVal || 1
         for (let i = 0; i < rows.length; i++) {
-          const normalizedValue = normalized[i]
-          const tRaw =
-            maxDisplaySize > minDisplaySize
-              ? (normalizedValue - minDisplaySize) / (maxDisplaySize - minDisplaySize)
-              : 0
-          const t = Math.max(0, Math.min(1, tRaw))
-          colors.push(interpolateColor(colorStart, colorEnd, t))
+          const raw = numericValues[i] ?? minVal
+          const tNorm = Math.max(0, Math.min(1, (raw - minVal) / span))
+          const { color, opacity } = interpolateColorFromStops(stops, tNorm)
+          colors.push(color)
+          opacities.push(opacity)
         }
-      } else {
-        const colorMap = getStringValueColorMapForRows(rows, fieldForEncoding, colorStart, colorEnd)
+      } else if (useCategorical) {
+        const categoricalColors = (mark as any).categoricalColors as Record<string, string> | undefined
+        const colorMap = getStringValueColorMapForRows(rows, fieldForEncoding, stops)
+        const fallbackColor = stops[0]?.color || '#ffffff'
         for (let i = 0; i < rows.length; i++) {
           const row = rows[i]
           const value = row && fieldForEncoding in row ? row[fieldForEncoding] : undefined
           const valueStr = value != null ? String(value) : ''
-          colors.push(colorMap.get(valueStr) || colorStart)
+          const mapped =
+            (categoricalColors && categoricalColors[valueStr]) ||
+            colorMap.get(valueStr) ||
+            fallbackColor
+          colors.push(mapped)
+          opacities.push(1)
         }
       }
     }
@@ -682,6 +734,9 @@ export const useCanvasStore = defineStore('canvas', () => {
             obj.set('fill', interpolatedColor)
           }
         })
+        if (opacities && opacities[i] != null) {
+          group.set('opacity', opacities[i])
+        }
       }
 
       // 添加到主画布（此时所有属性都已设置好）
@@ -751,10 +806,14 @@ export const useCanvasStore = defineStore('canvas', () => {
       if (indices.length === 0) continue
 
       // 编码：优先使用子实例自己的 encoding，否则回落到父实例 encoding
-      const encoding = child.encoding || mark.encoding || {}
+      const encoding = (child.encoding || mark.encoding || {}) as any
       let channelKey: MarkEncodingChannel | null = null
       let fieldForEncoding: string | undefined
-      const entries = Object.entries(encoding)
+      let colorMode: 'numeric' | 'categorical' | undefined
+      if (encoding.colorMode) {
+        colorMode = encoding.colorMode
+      }
+      const entries = Object.entries(encoding).filter(([k]) => k !== 'colorMode')
       if (entries.length > 0) {
         channelKey = entries[0][0] as MarkEncodingChannel
         fieldForEncoding = entries[0][1] as string
@@ -785,34 +844,57 @@ export const useCanvasStore = defineStore('canvas', () => {
 
       // 如果是颜色编码，预先为该子实例的每个实体计算好颜色（优先使用子实例的色带，否则使用父 mark 的色带）
       let colors: string[] | null = null
-      const childColorStart = child.colorStart || mark.colorStart
-      const childColorEnd = child.colorEnd || mark.colorEnd
-      if (channelKey === 'color' && fieldForEncoding && childColorStart && childColorEnd) {
+      let opacities: number[] | null = null
+      const childColorStops =
+        ((child as any).colorStops as ColorStop[] | undefined) ||
+        ((mark as any).colorStops as ColorStop[] | undefined)
+      if (channelKey === 'color' && fieldForEncoding) {
         colors = []
-        const colorStart = childColorStart
-        const colorEnd = childColorEnd
+        opacities = []
+        const stops: ColorStop[] =
+          childColorStops && childColorStops.length >= 2
+            ? childColorStops
+            : [
+                { position: 0, color: '#A7C8FB', opacity: 1 },
+                { position: 1, color: '#5592F9', opacity: 1 },
+              ]
 
+        // 判断该字段是否为数值型（当 colorMode 未显式指定时用于自动推断）
         const firstRow = rows[0]
         const firstValue = firstRow && fieldForEncoding in firstRow ? firstRow[fieldForEncoding] : undefined
         const treatAsNumeric = isNumericValue(firstValue)
 
-        if (treatAsNumeric) {
+        const useNumeric = colorMode === 'numeric' || (!colorMode && treatAsNumeric)
+        const useCategorical = colorMode === 'categorical' || (!colorMode && !treatAsNumeric)
+
+        if (useNumeric) {
+          const numericValues = values.length ? values : [1]
+          const minVal = Math.min(...numericValues)
+          const maxVal = Math.max(...numericValues)
+          const span = maxVal - minVal || 1
           for (let i = 0; i < rows.length; i++) {
-            const normalizedValue = normalized[i]
-            const tRaw =
-              maxDisplaySize > minDisplaySize
-                ? (normalizedValue - minDisplaySize) / (maxDisplaySize - minDisplaySize)
-                : 0
-            const t = Math.max(0, Math.min(1, tRaw))
-            colors.push(interpolateColor(colorStart, colorEnd, t))
+            const raw = numericValues[i] ?? minVal
+            const tNorm = Math.max(0, Math.min(1, (raw - minVal) / span))
+            const { color, opacity } = interpolateColorFromStops(stops, tNorm)
+            colors.push(color)
+            opacities.push(opacity)
           }
-        } else {
-          const colorMap = getStringValueColorMapForRows(rows, fieldForEncoding, colorStart, colorEnd)
+        } else if (useCategorical) {
+          const categoricalColors =
+            ((child as any).categoricalColors as Record<string, string> | undefined) ||
+            ((mark as any).categoricalColors as Record<string, string> | undefined)
+          const colorMap = getStringValueColorMapForRows(rows, fieldForEncoding, stops)
+          const fallbackColor = stops[0]?.color || '#ffffff'
           for (let i = 0; i < rows.length; i++) {
             const row = rows[i]
             const value = row && fieldForEncoding in row ? row[fieldForEncoding] : undefined
             const valueStr = value != null ? String(value) : ''
-            colors.push(colorMap.get(valueStr) || colorStart)
+            const mapped =
+              (categoricalColors && categoricalColors[valueStr]) ||
+              colorMap.get(valueStr) ||
+              fallbackColor
+            colors.push(mapped)
+            opacities.push(1)
           }
         }
       }
@@ -885,6 +967,9 @@ export const useCanvasStore = defineStore('canvas', () => {
               obj.set('fill', interpolatedColor)
             }
           })
+          if (opacities && opacities[i] != null) {
+            group.set('opacity', opacities[i])
+          }
         }
 
         canvasInstance.add(group)
