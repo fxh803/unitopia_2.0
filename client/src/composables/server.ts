@@ -88,7 +88,14 @@ export async function collectAllSlidesData(): Promise<Array<{overviewId: string,
         //加载幻灯片数据
         await tempCanvas.loadFromJSON(slide.json)
         tempCanvas.backgroundColor = '#fffef8'
-        collageSeriesStore.restoreCustomProperties(tempCanvas, slide.dataTypeArray, slide.markerIdArray, slide.clusterIdArray, slide.forceTypeArray, slide.dataArray || [])
+        collageSeriesStore.restoreCustomProperties(
+          tempCanvas,
+          slide.dataTypeArray,
+          slide.markerIdArray,
+          slide.forceTypeArray,
+          slide.dataArray || [],
+          slide.origOpacityArray || []
+        )
         result.markers = processMarker(tempCanvas)
         result.forces = processForce(tempCanvas)
         result.emitter = processEmitter(tempCanvas)
@@ -662,9 +669,9 @@ export async function sendBackgroundToSegmentAll(canvas: Canvas | null): Promise
         tempCanvas,
         currentSlide.dataTypeArray,
         currentSlide.markerIdArray,
-        currentSlide.clusterIdArray,
         currentSlide.forceTypeArray,
-        currentSlide.dataArray || []
+        currentSlide.dataArray || [],
+        currentSlide.origOpacityArray || []
       )
     }
 
@@ -752,9 +759,9 @@ export async function sendPointToSegmentPoint(canvas: Canvas | null, point: { x:
         tempCanvas,
         currentSlide.dataTypeArray,
         currentSlide.markerIdArray,
-        currentSlide.clusterIdArray,
         currentSlide.forceTypeArray,
-        currentSlide.dataArray || []
+        currentSlide.dataArray || [],
+        currentSlide.origOpacityArray || []
       )
     }
 
