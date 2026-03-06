@@ -28,12 +28,12 @@ export interface MarkChildInstance {
   entities: number
   // 这个子实例包含的实体在 tableData 中的行索引
   entityIndices: number[]
-  // 子实例对应的 marker 可视化（可选）
+  // 子实例对应的 marker 可视化
   markerThumbnail?: string | null
   markerJsonData?: any | null
-  // 子实例自身的编码（目前预留，默认复用父实例 encoding）
+  // 子实例自身的编码
   encoding?: MarkEncoding
-  // 数值型颜色映射的停靠点配置（如果缺省则回退到父级或全局默认）
+  // 数值型颜色映射的停靠点配置
   colorStops?: ColorStop[]
   // 分类型颜色映射：类别值 -> 颜色
   categoricalColors?: Record<string, string>

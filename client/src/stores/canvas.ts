@@ -796,8 +796,8 @@ export const useCanvasStore = defineStore('canvas', () => {
       const indices = child.entityIndices || []
       if (indices.length === 0) continue
 
-      // 编码：优先使用子实例自己的 encoding，否则回落到父实例 encoding
-      const encoding = (child.encoding || mark.encoding || {}) as any
+      // 编码：group 子实例只使用自己的 encoding
+      const encoding = (child.encoding || {}) as any
       let channelKey: MarkEncodingChannel | null = null
       let fieldForEncoding: string | undefined
       let colorMode: 'numeric' | 'categorical' | undefined
@@ -843,9 +843,7 @@ export const useCanvasStore = defineStore('canvas', () => {
         const useCategorical = colorMode === 'categorical'
 
         if (useNumeric) {
-          const childColorStops =
-            ((child as any).colorStops as ColorStop[] | undefined) ||
-            ((mark as any).colorStops as ColorStop[] | undefined)
+          const childColorStops = (child as any).colorStops as ColorStop[] | undefined
           const stops: ColorStop[] =
             childColorStops && childColorStops.length >= 2
               ? childColorStops
@@ -865,9 +863,9 @@ export const useCanvasStore = defineStore('canvas', () => {
             opacities.push(opacity)
           }
         } else if (useCategorical) {
-          const categoricalColors =
-            ((child as any).categoricalColors as Record<string, string> | undefined) ||
-            ((mark as any).categoricalColors as Record<string, string> | undefined)
+          const categoricalColors = (child as any).categoricalColors as
+            | Record<string, string>
+            | undefined
           const defaultStops: ColorStop[] = [
             { position: 0, color: '#A7C8FB', opacity: 1 },
             { position: 1, color: '#5592F9', opacity: 1 },
