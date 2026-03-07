@@ -158,7 +158,7 @@ watch(() => overviews.value.length, (newLength, oldLength) => {
 </script>
 
 <template>
-  <div class="absolute right-0 top-0 bottom-0 z-20 h-full">
+  <div class="absolute right-0 top-0 bottom-0 z-9999 h-full">
       <!-- 面板内容 -->
       <aside
       class="bg-[var(--primary-light-color)] flex flex-col h-full items-center transition-all duration-300 shadow-left border-l border-[var(--border-color)] overflow-x-hidden relative"

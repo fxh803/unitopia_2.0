@@ -5,10 +5,6 @@ import { useBackgroundStore } from '~/stores/background'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useAnimationStore } from '~/stores/animation'
 
-/** 带 dataType 的 Raster（paper.Raster 扩展） */
-interface RasterWithDataType extends paper.Raster {
-  dataType?: string
-}
 
 const animationStore = useAnimationStore()
 const paperCanvasRef = ref<HTMLCanvasElement | null>(null)
@@ -29,7 +25,7 @@ function updateBackground() {
     // 如果background存在，绘制到画布上
     const bg = backgroundStore.getCurrentOverviewBackground(overviewId)
     if (bg) {
-        const backgroundImage = new paper.Raster(bg) as RasterWithDataType
+        const backgroundImage = new paper.Raster({source: bg, dataType: 'background'})
         backgroundImage.onLoad = () => {
             // 计算合适的缩放比例，使图片完全适应画布
             const scaleX = size.value / backgroundImage.width;
@@ -39,7 +35,6 @@ function updateBackground() {
             // 设置图片位置和缩放
             backgroundImage.scaling = new paper.Point(scale, scale);
             backgroundImage.position = new paper.Point(size.value / 2, size.value / 2);
-            backgroundImage.dataType = 'background'
             // 将背景图片添加到画布并置于最底层
             backgroundImage.sendToBack();
         };
