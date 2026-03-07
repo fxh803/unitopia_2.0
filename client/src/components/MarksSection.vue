@@ -36,10 +36,68 @@ function toggleGroupRow(id: string) {
   groupRowExpanded.value[id] = !isGroupRowExpanded(id)
 }
 
+/** 创建自定义拖拽图像内容（只显示图案，用于 ghost 跟随光标，避免浏览器强制半透明） */
+function createSimpleDragImage(thumbnail: string): HTMLDivElement {
+  const dragDiv = document.createElement('div')
+  dragDiv.style.cssText = `
+    width: 80px;
+    height: 80px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  `
+  const img = document.createElement('img')
+  img.src = thumbnail
+  img.style.cssText = 'width: 100%; height: 100%; object-fit: contain; border-radius: 4px;'
+  dragDiv.appendChild(img)
+  return dragDiv
+}
+
 function onMarkDragStart(e: DragEvent, mark: any) {
   if (!e.dataTransfer) return
   e.dataTransfer.effectAllowed = 'copy'
   e.dataTransfer.setData('mark-instance-id', mark.id)
+
+  // 用 1x1 透明图隐藏系统拖拽图（浏览器会强制半透明），用 ghost div 跟随光标实现完全不透明
+  const transparent = document.createElement('canvas')
+  transparent.width = 1
+  transparent.height = 1
+  transparent.style.cssText = 'position:absolute;left:-9999px;top:0;'
+  document.body.appendChild(transparent)
+  e.dataTransfer.setDragImage(transparent, 0, 0)
+
+  const offsetX = 10
+  const offsetY = 10
+  const ghost = document.createElement('div')
+  ghost.style.cssText = `
+    position: fixed;
+    left: ${e.clientX - offsetX}px;
+    top: ${e.clientY - offsetY}px;
+    z-index: 2147483647;
+    pointer-events: none;
+    opacity: 1;
+  `
+  ghost.appendChild(createSimpleDragImage(mark.markerThumbnail || '/default_mark.svg'))
+  document.body.appendChild(ghost)
+
+  const dragEl = e.currentTarget as HTMLElement
+  function moveGhost(ev: DragEvent) {
+    ghost.style.left = `${ev.clientX - offsetX}px`
+    ghost.style.top = `${ev.clientY - offsetY}px`
+  }
+  function cleanup() {
+    ghost.remove()
+    transparent.remove()
+    dragEl.removeEventListener('drag', moveGhost)
+    dragEl.removeEventListener('dragend', cleanup)
+  }
+  dragEl.addEventListener('drag', moveGhost)
+  dragEl.addEventListener('dragend', cleanup)
 }
 
 function handleGroupValueChange(parentId: string, childId: string, value: string) {

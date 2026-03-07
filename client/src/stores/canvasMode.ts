@@ -16,10 +16,6 @@ export const useCanvasModeStore = defineStore('canvasMode', () => {
   }
 
   function setMode(m: 'draw' | 'move' | 'erase' | 'rect' | 'ellipse' | 'bezier' | 'force' | 'segmentPoint' | null) {
-    if (m === null) {
-      mode.value = null
-      return
-    }
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
 

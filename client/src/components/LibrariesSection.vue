@@ -81,10 +81,69 @@ async function handleMarkFiles(files: FileList | null) {
   }
 }
 
-function onLibraryMarkerDragStart(e: DragEvent, marker: { id: string }) {
+/** 创建自定义拖拽图像内容（只显示图案，用于 ghost 跟随光标，避免浏览器强制半透明） */
+function createSimpleDragImage(thumbnail: string): HTMLDivElement {
+  const dragDiv = document.createElement('div')
+  dragDiv.style.cssText = `
+    width: 80px;
+    height: 80px;
+    padding: 8px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  `
+  const img = document.createElement('img')
+  img.src = thumbnail
+  img.style.cssText = 'width: 100%; height: 100%; object-fit: contain; border-radius: 4px;'
+  dragDiv.appendChild(img)
+  return dragDiv
+}
+
+function onLibraryMarkerDragStart(e: DragEvent, marker: { id: string; thumbnail?: string | null; name?: string }) {
   if (!e.dataTransfer) return
+  const dragEl = e.currentTarget as HTMLElement
+  const offsetX = 10
+  const offsetY = 10
+  const thumbnail = marker.thumbnail ?? '/default_mark.svg'
+
   e.dataTransfer.effectAllowed = 'copy'
   e.dataTransfer.setData('library-marker-id', marker.id)
+
+  const transparent = document.createElement('canvas')
+  transparent.width = 1
+  transparent.height = 1
+  transparent.style.cssText = 'position:absolute;left:-9999px;top:0;'
+  document.body.appendChild(transparent)
+  e.dataTransfer.setDragImage(transparent, 0, 0)
+
+  const ghost = document.createElement('div')
+  ghost.style.cssText = `
+    position: fixed;
+    left: ${e.clientX - offsetX}px;
+    top: ${e.clientY - offsetY}px;
+    z-index: 2147483647;
+    pointer-events: none;
+    opacity: 1;
+  `
+  ghost.appendChild(createSimpleDragImage(thumbnail))
+  document.body.appendChild(ghost)
+
+  function moveGhost(ev: DragEvent) {
+    ghost.style.left = `${ev.clientX - offsetX}px`
+    ghost.style.top = `${ev.clientY - offsetY}px`
+  }
+  function cleanup() {
+    ghost.remove()
+    transparent.remove()
+    dragEl.removeEventListener('drag', moveGhost)
+    dragEl.removeEventListener('dragend', cleanup)
+  }
+  dragEl.addEventListener('drag', moveGhost)
+  dragEl.addEventListener('dragend', cleanup)
 }
 
 async function handleMarkDrop(e: DragEvent) {
@@ -136,10 +195,47 @@ async function handleContainerFiles(files: FileList | null) {
   }
 }
 
-function onLibraryContainerDragStart(e: DragEvent, item: { id: string }) {
+function onLibraryContainerDragStart(e: DragEvent, item: { id: string; thumbnail?: string | null; name?: string }) {
   if (!e.dataTransfer) return
+  const dragEl = e.currentTarget as HTMLElement
+  const offsetX = 10
+  const offsetY = 10
+  const thumbnail = item.thumbnail ?? '/default_mark.svg'
+
   e.dataTransfer.effectAllowed = 'copy'
   e.dataTransfer.setData('library-container-id', item.id)
+
+  const transparent = document.createElement('canvas')
+  transparent.width = 1
+  transparent.height = 1
+  transparent.style.cssText = 'position:absolute;left:-9999px;top:0;'
+  document.body.appendChild(transparent)
+  e.dataTransfer.setDragImage(transparent, 0, 0)
+
+  const ghost = document.createElement('div')
+  ghost.style.cssText = `
+    position: fixed;
+    left: ${e.clientX - offsetX}px;
+    top: ${e.clientY - offsetY}px;
+    z-index: 2147483647;
+    pointer-events: none;
+    opacity: 1;
+  `
+  ghost.appendChild(createSimpleDragImage(thumbnail))
+  document.body.appendChild(ghost)
+
+  function moveGhost(ev: DragEvent) {
+    ghost.style.left = `${ev.clientX - offsetX}px`
+    ghost.style.top = `${ev.clientY - offsetY}px`
+  }
+  function cleanup() {
+    ghost.remove()
+    transparent.remove()
+    dragEl.removeEventListener('drag', moveGhost)
+    dragEl.removeEventListener('dragend', cleanup)
+  }
+  dragEl.addEventListener('drag', moveGhost)
+  dragEl.addEventListener('dragend', cleanup)
 }
 
 async function handleContainerDrop(e: DragEvent) {
@@ -206,7 +302,7 @@ async function handleContainerFileSelect(e: Event) {
               v-for="marker in markerStore.markers"
               :key="marker.id"
               type="button"
-              class="group flex flex-col items-center justify-between rounded-xl bg-[var(--primary-light-color)] border border-[var(--border-color)] px-2 pt-2 pb-1 cursor-pointer hover:border-[var(--primary-color)] transition-colors w-[110px]"
+              class="group flex flex-col items-center justify-between rounded-xl bg-[var(--primary-light-color)] border border-[var(--border-color)] px-2 pt-2 pb-1 cursor-pointer w-[110px]"
               draggable="true"
               @dragstart.stop="onLibraryMarkerDragStart($event, marker)"
             >
@@ -277,7 +373,7 @@ async function handleContainerFileSelect(e: Event) {
               v-for="item in containerStore.containers"
               :key="item.id"
               type="button"
-              class="group flex flex-col items-center justify-between rounded-xl bg-[var(--primary-light-color)] border border-[var(--border-color)] px-2 pt-2 pb-1 cursor-pointer hover:border-[var(--primary-color)] transition-colors w-[110px]"
+              class="group flex flex-col items-center justify-between rounded-xl bg-[var(--primary-light-color)] border border-[var(--border-color)] px-2 pt-2 pb-1 cursor-pointer w-[110px]"
               draggable="true"
               @dragstart.stop="onLibraryContainerDragStart($event, item)"
             >
