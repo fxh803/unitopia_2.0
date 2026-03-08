@@ -295,7 +295,7 @@ async function handleContainerFileSelect(e: Event) {
         </button>
 
         <!-- Mark 内容：已上传的 Mark + 上传入口 -->
-        <div v-show="isMarkExpanded" class="mt-2">
+        <div v-show="isMarkExpanded" class="mt-2 max-h-[280px] overflow-y-auto">
           <div class="flex flex-wrap gap-3">
             <!-- 已上传 Mark 卡片 -->
             <button
@@ -366,7 +366,7 @@ async function handleContainerFileSelect(e: Event) {
         </button>
 
         <!-- Container 内容：已上传的 Container + 上传入口 -->
-        <div v-show="isContainerExpanded" class="mt-2">
+        <div v-show="isContainerExpanded" class="mt-2 max-h-[280px] overflow-y-auto">
           <div class="flex flex-wrap gap-3">
             <!-- 已上传 Container 卡片 -->
             <button

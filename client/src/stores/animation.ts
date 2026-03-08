@@ -431,8 +431,7 @@ export const useAnimationStore = defineStore('animation', () => {
 
   // 提取replay逻辑为独立方法
   async function executeReplayStep() {
-    const now_collage = progress_data.value[replayIdx.value].now_collage;
-    if (!now_collage) return
+    const now_collage = progress_data.value[replayIdx.value].now_collage??0;
     const now_overview = progress_data.value[replayIdx.value].now_overview_idx;
     process_id.value = progress_data.value[replayIdx.value].process_id??null;
     collage_result_type.value = progress_data.value[replayIdx.value].collage_result_type??[];

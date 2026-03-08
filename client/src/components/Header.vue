@@ -31,7 +31,6 @@ const percentage = ref(0)
 const showReplayButton = computed(() => result_data.value && result_data.value.length > 0 && !collaging.value)
 const showBackToEditButton = computed(() => !collaging.value&&result_data.value.length>0)
 const showExportButton = computed(() => !collaging.value&&result_data.value.length>0)
-const showRunButton = computed(() => result_data.value.length===0 || collaging.value)
 
 // 监听 progress 变化
 watch(progress, (newProgress) => {
@@ -164,7 +163,7 @@ const handleHelp = () => {
             v-else
             class="i-carbon:renew animate-spin text-lg"
           ></div>
-          <span class="topbar-button-label">{{ replaying ? 'replaying...' : 'play' }}</span>
+          <span class="topbar-button-label">{{ replaying ? 'replaying...' : 'replay' }}</span>
         </button>
         
         <!-- Export 按钮 -->
@@ -203,8 +202,7 @@ const handleHelp = () => {
         </button>
         
         <!-- Run 按钮 -->
-        <button 
-          v-show="showRunButton"
+        <button
           data-tutorial="run-button"
           class="flex items-center gap-2 px-6 py-1 rounded-md bg-[var(--primary-light-color)] text-[var(--title-color)] transition-colors duration-200 font-medium hover:bg-[var(--primary-light-color)] border border-[var(--border-color)]"
           :class="[replaying ? 'opacity-50 cursor-not-allowed' : '']"
