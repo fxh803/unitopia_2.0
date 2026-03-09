@@ -68,7 +68,9 @@ const bezierDrawingStore = useBezierDrawingStore()
 
 const canvasEl = ref<HTMLCanvasElement | null>(null)
 const canvasAreaRef = ref<HTMLDivElement | null>(null)
-const canvasSize = ref(400)
+// 画布宽高分开控制，不再强制 1:1
+const canvasWidth = ref(400)
+const canvasHeight = ref(400)
 let canvas: Canvas | null = null
 
 const backgroundStore = useBackgroundStore()
@@ -91,11 +93,12 @@ function getDpr() {
 function resizeCanvasForDPR() {
   if (!canvas || !canvasEl.value) return
   const dpr = getDpr()
-  const size = canvasSize.value
-  canvasEl.value.width = size * dpr
-  canvasEl.value.height = size * dpr
-  canvas.setWidth(size)
-  canvas.setHeight(size)
+  const width = canvasWidth.value
+  const height = canvasHeight.value
+  canvasEl.value.width = width * dpr
+  canvasEl.value.height = height * dpr
+  canvas.setWidth(width)
+  canvas.setHeight(height)
   // canvas.setZoom(dpr)
   canvas.renderAll()
 }
@@ -162,9 +165,13 @@ function updateCanvasSize() {
   const parent = canvasAreaRef.value
   if (parent) {
     const rect = parent.getBoundingClientRect()
-    // 减少边距，给画布更多空间
-    const size = Math.floor(Math.min(rect.width, rect.height) - 20)
-    canvasSize.value = Math.max(size, 200) // 增加最小尺寸
+    // 按父容器宽高分别计算尺寸，不再强制正方形
+    const paddingX = 150
+    const paddingY = 20
+    const width = Math.floor(rect.width - paddingX)
+    const height = Math.floor(rect.height - paddingY)
+    canvasWidth.value = Math.max(width, 200)
+    canvasHeight.value = Math.max(height, 200)
     if (canvas) {
       resizeCanvasForDPR()
     }
@@ -385,8 +392,8 @@ onMounted(async () => {
       backgroundColor: '#fffef8',
       isDrawingMode: false,
       selection: false,
-      width: canvasSize.value,
-      height: canvasSize.value,
+      width: canvasWidth.value,
+      height: canvasHeight.value,
     })
 
     const dpr = getDpr()

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onBeforeUnmount, computed, nextTick } from 'vue'
+import { ref, onMounted, onBeforeUnmount, computed, nextTick, watch } from 'vue'
 import { storeToRefs } from 'pinia'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 
@@ -35,8 +35,22 @@ onBeforeUnmount(() => {
 const currentSlide = computed(() => {
   const ov = overviews.value[props.overviewIdx]
   const sl = ov?.collageSeries?.[props.slideIdx]
-  return sl as any || null
+  return (sl as any) || null
 })
+
+// 每次打开设置面板时，用主画布的当前长宽重置 render_size，
+// 然后再在面板里等比缩放（以主画布为基准）
+watch(
+  currentSlide,
+  (sl) => {
+    if (!sl) return
+    const canvas = collageSeriesStore.canvasRef?.()
+    const width = canvas?.width || 1000
+    const height = canvas?.height || 1000
+    ;(sl as any).render_size = [width, height]
+  },
+  { immediate: true },
+)
 
 // 直接通过 store 的 overviews 修改对应 slide 字段，避免中间 computed 包装
 
@@ -136,19 +150,35 @@ const handleClose = () => emit('close')
           />
         </div>
 
-        <!-- render_size: Element Plus Slider -->
+        <!-- render_size: 等比缩放主画布尺寸（基于宽度，保持长宽比） -->
         <div class="slider-demo-block">
           <div class="flex items-center justify-between mb-2">
             <span class="demonstration text-gray-700 font-medium">render_size</span>
-            <span class="text-gray-500">{{ currentSlide?.render_size ?? 1000 }}</span>
+            <span class="text-gray-500">
+              {{
+                Array.isArray(currentSlide?.render_size)
+                  ? `${currentSlide.render_size[0]} × ${currentSlide.render_size[1]}`
+                  : '—'
+              }}
+            </span>
           </div>
           <el-slider
-            :model-value="currentSlide?.render_size ?? 1000"
+            :model-value="
+              Array.isArray(currentSlide?.render_size)
+                ? currentSlide.render_size[0]
+                : 1000
+            "
             :min="300"
-            :max="1000"
-            :step="100"
-            show-stops
-            @update:model-value="(v: number | number[]) => { if (currentSlide) currentSlide.render_size = Array.isArray(v) ? v[0] ?? 1000 : v }"
+            :max="2000"
+            :step="50"
+            @update:model-value="(v: number | number[]) => {
+              if (!currentSlide) return
+              const width = Array.isArray(v) ? v[0] ?? 1000 : v
+              const rs = (currentSlide as any).render_size as [number, number] | undefined
+              const ratio = rs && rs[0] ? (rs[1] ?? rs[0]) / rs[0] : 1
+              const height = Math.round(width * ratio)
+              ;(currentSlide as any).render_size = [width, height]
+            }"
           />
         </div>
 

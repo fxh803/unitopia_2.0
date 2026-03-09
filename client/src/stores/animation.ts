@@ -171,7 +171,10 @@ export const useAnimationStore = defineStore('animation', () => {
     // 获取当前幻灯片的 render_size
     const collageSeriesStore = useCollageSeriesStore()
     const { overviews, currentOverviewIndex } = storeToRefs(collageSeriesStore)
-    const renderSize = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size ?? 1000
+    const renderSizeSetting = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size as any
+    // 默认值：使用当前主画布宽高
+    let renderSizeWidth = renderSizeSetting[0] ?? canvas_width.value
+    let renderSizeHeight = renderSizeSetting[1] ?? canvas_height.value
 
     for (let i = startIndex; i < result['pos'].length + startIndex; i++) {
       posArray.value[i] = [result['pos'][i - startIndex][0] * canvas_width.value, result['pos'][i - startIndex][1] * canvas_height.value];
@@ -184,8 +187,8 @@ export const useAnimationStore = defineStore('animation', () => {
       else {
         originSize = 500
       }
-      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / renderSize);
-      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_width.value / renderSize);
+      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / renderSizeWidth);
+      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_height.value / renderSizeHeight);
     }
   }
 
@@ -196,7 +199,9 @@ export const useAnimationStore = defineStore('animation', () => {
     // 获取当前幻灯片的 render_size
     const collageSeriesStore = useCollageSeriesStore()
     const { overviews, currentOverviewIndex } = storeToRefs(collageSeriesStore)
-    const renderSize = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size ?? 1000
+    const renderSizeSetting = overviews.value[currentOverviewIndex.value]?.collageSeries[now_collage]?.render_size as any
+    let renderSizeWidth = renderSizeSetting[0] ?? canvas_width.value
+    let renderSizeHeight = renderSizeSetting[1] ?? canvas_height.value
 
     for (let i = startIndex; i < result['pos'].length + startIndex; i++) {
       posArray.value[i] = [result['pos'][i - startIndex][0] * canvas_width.value, result['pos'][i - startIndex][1] * canvas_height.value];
@@ -209,8 +214,8 @@ export const useAnimationStore = defineStore('animation', () => {
       else {
         originSize = 500
       }
-      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / renderSize);
-      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_width.value / renderSize);
+      widthArray.value[i] = result['size'][i - startIndex][0] * originSize * (canvas_width.value / renderSizeWidth);
+      heightArray.value[i] = result['size'][i - startIndex][1] * originSize * (canvas_height.value / renderSizeHeight);
     }
   }
   // 根据 overview_idx 和 collage_idx 获取对应的 dataBinding，打平成一维数组

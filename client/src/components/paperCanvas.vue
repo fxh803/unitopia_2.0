@@ -12,7 +12,9 @@ const paperExportStore = usePaperExportStore()
 const paperCanvasRef = ref<HTMLCanvasElement | null>(null)
 const backgroundStore = useBackgroundStore()
 const collageSeriesStore = useCollageSeriesStore()
-const size = ref(0)
+// 与主画布对齐的宽高（不再强制 1:1）
+const canvasWidth = ref(0)
+const canvasHeight = ref(0)
 function updateBackground() {
     //先删除现有背景
     const objects = paper.project.activeLayer.children
@@ -29,32 +31,31 @@ function updateBackground() {
     if (bg) {
         const backgroundImage = new paper.Raster({source: bg, dataType: 'background'})
         backgroundImage.onLoad = () => {
-            // 计算合适的缩放比例，使图片完全适应画布
-            const scaleX = size.value / backgroundImage.width;
-            const scaleY = size.value / backgroundImage.height;
-            const scale = Math.min(scaleX, scaleY);
+            // 计算合适的缩放比例，使图片完全适应当前画布宽高
+            const scaleX = canvasWidth.value / backgroundImage.width
+            const scaleY = canvasHeight.value / backgroundImage.height
+            const scale = Math.min(scaleX, scaleY)
 
-            // 设置图片位置和缩放
-            backgroundImage.scaling = new paper.Point(scale, scale);
-            backgroundImage.position = new paper.Point(size.value / 2, size.value / 2);
-            // 将背景图片添加到画布并置于最底层
-            backgroundImage.sendToBack();
-        };
+            // 设置图片位置和缩放，居中铺满
+            backgroundImage.scaling = new paper.Point(scale, scale)
+            backgroundImage.position = new paper.Point(canvasWidth.value / 2, canvasHeight.value / 2)
+            backgroundImage.sendToBack()
+        }
     }
 }
 onMounted(() => {
     nextTick(() => {
         // 绑定 Paper.js 到 canvas
         paper.setup(paperCanvasRef.value as HTMLCanvasElement);
-        const canvasSize = document.querySelector('.canvas-wrapper')?.getBoundingClientRect()
-        const width = Math.floor(canvasSize?.width ?? 0);
-        const height = Math.floor(canvasSize?.height ?? 0);
-        // 保证宽高比 1:1
-        size.value = Math.min(width, height);
-        if (paperCanvasRef.value) {
-            paperCanvasRef.value.width = size.value
-            paperCanvasRef.value.height = size.value
-            paper.view.viewSize = new paper.Size(size.value, size.value); 
+        const rect = document.querySelector('.canvas-wrapper')?.getBoundingClientRect()
+        const width = Math.floor(rect?.width ?? 0)
+        const height = Math.floor(rect?.height ?? 0)
+        canvasWidth.value = width
+        canvasHeight.value = height
+        if (paperCanvasRef.value && width > 0 && height > 0) {
+            paperCanvasRef.value.width = width
+            paperCanvasRef.value.height = height
+            paper.view.viewSize = new paper.Size(width, height)
             updateBackground()
             paperExportStore.setPaperCanvasEl(paperCanvasRef.value)
         }

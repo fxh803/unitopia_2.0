@@ -161,7 +161,8 @@ def process_data():
                 json_data["collage"][i]["force_config"]["force_type"] = "indicate_direction"
         # json_data["collage"][i]['marker_config'][0]['init_size_ratio'] = 0.6
         json_data["collage"][i]['iterations'] = collage_data["iterations"]
-        json_data["collage"][i]['render_size'] = collage_data["render_size"]
+        json_data["collage"][i]['render_size_w'] = collage_data["render_size"][0]
+        json_data["collage"][i]['render_size_h'] = collage_data["render_size"][1]
  
     with open(f'./workdir/{str(id)}_collage.json', 'w') as f:
         json.dump(json_data, f, indent=4)

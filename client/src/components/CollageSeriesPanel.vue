@@ -210,7 +210,7 @@ watch(() => overviews.value.length, (newLength, oldLength) => {
           <transition name="slide-fade">
             <div v-show="!collapsedOverviews.has(overviewIdx)" class=" mt-3 flex-1 overflow-y-auto">
               <div v-for="(item, slideIdx) in overview.collageSeries" :key="item.slideId"
-              class="relative mb-3 m-l-5 m-r-5 border rounded flex h-28 items-center justify-center cursor-pointer"
+              class="relative mb-3 m-l-5 m-r-5 border-2 rounded flex h-28 items-center justify-center cursor-pointer"
               :class="[
                 (item as any).isResult === true
                   ? 'border-green-500 bg-green-50'
