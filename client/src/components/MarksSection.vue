@@ -209,6 +209,38 @@ function handleAddGroupChild(parentId: string) {
   })
 }
 
+// 获取某个 group 父实例下，某个子 mark 可用的分组值列表：
+// - 基于当前 fieldName 从 tableData 提取所有去重后的非空值
+// - 排除同一父实例下其它子 mark 已经 selected 的值
+function getAvailableGroupValues(parentId: string, childId: string): string[] {
+  const parent = markInstances.value.find(m => m.id === parentId)
+  if (!parent || !parent.isGroup || !parent.fieldName) return []
+
+  const fieldName = parent.fieldName
+
+  // 所有去重后的非空值
+  const allValues = Array.from(
+    new Set(
+      tableData.value
+        .map(row => (row as any)[fieldName])
+        .filter(v => v != null && String(v).trim() !== ''),
+    ),
+  ).map(v => String(v))
+
+  // 兄弟子实例已经占用的值（不含当前 child）
+  const usedBySiblings = new Set(
+    (parent.children || [])
+      .filter(c => c.id !== childId && c.selectedValue != null && String(c.selectedValue).trim() !== '')
+      .map(c => String(c.selectedValue)),
+  )
+
+  // 当前 child 自己的值要保留在候选列表中
+  const current = parent.children.find(c => c.id === childId)?.selectedValue
+  const currentStr = current != null ? String(current) : null
+
+  return allValues.filter(v => !usedBySiblings.has(v) || v === currentStr)
+}
+
 function handleFieldDropOnMark(e: DragEvent, markId: string) {
   e.preventDefault()
   const fieldName = e.dataTransfer?.getData('text/plain')
@@ -623,13 +655,7 @@ function handleDragLeave(e: DragEvent) {
                       @change="handleGroupValueChange(mark.id, child.id, ($event.target as HTMLSelectElement).value)"
                     >
                       <option
-                        v-for="val in Array.from(
-                          new Set(
-                            tableData
-                              .map(row => (row as any)[mark.fieldName!])
-                              .filter(v => v != null && String(v).trim() !== ''),
-                          ),
-                        )"
+                        v-for="val in getAvailableGroupValues(mark.id, child.id)"
                         :key="String(val)"
                         :value="String(val)"
                       >
