@@ -103,7 +103,7 @@ export async function collectAllSlidesData(): Promise<Array<{overviewId: string,
         result.dataBinding = processDataBinding(tempCanvas)
         // 注入当前 slide 的个性化设置
         const slideSettings = slide as any
-        result.iterations = slideSettings.iterations ?? 150
+        result.iterations = slideSettings.iterations ?? 120
         // 如果未设置则使用原始画布大小
         result.render_size = (slideSettings.render_size as [number, number] | undefined) ?? [originalWidth, originalHeight]
         result.rotation = slideSettings.rotation ?? true
