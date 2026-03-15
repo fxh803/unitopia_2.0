@@ -24,7 +24,7 @@ import type { TableData } from '~/stores/table'
 export const useCanvasStore = defineStore('canvas', () => {
   const canvasRef = ref<(() => Canvas | null) | null>(null)
   // primary-color (#EB7678) 的透明版，用于 container 绘制
-  const containerColor = ref([235, 118, 120, 0.4])
+  const containerColor = ref([235, 118, 120, 0.5])
   const hasMarker = ref(false)
   const hasContainer = ref(false)
   // Segment 加载状态
@@ -358,6 +358,91 @@ export const useCanvasStore = defineStore('canvas', () => {
   //   canvasInstance.discardActiveObject()
   //   canvasInstance.renderAll()
   // }
+
+  // Mark 实例拖拽时，当前高亮的 container（用于边沿高亮）
+  const highlightedContainer = ref<fabric.FabricObject | null>(null)
+  const HIGHLIGHT_STROKE = '#EB7678'
+  const HIGHLIGHT_STROKE_WIDTH = 4
+
+  // 将客户端坐标转换为画布内坐标（与 handleDrop 中一致：先相对 canvas 元素，再按画布逻辑尺寸缩放）
+  function clientToCanvasPoint(
+    canvasInstance: Canvas,
+    canvasEl: HTMLElement,
+    clientX: number,
+    clientY: number
+  ): { x: number; y: number } {
+    const rect = canvasEl.getBoundingClientRect()
+    const elX = clientX - rect.left
+    const elY = clientY - rect.top
+    const w = canvasInstance.getWidth() ?? 1
+    const h = canvasInstance.getHeight() ?? 1
+    return {
+      x: (elX / rect.width) * w,
+      y: (elY / rect.height) * h,
+    }
+  }
+
+  // 获取指定画布坐标处最上层的 container 对象
+  function getContainerAtPoint(
+    canvasInstance: Canvas,
+    canvasEl: HTMLElement,
+    clientX: number,
+    clientY: number
+  ): fabric.FabricObject | null {
+    const { x, y } = clientToCanvasPoint(canvasInstance, canvasEl, clientX, clientY)
+    const objects = canvasInstance.getObjects()
+    for (let i = objects.length - 1; i >= 0; i--) {
+      const obj = objects[i]
+      if (obj.get('dataType') === 'container') {
+        const bounds = obj.getBoundingRect()
+        if (
+          x >= bounds.left &&
+          x <= bounds.left + bounds.width &&
+          y >= bounds.top &&
+          y <= bounds.top + bounds.height
+        ) {
+          return obj
+        }
+      }
+    }
+    return null
+  }
+
+  // 设置 container 边沿高亮（或取消高亮）
+  function setContainerHighlight(obj: fabric.FabricObject | null) {
+    const canvasInstance = canvasRef.value?.()
+    if (!canvasInstance) return
+
+    const prev = highlightedContainer.value
+    if (prev) {
+      const origStroke = prev.get('__highlightOriginalStroke') as string | undefined
+      const origWidth = (prev.get('__highlightOriginalStrokeWidth') as number) ?? 0
+      prev.set('stroke', origStroke)
+      prev.set('strokeWidth', origWidth)
+      prev.set('__highlightOriginalStroke', undefined)
+      prev.set('__highlightOriginalStrokeWidth', undefined)
+      highlightedContainer.value = null
+    }
+
+    if (obj) {
+      obj.set('__highlightOriginalStroke', obj.stroke ?? undefined)
+      obj.set('__highlightOriginalStrokeWidth', obj.strokeWidth ?? 0)
+      obj.set('stroke', HIGHLIGHT_STROKE)
+      obj.set('strokeWidth', HIGHLIGHT_STROKE_WIDTH)
+      highlightedContainer.value = obj
+    }
+
+    canvasInstance.requestRenderAll()
+  }
+
+  // 清除 container 高亮。若传入 e 与 dropZoneEl，则仅当鼠标真正离开放置区时才清除（用于 dragleave）
+  function clearContainerHighlight(e?: DragEvent, dropZoneEl?: HTMLElement | null) {
+    if (e != null && dropZoneEl != null) {
+      const next = e.relatedTarget as Node | null
+      if (next != null && dropZoneEl.contains(next)) return
+    }
+    setContainerHighlight(null)
+  }
 
   // 检测拖拽位置是否在emitter上
   function isDropOnEmitter(dropX: number, dropY: number): boolean {
@@ -1005,16 +1090,34 @@ export const useCanvasStore = defineStore('canvas', () => {
     }
   }
 
-  // 处理拖拽预览图到主画布
-  function handleDragOver(e: DragEvent) {
+  // 处理拖拽预览图到主画布（canvasEl 传入时，拖拽 mark 实例会高亮鼠标下的 container 边沿）
+  function handleDragOver(e: DragEvent, canvasEl?: HTMLCanvasElement | null) {
     e.preventDefault()
     if (e.dataTransfer) {
       e.dataTransfer.dropEffect = 'copy'
+    }
+    if (
+      e.dataTransfer?.types?.includes('mark-instance-id') &&
+      canvasEl &&
+      canvasRef.value
+    ) {
+      const canvasInstance = canvasRef.value()
+      if (!canvasInstance) return
+      const container = getContainerAtPoint(
+        canvasInstance,
+        canvasEl,
+        e.clientX,
+        e.clientY
+      )
+      if (container !== highlightedContainer.value) {
+        setContainerHighlight(container)
+      }
     }
   }
 
   async function handleDrop(e: DragEvent, canvasEl: HTMLElement) {
     e.preventDefault()
+    clearContainerHighlight()
     const canvasInstance = canvasRef.value?.()
     if (!canvasInstance) return
 
@@ -1359,7 +1462,8 @@ export const useCanvasStore = defineStore('canvas', () => {
   calculateBezierPoint,
   getEmitterSampledPoints,
   handleDragOver,
-    handleDrop,
+  handleDrop,
+  clearContainerHighlight,
   askToClosePath,
   handleClosePathConfirm,
   renderResult,

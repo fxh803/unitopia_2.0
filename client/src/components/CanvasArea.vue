@@ -49,6 +49,7 @@ const {
   adjustLayer,
   handleDragOver,
   handleDrop,
+  clearContainerHighlight,
   addCanvasEventListeners,
   removeCanvasEventListeners
 } = canvasStore
@@ -463,7 +464,8 @@ onBeforeUnmount(() => {
       ref="canvasAreaRef"
       data-tutorial="canvas-editor"
       class="border-r border-[var(--border-color)] bg-[var(--primary-light-color)] flex flex-1 flex-row min-h-0 min-w-0 items-center justify-center relative overflow-hidden canvas-with-grid"
-      @dragover="handleDragOver"
+      @dragover="(e) => handleDragOver(e, canvasEl)"
+      @dragleave="(e) => clearContainerHighlight(e, canvasAreaRef)"
       @drop="(e) => { handleLibraryContainerDrop(e); if (canvasEl) handleDrop(e, canvasEl) }">
       <!-- 工具栏容器：垂直居中，包含所有工具栏 -->
       <div class="absolute left-0 z-10 flex flex-col items-start gap-2" style="top: 50%; transform: translateY(-50%);">
