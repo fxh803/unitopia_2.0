@@ -255,7 +255,6 @@ async function handleContainerFileSelect(e: Event) {
 <template>
   <div
     class="flex flex-col h-full min-h-0 overflow-hidden bg-[var(--primary-light-color)]"
-    data-tutorial="libraries-section"
   >
     <!-- 顶部：Libraries 标题 -->
     <div

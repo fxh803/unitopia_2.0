@@ -9,38 +9,23 @@ const { isTutorialOpen } = storeToRefs(tutorialStore)
 const steps = [
   {
     id: 'data-section',
-    title: 'Data Panel',
-    desc: 'Step 1: Upload and manage your data in the Data Panel. Switch between Table and Fields views, and start from local CSV files or the built‑in presets.'
+    title: 'Step 1: Upload & manage data',
+    desc: 'Upload and manage your data in the Data Panel. Switch between Table and Fields views, and start from local CSV files or the built‑in presets.'
   },
   {
     id: 'marks-section',
-    title: 'Marks Panel',
-    desc: 'Step 2: Use the Marks Panel to drag fields from Data and create mark instances. Manage how single marks or mark groups are linked to rows in your dataset.'
-  },
-  {
-    id: 'mark-detail-panel',
-    title: 'Mark Detail Panel',
-    desc: 'Step 3: In the Mark Detail Panel, edit the selected mark instance in detail, including visual encodings (color, size, etc.) and edit mark on the canvas.'
-  },
-  {
-    id: 'libraries-section',
-    title: 'Libraries',
-    desc: 'Step 4: Use the Libraries Panel to upload and manage Mark and Container assets. Drag mark assets to the Mark Detail Panel canvas, and container assets to the main canvas.'
+    title: 'Step 2: Create marks',
+    desc: 'Use the Marks Panel to drag fields from Data and create mark instances. Click a mark to edit its visual encoding and appearance in the Mark Detail panel.'
   },
   {
     id: 'canvas-editor',
-    title: 'Main Canvas',
-    desc: 'Step 5: In the Main Canvas, place Containers, Emitters, and Forces, then drag Marks and Containers to compose your unit visualization layout.'
-  },
-  {
-    id: 'visualization-gallery',
-    title: 'Collage Series Panel',
-    desc: 'Step 6: Use the Visualization Gallery to manage sequences of unit visualizations. Expand the panel, select or duplicate slides, and adjust rendering parameters.'
+    title: 'Step 3: Compose on canvas',
+    desc: 'In the Main Canvas, place Containers, Emitters, and Forces, then drag Marks and Containers to compose your unit visualization layout.'
   },
   {
     id: 'run-button',
-    title: 'Run',
-    desc: 'Final step: Click the Run button to start rendering and generate the final visualization for the current series and settings.'
+    title: 'Step 4: Run',
+    desc: 'Click the Run button to start rendering and generate the final visualization for the current series and settings.'
   }
 ]
 
@@ -61,11 +46,7 @@ function updateSpotlight() {
   const step = steps[currentStep.value]
   if (!step) return
   nextTick(() => {
-    let rect = getPanelRect(step.id)
-    // Mark Detail 步骤：如果详情面板未展开，则优先高亮中间的 MarkDetailToggle
-    if (!rect && step.id === 'mark-detail-panel') {
-      rect = getPanelRect('mark-detail-toggle')
-    }
+    const rect = getPanelRect(step.id)
     if (rect) {
       spotlightRect.value = {
         top: rect.top - PADDING,
@@ -193,7 +174,7 @@ onBeforeUnmount(() => {
           <div class="flex items-center justify-between gap-3">
             <button
               type="button"
-              class="px-4 py-2 text-sm font-medium text-[var(--text-muted)] hover:bg-[var(--primary-light-color)] rounded-lg transition-colors"
+              class="px-4 py-2 text-sm font-medium text-[var(--text-muted)] bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors cursor-pointer"
               :class="{ 'invisible': currentStep === 0 }"
               :disabled="currentStep === 0"
               @click="goPrev"
