@@ -52,6 +52,7 @@
 
 <script setup lang="ts">
 import MainHeader from '~/components/MainHeader.vue'
+import { useRouter } from 'vue-router'
 import { useMarkInstanceStore } from '~/stores/markInstance'
 import { useTableStore } from '~/stores/table'
 import { useMarkerStore } from '~/stores/marker'
@@ -59,6 +60,7 @@ import { useContainerStore } from '~/stores/container'
 import { sendUploadContainerToServer } from '~/composables/server'
 import { paralympicsHairMarkSnapshot } from '~/markSnapshot/paralympicsHair'
 
+const router = useRouter()
 const markInstanceStore = useMarkInstanceStore()
 const tableStore = useTableStore()
 const markerStore = useMarkerStore()
@@ -78,6 +80,12 @@ const galleryItems = [
 ]
 
 const handleTryInEditor = async (item: (typeof galleryItems)[number]) => {
+  // 0. 进入示例前，清空相关 store 状态，避免残留
+  tableStore.clearTableData()
+  markerStore.clearAllMarkers()
+  containerStore.clearAllContainers()
+  markInstanceStore.clearAllMarkInstances()
+
   // 1. 触发 DataSection 加载 Paralympics 2024 预设数据
   tableStore.loadFromUrl(item.dataUrl, 'Paralympics_2024_Medal')
 
@@ -132,10 +140,8 @@ const handleTryInEditor = async (item: (typeof galleryItems)[number]) => {
     window.sessionStorage.setItem('autoBackgroundUrl', item.backgroundUrl)
   }
 
-  // 5. 刷新并跳转到系统编辑页，避免保留之前的编辑痕迹 / 状态
-  if (typeof window !== 'undefined') {
-    window.location.href = '/editor'
-  }
+  // 5. 跳转到系统编辑页
+  router.push('/editor')
 }
 </script>
 
