@@ -28,6 +28,7 @@ declare module 'vue' {
     HoverInfoPanel: typeof import('./src/components/hoverInfoPanel.vue')['default']
     LeftSidebar: typeof import('./src/components/LeftSidebar.vue')['default']
     LibrariesSection: typeof import('./src/components/LibrariesSection.vue')['default']
+    MainHeader: typeof import('./src/components/MainHeader.vue')['default']
     MarkDetailPanel: typeof import('./src/components/MarkDetailPanel.vue')['default']
     MarkDetailToggle: typeof import('./src/components/MarkDetailToggle.vue')['default']
     MarkerCanvasArea: typeof import('./src/components/MarkerCanvasArea.vue')['default']

@@ -1,4 +1,5 @@
 <script setup lang="ts"> 
+import { onMounted } from 'vue'
 import { storeToRefs } from 'pinia'
 import { FabricImage } from 'fabric'
 import { useBackgroundStore } from '~/stores/background'
@@ -110,6 +111,51 @@ const setBackgroundImage = async (imageDataUrl: string, fileName: string) => {
     console.error('背景图片加载失败:', error)
   }
 }
+
+// 从 URL 自动应用背景（用于示例入口）
+const setBackgroundFromUrl = async (url: string) => {
+  try {
+    // 先确保 canvas 已经就绪
+    const waitForCanvasReady = async (timeout = 3000) => {
+      const start = Date.now()
+      while (!canvasRef.value?.()) {
+        if (Date.now() - start > timeout) return false
+        await new Promise(resolve => setTimeout(resolve, 100))
+      }
+      return true
+    }
+
+    const ready = await waitForCanvasReady()
+    if (!ready) {
+      console.error('等待 Canvas 实例超时，自动背景未应用')
+      return
+    }
+
+    const res = await fetch(url)
+    if (!res.ok) return
+    const blob = await res.blob()
+    const base64 = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result as string)
+      reader.onerror = reject
+      reader.readAsDataURL(blob)
+    })
+
+    await setBackgroundImage(base64, url.split('/').pop() || 'background')
+  } catch (error) {
+    console.error('自动背景加载失败:', error)
+  }
+}
+
+onMounted(async () => {
+  if (typeof window === 'undefined') return
+  const url = window.sessionStorage.getItem('autoBackgroundUrl')
+  if (!url) return
+
+  // 使用一次后清理
+  window.sessionStorage.removeItem('autoBackgroundUrl')
+  await setBackgroundFromUrl(url)
+})
 
 const triggerFileUpload = () => {
   creatingBackground.value = true
