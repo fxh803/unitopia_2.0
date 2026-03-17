@@ -1,9 +1,9 @@
 <template>
   <div class="flex flex-col h-full">
-    <div class="flex h-full">
+    <div class="flex h-full bg-[var(--primary-light-color)] text-[var(--title-color)]">
       <!-- 左侧筛选栏 -->
       <aside
-        class="self-stretch w-[15%] min-w-[280px] max-w-[380px] flex-shrink-0 bg-white border-r border-gray-300 px-3 overflow-y-auto shadow-sm font-sans"
+        class="self-stretch w-[15%] min-w-[280px] max-w-[380px] flex-shrink-0 bg-[var(--primary-light-color)] border-r border-[var(--border-color)] px-3 overflow-y-auto shadow-sm font-sans"
       >
         <!-- Source 过滤 -->
         <div class="mx-2.5">
@@ -204,7 +204,7 @@
         </div>
       </aside>
 
-      <main class="flex-1 p-4 bg-gray-50 overflow-y-auto">
+      <main class="flex-1 p-4 bg-[var(--primary-muted-color)] overflow-y-auto">
         <div class="mx-auto w-[95%]">
           <div class="grid grid-cols-4 gap-4">
             <div
