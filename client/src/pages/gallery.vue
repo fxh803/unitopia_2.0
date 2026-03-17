@@ -32,7 +32,7 @@
               class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             >
               <button
-                class="px-5 py-2.5 rounded-lg bg-[var(--primary-color)] text-white text-sm md:text-base font-semibold shadow-lg hover:bg-[var(--primary-hover-color)]"
+                class="px-5 py-2.5 rounded-lg bg-[var(--primary-color)] text-white text-sm md:text-base font-semibold shadow-lg hover:bg-[var(--primary-hover-color)] cursor-pointer" 
                 @click.stop="handleTryInEditor(item)"
               >
                 try in editor
@@ -52,21 +52,6 @@
 
 <script setup lang="ts">
 import MainHeader from '~/components/MainHeader.vue'
-import { useRouter } from 'vue-router'
-import { useMarkInstanceStore } from '~/stores/markInstance'
-import { useTableStore } from '~/stores/table'
-import { useMarkerStore } from '~/stores/marker'
-import { useContainerStore } from '~/stores/container'
-import { useCollageSeriesStore } from '~/stores/collageSeries'
-import { sendUploadContainerToServer } from '~/composables/server'
-import { useBackgroundStore } from '~/stores/background'
-const router = useRouter()
-const markInstanceStore = useMarkInstanceStore()
-const tableStore = useTableStore()
-const markerStore = useMarkerStore()
-const containerStore = useContainerStore()
-const collageSeriesStore = useCollageSeriesStore()
-
 const galleryItems = [
   {
     id: 1,
@@ -81,103 +66,13 @@ const galleryItems = [
   },
 ]
 
-const handleTryInEditor = async (item: (typeof galleryItems)[number]) => {
-  // 0. 进入示例前，清空相关 store 状态，避免残留
-  tableStore.clearTableData()
-  markerStore.clearAllMarkers()
-  containerStore.clearAllContainers()
-  markInstanceStore.clearAllMarkInstances()
-
-  // 1. 触发 DataSection 加载 Paralympics 2024 预设数据
-  tableStore.loadFromUrl(item.dataUrl, 'Paralympics_2024_Medal')
-
-  // 2. 将对应的 mark / container 加载进 Libraries（markerStore / containerStore）
-  if (item.markLibUrl) {
-    const exists = markerStore.markers.some(m => m.name === item.title)
-    if (!exists) {
-      markerStore.addMarker({
-        name: item.title,
-        thumbnail: item.markLibUrl,
-        source: item.markLibUrl,
-      })
-    }
+const handleTryInEditor = (item: (typeof galleryItems)[number]) => {
+  if (typeof window !== 'undefined') {
+    // 将当前示例信息暂存到 localStorage，刷新后在 /editor 中恢复
+    window.localStorage.setItem('unitopia-example', JSON.stringify(item))
+    // 使用整页刷新进入编辑器，顺便重置所有 Pinia 状态
+    window.location.href = '/editor'
   }
-
-  if (item.containerUrl) {
-    const exists = containerStore.containers.some(c => c.name === item.title)
-    if (!exists) {
-      try {
-        // 先从 public 读出 PNG 转为 base64，再发给后端做处理，保持与 LibrariesSection 一致
-        const url = item.containerUrl
-        const res = await fetch(url)
-        if (res.ok) {
-          const blob = await res.blob()
-          const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result as string)
-            reader.onerror = reject
-            reader.readAsDataURL(blob)
-          })
-          const processed = await sendUploadContainerToServer(base64)
-          const finalBase64 = processed || base64
-          if (finalBase64) {
-            containerStore.addContainer({
-              name: item.title,
-              thumbnail: finalBase64,
-              source: finalBase64,
-            })
-          }
-        }
-      } catch {
-        // 忽略单个示例容器加载失败
-      }
-    }
-  }
-
-  // 3. 从 public 读取 markInstances 快照（JSON），写入 markInstanceStore
-  if (item.markSnapshotUrl) {
-    try {
-      const marksRes = await fetch(item.markSnapshotUrl)
-      if (marksRes.ok) {
-        const marks = await marksRes.json()
-        const snapshots = Array.isArray(marks) ? marks : [marks]
-        snapshots.forEach((snap: any) => {
-          markInstanceStore.addMarkInstance(snap)
-        })
-      }
-    } catch {
-      // 忽略单个示例 marks 加载失败
-    }
-  }
-  
-  // 4. 从 public 读取 collageSeries 快照，合并到当前 overview，并设置背景
-  // 为了确保 /editor 中的画布已经准备好，这里延迟 2 秒再执行
-  if (item.collageSeriesSnapshotUrl) {
-    setTimeout(async () => {
-      try {
-        const overviewRes = await fetch(item.collageSeriesSnapshotUrl)
-        if (overviewRes.ok) {
-          const overviewSnapshot = await overviewRes.json()
-          collageSeriesStore.loadOverviewSnapshot(overviewSnapshot as any)
-
-          const backgroundStore = useBackgroundStore()
-          const targetOverview = collageSeriesStore.overviews[collageSeriesStore.currentOverviewIndex] ||
-            collageSeriesStore.overviews[0]
-          if (targetOverview && item.backgroundUrl) {
-            backgroundStore.setCurrentOverviewBackground(targetOverview.overviewId, item.backgroundUrl)
-          }
-
-          // 恢复第一个 slide 到画布
-          collageSeriesStore.handleCollageSeriesSelect(0)
-        }
-      } catch {
-        // 忽略单个示例 collageSeries 加载失败
-      }
-    }, 1000)
-  }
-
-  // 5. 跳转到系统编辑页
-  router.push('/editor')
 }
 </script>
 
