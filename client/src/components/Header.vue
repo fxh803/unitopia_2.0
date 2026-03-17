@@ -151,6 +151,10 @@ const handleHelp = () => {
   tutorialStore.openTutorial()
 }
 
+// 仅在本地开发环境（localhost）下显示某些临时工具按钮
+const isLocalhost = typeof window !== 'undefined'
+  && ['localhost', '127.0.0.1', '::1'].includes(window.location.hostname)
+
 // 临时导出：将 collage overviews 序列化到剪贴板并输出到控制台，方便复制到示例 TS
 const handleExportOverviewsJson = () => {
   const data = JSON.stringify(collageSeriesStore.overviews, null, 2)
@@ -272,8 +276,9 @@ const handleExportMarkInstancesJson = () => {
           <span class="topbar-button-label">{{ collaging ?  'Running...' : result_data.length>0 ? 'reRun' : 'Run' }}</span>
         </button>
 
-        <!-- 导出 overviews JSON（临时工具） -->
+        <!-- 导出 overviews JSON（临时工具，仅 localhost 显示） -->
         <button
+          v-if="isLocalhost"
           class="flex items-center gap-1 px-3 py-1 rounded-md bg-[var(--primary-light-color)] text-[var(--text-muted)] text-xs transition-colors duration-200 hover:bg-[var(--primary-light-color)] border border-[var(--border-color)] cursor-pointer"
           @click="handleExportOverviewsJson"
         >
@@ -281,8 +286,9 @@ const handleExportMarkInstancesJson = () => {
           <span class="topbar-button-label text-xs">导出 overviews</span>
         </button>
 
-        <!-- 导出 markInstances JSON（临时工具） -->
+        <!-- 导出 markInstances JSON（临时工具，仅 localhost 显示） -->
         <button
+          v-if="isLocalhost"
           class="flex items-center gap-1 px-3 py-1 rounded-md bg-[var(--primary-light-color)] text-[var(--text-muted)] text-xs transition-colors duration-200 hover:bg-[var(--primary-light-color)] border border-[var(--border-color)] cursor-pointer"
           @click="handleExportMarkInstancesJson"
         >
