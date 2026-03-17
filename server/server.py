@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
 import json
 import os
+from openpyxl import load_workbook
 from datetime import datetime
 import math
 import base64
@@ -492,6 +493,67 @@ def serve_workdir(filename):
     response.cache_control.max_age = 3600
     response.cache_control.public = True
     return response
+
+
+@app.route("/api/images", methods=["GET"])
+def get_images():
+    try:
+        # 与原 Node 版本保持相同的相对路径：./data/images.xlsx
+        excel_path = os.path.join(os.path.dirname(__file__), "data", "images.xlsx")
+        wb = load_workbook(excel_path, data_only=True)
+        ws = wb[wb.sheetnames[0]]
+
+        # 将整张表读成二维数组 raw_data[row_index][col_index]
+        raw_data = []
+        for row in ws.iter_rows(values_only=True):
+            raw_data.append(list(row))
+
+        # 原 Node 代码中 headers = rawData[2]（未使用，这里保留逻辑以防后续扩展）
+        _headers = raw_data[2] if len(raw_data) > 2 else []
+
+        data = []
+        # 原 Node 代码：for (let i = 3; i < rawData.length; i++) —— 从第 4 行开始
+        for i in range(3, len(raw_data)):
+            row = raw_data[i] or []
+
+            def get_val(idx: int) -> str:
+                if idx >= len(row) or row[idx] is None:
+                    return ""
+                return str(row[idx]).strip()
+
+            item = {
+                "id": get_val(0),
+                "fr": get_val(1),
+                "source": get_val(2),
+                "url": get_val(3),
+                "element_design": {
+                    "shapes": {
+                        "regular": get_val(4),
+                        "irregular": get_val(5),
+                    },
+                    "patterns": {
+                        "geometric_repetitive": get_val(6),
+                        "non_repetitive": get_val(7),
+                    },
+                },
+                "visual_layout": {
+                    "regularity": {
+                        "restrict_rule_based": get_val(8),
+                        "organic_natural_structure": get_val(9),
+                    },
+                    "representation": {
+                        "metaphor_based_composition": get_val(10),
+                        "abstract_boundary": get_val(11),
+                    },
+                },
+            }
+            data.append(item)
+
+        return jsonify(data)
+    except Exception as e:
+        # 与原 Node 版本类似，打印错误并返回 500
+        print(e)
+        return jsonify({"error": "读取 Excel 文件失败"}), 500
 
 if __name__ == '__main__': 
     

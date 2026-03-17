@@ -37,7 +37,7 @@ interface ProcessedData {
   margin?: number
   emitter_type?: string
 }
-const ip = 'http://localhost:4444'
+export const ip = 'http://localhost:4444'
 
 
 
