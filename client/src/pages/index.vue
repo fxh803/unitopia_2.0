@@ -16,11 +16,10 @@
       >
         <div class="absolute inset-0 flex flex-col items-center justify-center text-center px-4">
           <h1 class="text-4xl md:text-5xl font-bold tracking-wide text-white mb-4">
-            UnitoPia：图像化单元可视化框架
+            UnitoPia: Pictorial Unit Visualization Framework
           </h1>
           <p class="max-w-3xl text-sm md:text-base text-slate-100 leading-relaxed">
-            UnitoPia 面向单元可视化（unit visualization），以“逐个数据单元、一一对应”为核心，
-            支持用丰富的图像元素和灵活布局来表达数据故事，让每一个数据点都保持清晰身份与语义。
+            A pictorial unit visualization framework for one-to-one mapping between data units and visual elements.
           </p>
         </div>
       </div>
@@ -31,34 +30,31 @@
           <!-- 卡片一 -->
           <article class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-[var(--border-color)] dark:border-gray-700 p-7 md:p-8 flex flex-col">
             <h2 class="text-base font-semibold mb-3 text-[var(--title-color)] dark:text-gray-50">
-              面向数据粒度的单元可视化
+              Unit Visualization at Data Granularity
             </h2>
             <p class="text-sm text-[var(--text-muted)] dark:text-gray-300 mb-5">
-              采用一对一的数据编码方式，每个可视元素对应一个数据项，兼顾数据精细粒度与整体构成，
-              适合讲述组合结构、群体分布以及数据故事。
+              Encode every data item as an individual pictorial unit for precise, story-driven visualizations.
             </p>
             <button
               class="mt-auto inline-flex items-center justify-center w-full rounded-md bg-[var(--primary-color)] text-white text-sm font-semibold py-2.5 hover:bg-[var(--primary-hover-color)] transition-colors cursor-pointer"
               @click="$router.push('/gallery')"
             >
-              浏览示例
+              Browse Examples
             </button>
           </article>
 
           <!-- 卡片二 -->
           <article class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-[var(--border-color)] dark:border-gray-700 p-7 md:p-8 flex flex-col">
             <h2 class="text-base font-semibold mb-3 text-[var(--title-color)] dark:text-gray-50">
-              可扩展的布局引擎与集成能力
-              
+              Scalable Layout Engine & Integration
             </h2>
             <p class="text-sm text-[var(--text-muted)] dark:text-gray-300 mb-5">
-              基于可微渲染（differentiable rendering）的图像空间布局方法，自动求解复杂图像单元的排布，
-              预留 SDK / API 接口，通过python库接入现有可视分析与叙事可视化工作流。
+              Automatically arrange complex pictorial units and integrate with existing analysis workflows.
             </p>
             <button
               class="mt-auto inline-flex items-center justify-center w-full rounded-md bg-[var(--primary-color)] text-white text-sm font-semibold py-2.5 hover:bg-[var(--primary-hover-color)] transition-colors cursor-pointer"
             >
-              快速上手
+              Get Started
             </button>
           </article>
 
@@ -67,17 +63,16 @@
             class="flex-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-[var(--border-color)] dark:border-gray-700 p-7 md:p-8 flex flex-col"
           >
             <h2 class="text-base font-semibold mb-3 text-[var(--title-color)] dark:text-gray-50">
-              图形编辑系统
+              Visual Editor
             </h2>
             <p class="text-sm text-[var(--text-muted)] dark:text-gray-300 mb-5">
-              以“容器-填充”的物理隐喻建模，将单元可视化拆分为标记（mark）、容器（container）、
-              发射源（emitter）和力场（force）四个概念，并提供图形化编辑视图创作。
+              Design unit visualizations interactively with marks, containers, emitters, and forces.
             </p>
             <button
               class="mt-auto inline-flex items-center justify-center w-full rounded-md bg-[var(--primary-color)] text-white text-sm font-semibold py-2.5 hover:bg-[var(--primary-hover-color)] transition-colors cursor-pointer"
               @click.stop="goEditorFresh"
             >
-              在线体验
+              Try Online
             </button>
           </article>
         </div>

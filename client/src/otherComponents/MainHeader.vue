@@ -3,7 +3,7 @@
     class="w-full h-16 flex items-center justify-between px-10 py-4 shadow-sm bg-white/95 backdrop-blur dark:bg-gray-900/95"
   >
     <div class="flex items-center space-x-2">
-      <span class="text-2xl font-bold tracking-wide text-[var(--title-color)]">Unitopia</span>
+      <span class="text-2xl font-bold tracking-wide text-[var(--title-color)]">UnitoPia</span>
     </div>
 
     <nav class="hidden md:flex items-center space-x-8 text-sm font-medium text-[var(--text-muted)] dark:text-gray-300">
@@ -19,19 +19,19 @@
       >
         Gallery
       </button>
-      <button class="hover:text-[var(--primary-color)] transition-colors cursor-default">
+      <button class="hover:text-[var(--primary-color)] transition-colors cursor-pointer">
         Get Started
       </button>
-      <button class="hover:text-[var(--primary-color)] transition-colors cursor-default" @click="goToDataset">
+      <button class="hover:text-[var(--primary-color)] transition-colors cursor-pointer" @click="goToDataset">
         Datasets
       </button>
-      <button class="hover:text-[var(--primary-color)] transition-colors cursor-default">
+      <button class="hover:text-[var(--primary-color)] transition-colors cursor-pointer">
         User Study
       </button>
-      <button class="hover:text-[var(--primary-color)] transition-colors cursor-default">
+      <button class="hover:text-[var(--primary-color)] transition-colors cursor-pointer">
         Paper
       </button>
-      <button class="hover:text-[var(--primary-color)] transition-colors cursor-default">
+      <button class="hover:text-[var(--primary-color)] transition-colors cursor-pointer">
         Source Code
       </button>
     </nav>
@@ -46,26 +46,20 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
-
 const goHome = () => {
-  router.push('/')
+  if (typeof window !== 'undefined') window.location.href = '/'
 }
 
 const goToGallery = () => {
-  router.push('/gallery')
+  if (typeof window !== 'undefined') window.location.href = '/gallery'
 }
 
 const goToDataset = () => {
-  router.push('/dataset')
+  if (typeof window !== 'undefined') window.location.href = '/dataset'
 }
 
 const goEditorFresh = () => {
-  if (typeof window !== 'undefined') {
-    window.location.href = '/editor'
-  }
+  if (typeof window !== 'undefined') window.location.href = '/editor'
 }
 </script>
 
