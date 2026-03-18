@@ -58,12 +58,23 @@ const galleryItems = [
     title: 'hair',
     image: '/gallery/hair.png',
     markSnapshotUrl: '/snapshots/hairMarks.json',
-    collageSeriesSnapshotUrl: '/snapshots/hairCollageSeries.json',
-    dataUrl: '/csv/paralympics_2024_medal_table.csv',
-    markLibUrl: '/marks/hair.svg',
-    containerUrl: '/containers/hair.png',
+    collageSeriesSnapshotUrl: '/snapshots/hairCanvas.json',
+    dataUrl: '/csv/hair.csv',
+    markLibUrls: ['/marks/hair.svg'],
+    containerUrls: ['/containers/hair.png'],
     backgroundUrl: '/background/hair.png',
   },
+  {
+    id: 2,
+    title:'bottleDream',
+    image: '/gallery/bottleDream.png',
+    markSnapshotUrl: '/snapshots/bottleDreamMarks.json',
+    collageSeriesSnapshotUrl: '/snapshots/bottleDreamCanvas.json',
+    dataUrl: '/csv/bottleDream.csv',
+    markLibUrls: ['/marks/bottleDream/1.svg', '/marks/bottleDream/2.svg', '/marks/bottleDream/3.svg', '/marks/bottleDream/4.svg', '/marks/bottleDream/5.svg', '/marks/bottleDream/6.svg'],
+    containerUrls: ['/containers/bottleDream.png'],
+    backgroundUrl: '/background/bottleDream.png',
+  }
 ]
 
 const handleTryInEditor = (item: (typeof galleryItems)[number]) => {

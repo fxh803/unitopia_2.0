@@ -14,8 +14,8 @@ interface ExampleItem {
   title: string
   image: string
   dataUrl?: string
-  markLibUrl?: string
-  containerUrl?: string
+  markLibUrls?: string[]
+  containerUrls?: string[]
   markSnapshotUrl?: string
   collageSeriesSnapshotUrl?: string
   backgroundUrl?: string
@@ -70,44 +70,48 @@ async function loadExampleToStores(item: ExampleItem) {
   }
 
   // 2. 将对应的 mark / container 加载进 Libraries
-  if (item.markLibUrl) {
-    const exists = markerStore.markers.some(m => m.name === item.title)
-    if (!exists) {
-      markerStore.addMarker({
-        name: item.title,
-        thumbnail: item.markLibUrl,
-        source: item.markLibUrl,
-      })
-    }
-  }
+  const markLibUrls = item.markLibUrls ?? []
+  markLibUrls.forEach((url, idx) => {
+    if (!url) return
+    const name = markLibUrls.length > 1 ? `${item.title}-${idx + 1}` : item.title
+    const exists = markerStore.markers.some(m => m.name === name)
+    if (exists) return
+    markerStore.addMarker({
+      name,
+      thumbnail: url,
+      source: url,
+    })
+  })
 
-  if (item.containerUrl) {
-    const exists = containerStore.containers.some(c => c.name === item.title)
-    if (!exists) {
-      try {
-        const url = item.containerUrl
-        const res = await fetch(url)
-        if (res.ok) {
-          const blob = await res.blob()
-          const base64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.onload = () => resolve(reader.result as string)
-            reader.onerror = reject
-            reader.readAsDataURL(blob)
+  const containerUrls = item.containerUrls ?? []
+  for (let idx = 0; idx < containerUrls.length; idx++) {
+    const url = containerUrls[idx]
+    if (!url) continue
+    const name = containerUrls.length > 1 ? `${item.title}-${idx + 1}` : item.title
+    const exists = containerStore.containers.some(c => c.name === name)
+    if (exists) continue
+    try {
+      const res = await fetch(url)
+      if (res.ok) {
+        const blob = await res.blob()
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const reader = new FileReader()
+          reader.onload = () => resolve(reader.result as string)
+          reader.onerror = reject
+          reader.readAsDataURL(blob)
+        })
+        const processed = await sendUploadContainerToServer(base64)
+        const finalBase64 = processed || base64
+        if (finalBase64) {
+          containerStore.addContainer({
+            name,
+            thumbnail: finalBase64,
+            source: finalBase64,
           })
-          const processed = await sendUploadContainerToServer(base64)
-          const finalBase64 = processed || base64
-          if (finalBase64) {
-            containerStore.addContainer({
-              name: item.title,
-              thumbnail: finalBase64,
-              source: finalBase64,
-            })
-          }
         }
-      } catch {
-        // 忽略单个示例容器加载失败
       }
+    } catch {
+      // 忽略单个示例容器加载失败
     }
   }
 

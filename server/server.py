@@ -161,7 +161,7 @@ def process_data():
                 json_data["collage"][i]["force_config"]["force_points"] = [x, y]
                 json_data["collage"][i]["force_config"]["force_type"] = "indicate_direction"
         # json_data["collage"][i]['marker_config'][0]['init_size_ratio'] = 0.6、
-        multi_res_list = [0.7,1/0.7]
+        multi_res_list = [1]
         json_data["collage"][i]['iterations'] = int(collage_data["iterations"]/len(multi_res_list))
         json_data["collage"][i]["multi_res_list"] = multi_res_list
         json_data["collage"][i]['render_size_w'] = collage_data["render_size"][0]
