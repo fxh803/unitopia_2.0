@@ -71,17 +71,36 @@ async function loadExampleToStores(item: ExampleItem) {
 
   // 2. 将对应的 mark / container 加载进 Libraries
   const markLibUrls = item.markLibUrls ?? []
-  markLibUrls.forEach((url, idx) => {
-    if (!url) return
+  for (let idx = 0; idx < markLibUrls.length; idx++) {
+    const url = markLibUrls[idx]
+    if (!url) continue
+
     const name = markLibUrls.length > 1 ? `${item.title}-${idx + 1}` : item.title
     const exists = markerStore.markers.some(m => m.name === name)
-    if (exists) return
+    if (exists) continue
+
+    // 为了与 LibrariesSection / 预加载 SVG 的行为对齐：
+    // - svg：source 存 svg 源码字符串（会以 `<` 开头，供 MarkerCanvasArea 识别）
+    // - 其他图片：source 继续存 url，供 FabricImage.fromURL 使用
+    let source = url
+    if (url.toLowerCase().endsWith('.svg')) {
+      try {
+        const res = await fetch(url)
+        if (res.ok) {
+          const svgString = await res.text()
+          if (svgString.trim().startsWith('<')) source = svgString
+        }
+      } catch {
+        // SVG 解析失败时回退到 url，避免示例直接加载失败
+      }
+    }
+
     markerStore.addMarker({
       name,
       thumbnail: url,
-      source: url,
+      source,
     })
-  })
+  }
 
   const containerUrls = item.containerUrls ?? []
   for (let idx = 0; idx < containerUrls.length; idx++) {

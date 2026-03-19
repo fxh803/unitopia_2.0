@@ -144,12 +144,12 @@ def process_data():
                 else:
                     json_data["collage"][i]["container_config"]["holes"] = None
             ##########################   emitter ########################
-            if collage_data["emitter"] and len(collage_data["emitter"]) > 0:
-                json_data["collage"][i]["emitter_config"]["control_points"] = [
-                    [point["x"]/canvas_width, point["y"]/canvas_height] for point in collage_data["emitter"]
-                ]
-                if collage_data["emitter_type"] != "":
-                    json_data["collage"][i]["emitter_config"]["emitter_type"] = collage_data["emitter_type"]
+            # if collage_data["emitter"] and len(collage_data["emitter"]) > 0:
+            #     json_data["collage"][i]["emitter_config"]["control_points"] = [
+            #         [point["x"]/canvas_width, point["y"]/canvas_height] for point in collage_data["emitter"]
+            #     ]
+            #     if collage_data["emitter_type"] != "":
+            #         json_data["collage"][i]["emitter_config"]["emitter_type"] = collage_data["emitter_type"]
             ##########################   forces ########################
             if collage_data["forces"] and len(collage_data["forces"]) > 0:
                 force_type = collage_data["forces"][0]["type"]

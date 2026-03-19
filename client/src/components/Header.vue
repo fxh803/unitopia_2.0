@@ -92,7 +92,7 @@ const handleRun = () => {
 
 const handleBackToEdit = async () => {
   // 结果 slide 生成完后，自动切回第一个 slide
-  collageSeriesStore.handleCollageSeriesSelect(0)
+  // collageSeriesStore.handleCollageSeriesSelect(0)
   animationStore.backToEdit()
 }
 

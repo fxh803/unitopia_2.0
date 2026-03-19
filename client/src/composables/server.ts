@@ -1,6 +1,5 @@
 import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { Canvas } from 'fabric'
-import * as fabric from 'fabric'
 import { ElMessage } from 'element-plus'
 import { storeToRefs } from 'pinia'
 import { useAnimationStore } from '~/stores/animation'
@@ -21,7 +20,6 @@ interface ProcessedData {
     colors: string[] | null // 颜色数组，如果映射是color则收集，否则为null
   }> // base64 字符串数组
   container: string // 整个画布的 base64（隐藏除 container 元素以外的对象）
-  emitter: Array<{ x: number; y: number }>
   forces: Array<{
     type: 'pointForce' | 'fieldForce'
     coordinates?: { x: number; y: number } // pointForce 的坐标
@@ -69,7 +67,6 @@ export async function collectAllSlidesData(): Promise<ProcessedData[]> {
       const result: ProcessedData = {
         markers: [],
         container: '',
-        emitter: [],
         forces: [],
         dataBinding: []
       }
@@ -90,7 +87,6 @@ export async function collectAllSlidesData(): Promise<ProcessedData[]> {
       )
       result.markers = processMarker(tempCanvas)
       result.forces = processForce(tempCanvas)
-      result.emitter = processEmitter(tempCanvas)
       result.container = processContainer(tempCanvas)
       result.dataBinding = processDataBinding(tempCanvas)
 
@@ -290,54 +286,6 @@ function processContainer(tempCanvas: Canvas) {
     }
   }
   return containerBase64
-}
-
-// 处理 emitter 对象（只能有一个）
-function processEmitter(tempCanvas: Canvas) {
-  const canvasObjects = tempCanvas.getObjects()
-  const controlPoints: Array<{ x: number; y: number }> = []
-  for (const obj of canvasObjects) {
-    if (obj.get('dataType') === 'emitter') {
-      const addedPoints = new Set<string>() // 用于去重
-      // 遍历 group 中的所有对象（此处 obj 一定是 Group）
-      const group = obj as fabric.Group
-      group.getObjects().forEach((groupObj: any) => {
-        if (groupObj.type === 'path' && groupObj.path) {
-          // 解析路径数据，提取控制点
-          const path = groupObj.path
-          if (Array.isArray(path)) {
-            // 先收集所有点，保持顺序
-            const allPoints: Array<{ x: number; y: number }> = []
-
-            path.forEach((segment: any) => {
-              if (segment[0] === 'M') {
-                // 移动到点 - 起始点
-                allPoints.push({ x: segment[1], y: segment[2] })
-              } else if (segment[0] === 'C') {
-                // 三次贝塞尔曲线 - 两个控制点 + 终点
-                allPoints.push({ x: segment[1], y: segment[2] }) // 第一个控制点
-                allPoints.push({ x: segment[3], y: segment[4] }) // 第二个控制点
-                allPoints.push({ x: segment[5], y: segment[6] }) // 终点
-              }
-            })
-
-            // 去重但保持顺序
-            allPoints.forEach(point => {
-              const pointKey = `${point.x},${point.y}`
-              if (!addedPoints.has(pointKey)) {
-                controlPoints.push(point)
-                addedPoints.add(pointKey)
-              }
-            })
-          }
-        }
-      })
-
-      // 只处理第一个 emitter，退出循环
-      break
-    }
-  }
-  return controlPoints
 }
 
 // 处理 force 对象

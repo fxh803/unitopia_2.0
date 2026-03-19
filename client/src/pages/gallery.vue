@@ -96,6 +96,17 @@ const galleryItems = [
     markLibUrls: ['/marks/dandelion.svg'],
     containerUrls: ['/containers/dandelion.png'],
     backgroundUrl: '/background/dandelion.png',
+  },
+  {
+    id: 5,
+    title:'workLife',
+    image: '/gallery/workLife.png',
+    markSnapshotUrl: '/snapshots/workLifeMarks.json',
+    collageSeriesSnapshotUrl: '/snapshots/workLifeCanvas.json',
+    dataUrl: '/csv/workLife.csv',
+    markLibUrls: ['/marks/workLife/1.svg', '/marks/workLife/2.svg'],
+    containerUrls: ['/containers/workLife.png'],
+    backgroundUrl: '/background/workLife.svg',
   }
 ]
 

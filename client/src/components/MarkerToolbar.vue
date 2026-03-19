@@ -4,6 +4,7 @@ import { useMarkerCanvasModeStore } from '~/stores/markerCanvasMode'
 import ColorPicker from './ColorPicker.vue'
 import { storeToRefs } from 'pinia'
 import { useBrushSizeStore } from '~/stores/brushsize'
+import * as fabric from 'fabric'
 
 const markerCanvasModeStore = useMarkerCanvasModeStore()
 const { mode } = storeToRefs(markerCanvasModeStore)
