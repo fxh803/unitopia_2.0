@@ -138,6 +138,7 @@ export const useForceDrawingStore = defineStore('forceDrawing', () => {
       canvasInstance.renderAll()
  
       forceType.value = 'fieldForce'
+      startBlinkAnimation()
     } catch (error) {
       console.error('Failed to load SVG:', error)
       throw error
@@ -191,7 +192,19 @@ export const useForceDrawingStore = defineStore('forceDrawing', () => {
     let lastTime = performance.now()
     const targetFPS = 60 // 目标帧率
     const frameInterval = 1000 / targetFPS // 每帧的时间间隔（毫秒）
-    const blinkSpeed = 0.5// 闪烁速度（每秒完整闪烁次数）
+    let blinkSpeed = 0.1// 闪烁速度（每秒完整闪烁次数）
+    let minOpacity = 0.2
+    let maxOpacity = 1
+    if(forceType.value === 'fieldForce'){
+      blinkSpeed = 0.6
+      minOpacity = 0.5
+      maxOpacity = 1
+    }
+    else{
+      blinkSpeed = 0.5
+      minOpacity = 0.2
+      maxOpacity = 1
+    }
 
     const animate = (currentTime: number) => {
       const canvasInstance = canvasRef.value?.()
@@ -207,14 +220,14 @@ export const useForceDrawingStore = defineStore('forceDrawing', () => {
 
         if (increasing) {
           opacity += opacityChange
-          if (opacity >= 1) {
-            opacity = 1
+          if (opacity >= maxOpacity) {
+            opacity = maxOpacity
             increasing = false
           }
         } else {
           opacity -= opacityChange
-          if (opacity <= 0.6) {
-            opacity = 0.6
+          if (opacity <= minOpacity) {
+            opacity = minOpacity
             increasing = true
           }
         }

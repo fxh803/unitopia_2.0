@@ -8,6 +8,8 @@ import { useCollageSeriesStore } from '~/stores/collageSeries'
 import { useCanvasStore } from '~/stores/canvas'
 import { sendUploadContainerToServer } from '~/composables/server'
 import { useBackgroundStore } from '~/stores/background'
+import { useBezierDrawingStore } from '~/stores/bezierDrawing'
+import { useForceDrawingStore } from '~/stores/forceDrawing'
 
 interface ExampleItem {
   id: number
@@ -28,6 +30,8 @@ const containerStore = useContainerStore()
 const collageSeriesStore = useCollageSeriesStore()
 const canvasStore = useCanvasStore()
 const backgroundStore = useBackgroundStore()
+const bezierDrawingStore = useBezierDrawingStore()
+const forceDrawingStore = useForceDrawingStore()
 const hasMarkDetail = computed(() => Boolean(markInstanceStore.selectedMarkForDetail))
 
 // 是否展示右侧 MarkDetailPanel（与是否选中分离，可单独折叠）
@@ -203,6 +207,12 @@ async function loadExampleToStores(item: ExampleItem) {
             // 忽略 transform 同步失败（不影响示例加载）
           }
         }
+
+        // 在最后一步启动 emitter 虚线与 force 闪烁动画：
+        // 这两个动画依赖 canvas 对象已通过 loadFromJSON 恢复完成。
+        await nextTick()
+        forceDrawingStore.startBlinkAnimation()
+        bezierDrawingStore.startDashAnimation()
       }
     } catch {
       // 忽略单个示例 collageSeries 加载失败
