@@ -29,6 +29,10 @@ export const useCanvasStore = defineStore('canvas', () => {
   const hasContainer = ref(false)
   // Segment 加载状态
   const isSegmentLoading = ref(false)
+
+  // 拖拽放置 Mark 时，不要再走 setDrawedObjectDataType，
+  // 否则会把 mark 内部对象误归类到当前绘制模式的数据类型里。
+  const isMarkDropInProgress = ref(false)
   
   function setSegmentLoading(loading: boolean) {
     isSegmentLoading.value = loading
@@ -201,7 +205,9 @@ export const useCanvasStore = defineStore('canvas', () => {
         collageSeriesStore.updateCurrentSlide()
       },
       'object:added': (e) => {
-        setDrawedObjectDataType(e)
+        if (!isMarkDropInProgress.value) {
+          setDrawedObjectDataType(e)
+        }
         debouncedUpdateCurrentSlide()
         adjustLayer()
         // 询问是否闭合路径
@@ -214,7 +220,7 @@ export const useCanvasStore = defineStore('canvas', () => {
       },
       'mouse:over': (e) => {
         // 鼠标悬停在对象上时添加偏透明蓝色效果
-        if (e.target && e.target.get('dataType') === 'container') {
+        if (e.target && e.target.get('dataType') === 'container' && !e.target.get('isErasePath')) {
           e.target.set('opacity', 0.7)
           canvasInstance.renderAll()
         }
@@ -231,7 +237,7 @@ export const useCanvasStore = defineStore('canvas', () => {
       },
       'mouse:out': (e) => {
         // 鼠标离开对象时恢复原始透明度
-        if (e.target && e.target.get('dataType') === 'container') {
+        if (e.target && e.target.get('dataType') === 'container' && !e.target.get('isErasePath')) {
           e.target.set('opacity', 1)
           canvasInstance.renderAll()
         }
@@ -283,6 +289,21 @@ export const useCanvasStore = defineStore('canvas', () => {
         }
         return
       }
+      // 擦除绘制（主画布）应当也参与 container 处理
+      if (canvasModeStore.mode === 'erase') {
+        path.set('dataType', 'container')
+        // 擦除路径在 hover 时不应改变 opacity（避免破坏 destination-out 效果）
+        path.set('isErasePath', true)
+        // 擦除用抠除合成：让导出时变成透明洞
+        path.set('globalCompositeOperation', 'destination-out')
+        // // 确保源颜色不透明，否则 destination-out 可能“擦不动”
+        // path.set('stroke', 'rgba(0, 0, 0, 1)')
+        // path.set('opacity', 1)
+        // path.set('selectable', false)
+        // path.set('evented', false)
+        return
+      }
+
       if (path.get('dataType') === undefined) {
         // 根据当前选择的模式设置dataType
         path.set('dataType', selectedModeStore.selectedMode);
@@ -394,6 +415,8 @@ export const useCanvasStore = defineStore('canvas', () => {
     for (let i = objects.length - 1; i >= 0; i--) {
       const obj = objects[i]
       if (obj.get('dataType') === 'container') {
+        // 擦除出来的 path 虽然也归类为 container，但 hover/drag 预览时不做边框高亮
+        if (obj.get('isErasePath')) continue
         const bounds = obj.getBoundingRect()
         if (
           x >= bounds.left &&
@@ -1200,12 +1223,16 @@ export const useCanvasStore = defineStore('canvas', () => {
     const mark = markInstances.find((m: MarkInstance) => m.id === markInstanceId)
     if (!mark) return
 
-    if (mark.isGroup) {
-      await handleGroupInstanceDrop(mark, dropX, dropY, dropOnEmitter, canvasInstance, tableStore)
-      return
+    isMarkDropInProgress.value = true
+    try {
+      if (mark.isGroup) {
+        await handleGroupInstanceDrop(mark, dropX, dropY, dropOnEmitter, canvasInstance, tableStore)
+        return
+      }
+      await handleSingleInstanceDrop(mark, dropX, dropY, dropOnEmitter, canvasInstance, tableStore)
+    } finally {
+      isMarkDropInProgress.value = false
     }
-
-    await handleSingleInstanceDrop(mark, dropX, dropY, dropOnEmitter, canvasInstance, tableStore)
   }
 
   // 获取路径的起点和终点
@@ -1474,10 +1501,12 @@ export const useCanvasStore = defineStore('canvas', () => {
 
         // 收集所有 container 对象的 JSON
         const containerJsonArray: any[] = []
+        const containerIsEraseArray: boolean[] = []
 
         slide.dataTypeArray.forEach((dataType: string, index: number) => {
           if (dataType === 'container' && slideData.objects[index]) {
             containerJsonArray.push(slideData.objects[index])
+            containerIsEraseArray.push(Boolean(slide.isErasePathArray?.[index]))
           }
         })
 
@@ -1486,6 +1515,10 @@ export const useCanvasStore = defineStore('canvas', () => {
           try {
             const enlivenedObjects = await fabric.util.enlivenObjects(containerJsonArray)
             if (enlivenedObjects && enlivenedObjects.length > 0) {
+              // 保证每个 enliven 对象都能恢复对应 erase 标记
+              enlivenedObjects.forEach((obj: any, idx: number) => {
+                obj.set('isErasePath', containerIsEraseArray[idx] ?? false)
+              })
               allContainerObjects.push(...enlivenedObjects)
             }
           } catch (enlivenError) {

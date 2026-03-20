@@ -126,13 +126,14 @@ def find_region_containing_point(image, pos):
  
 
 
-def grid_based_sampling(contour, num_points, canvas_width, canvas_height, shrink_distance=10):
+def grid_based_sampling(contour, num_points, canvas_width, canvas_height, container_alpha=None, shrink_distance=10):
     """
     基于网格的采样，通过收缩轮廓避免点在边缘初始化
     
     Args:
         contour: OpenCV轮廓
         num_points: 需要生成的点数
+        container_alpha: 可选的 alpha 矩阵(H,W)，用于过滤仅保留不透明区域(alpha>0)的点
         shrink_distance: 轮廓收缩距离（像素）
     
     Returns:
@@ -142,6 +143,9 @@ def grid_based_sampling(contour, num_points, canvas_width, canvas_height, shrink
     """
     if contour is None or num_points <= 0:
         return [], 0
+
+    if container_alpha is not None:
+        container_alpha = np.asarray(container_alpha)
     
     # 1. 获取轮廓边界框和面积
     x, y, w, h = cv2.boundingRect(contour)
@@ -195,18 +199,28 @@ def grid_based_sampling(contour, num_points, canvas_width, canvas_height, shrink
     # 4. 动态调整网格间距，确保生成的点数 >= num_points
     points = []
     
+    max_iters = 50
+    iters = 0
     while True:
+        iters += 1
         points.clear()
         # 生成网格点
         for i in range(x, x + w, grid_size):
             for j in range(y, y + h, grid_size):
                 if cv2.pointPolygonTest(target_contour, (i, j), False) >= 0:
-                    points.append((i, j))
+                    if container_alpha is not None:
+                        # container_alpha 形状为(H,W)，j是y坐标，i是x坐标
+                        if 0 <= j < canvas_height and 0 <= i < canvas_width and container_alpha[j, i] > 0:
+                            points.append((i, j))
+                    else:
+                        points.append((i, j))
         
         # 检查是否生成足够的点
         if len(points) >= num_points:
             break
         else:
+            if grid_size <= 1 or iters >= max_iters:
+                break
             # 缩小网格间距（例如每次减少10%）
             grid_size = max(1, int(grid_size * 0.9))  # 避免grid_size=0
 

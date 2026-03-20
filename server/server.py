@@ -244,8 +244,14 @@ def marker_drop_api():
             "init_pos": []
         })
     
-    # 3. 在找到的区域内生成均匀分布的点 
-    uniform_points, grid_size = grid_based_sampling(contour, num_markers, width, height)
+    # 3. 在找到的区域内生成均匀分布的点（仅保留 container 不透明区域）
+    container_rgba = container.convert('RGBA')
+    container_alpha = np.array(container_rgba)[:, :, 3]  # 0=透明区域，>0=不透明区域
+
+    uniform_points, grid_size = grid_based_sampling(
+        contour, num_markers, width, height, container_alpha=container_alpha
+    )
+
     # 将点坐标转换为字典格式
     init_positions = [{"x": int(point[0]), "y": int(point[1])} for point in uniform_points]
     

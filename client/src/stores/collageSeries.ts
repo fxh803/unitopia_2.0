@@ -17,6 +17,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             markerIdArray: any[],
             forceTypeArray: any[],
             dataArray: any[],
+            // erase 绘制出来的 path（虽然 dataType 会归入 container），但 hover 时需要跳过透明度变化
+            isErasePathArray?: boolean[],
         // 每个 object 的基础不透明度（用于跨 slide / 模式恢复）
         origOpacityArray?: number[],
             // 每个 slide 的个性化设置
@@ -159,6 +161,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         const markerIdArray = objects.map((obj: any) => obj.get('markerId'))
         const forceTypeArray = objects.map((obj: any) => obj.get('forceType'))
         const dataArray = objects.map((obj: any) => obj.get('data'))
+        const isErasePathArray = objects.map((obj: any) => Boolean(obj.get('isErasePath')))
         const origOpacityArray = objects.map((obj: any) => {
             // 如果有自定义的 _origOpacity，则优先使用，否则使用当前不透明度
             if (typeof obj._origOpacity === 'number') return obj._origOpacity
@@ -173,6 +176,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         currentSlide.markerIdArray = markerIdArray
         currentSlide.forceTypeArray = forceTypeArray
         currentSlide.dataArray = dataArray
+        currentSlide.isErasePathArray = isErasePathArray
         currentSlide.origOpacityArray = origOpacityArray
 
         // 生成总览的预览（合并所有幻灯片）
@@ -361,6 +365,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         let markerIdArray: any[] = []
         let forceTypeArray: any[] = []
         let dataArray: any[] = []
+        let isErasePathArray: boolean[] = []
 
         // 如果当前总览有背景，添加到JSON数据中
         if (currentOverviewBackground) {
@@ -416,6 +421,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                 markerIdArray.unshift(null)
                 forceTypeArray.unshift(null)
                 dataArray.unshift(null)
+                isErasePathArray.unshift(false)
 
                 canvasInstance.add(fabricImg)
                 canvasInstance.renderAll()
@@ -452,6 +458,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             markerIdArray,
             forceTypeArray,
             dataArray,
+            isErasePathArray,
             origOpacityArray: [],
             // 初始化个性化设置默认值
             iterations: 120,
@@ -503,6 +510,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         const forceTypeArray = currentOverview.collageSeries[idx].forceTypeArray || []
         const dataArray = currentOverview.collageSeries[idx].dataArray || []
         const origOpacityArray = currentOverview.collageSeries[idx].origOpacityArray || []
+        const isErasePathArray = currentOverview.collageSeries[idx].isErasePathArray || []
         // 清空当前画布
         clearCanvas()
         if (jsonObj.objects.length > 0) {
@@ -513,7 +521,15 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                         canvasInstance.backgroundColor = '#fffef8'
                         canvasInstance.renderAll()
                         // 恢复自定义属性
-                        restoreCustomProperties(canvasInstance, dataTypeArray, markerIdArray, forceTypeArray, dataArray, origOpacityArray)
+                        restoreCustomProperties(
+                            canvasInstance,
+                            dataTypeArray,
+                            markerIdArray,
+                            forceTypeArray,
+                            dataArray,
+                            origOpacityArray,
+                            isErasePathArray
+                        )
                         // updateCurrentSlide()
                         stopListen.value = false
                         resolve()
@@ -556,6 +572,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             markerIdArray: [...originalSlide.markerIdArray],
             forceTypeArray: [...originalSlide.forceTypeArray],
             dataArray: [...(originalSlide.dataArray || [])],
+            isErasePathArray: [...(originalSlide.isErasePathArray || [])],
             origOpacityArray: [...(originalSlide.origOpacityArray || [])],
             // 复制个性化设置
             iterations: originalSlide.iterations ?? 120,
@@ -611,7 +628,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         markerIdArray: any[] = [],
         forceTypeArray: any[] = [],
         dataArray: any[] = [],
-        origOpacityArray: number[] = []
+        origOpacityArray: number[] = [],
+        isErasePathArray: boolean[] = []
     ) {
         const objects = canvasInstance.getObjects()
         // 遍历画布对象和JSON对象，恢复自定义属性
@@ -629,6 +647,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                     obj.evented = true
                 }
             }
+            obj.set('isErasePath', isErasePathArray[index] ?? false)
             if (markerIdArray[index]) {
                 obj.set('markerId', markerIdArray[index])
             }
@@ -703,12 +722,16 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                     slide.markerIdArray[existingBackgroundIndex] = null
                     slide.forceTypeArray[existingBackgroundIndex] = null
                     slide.dataArray[existingBackgroundIndex] = null
+                    slide.isErasePathArray = slide.isErasePathArray || []
+                    slide.isErasePathArray[existingBackgroundIndex] = false
                 } else {
                     // 如果不存在背景对象，在数组开头添加对应的数据
                     slide.dataTypeArray.unshift('background')
                     slide.markerIdArray.unshift(null)
                     slide.forceTypeArray.unshift(null)
                     slide.dataArray.unshift(null)
+                    slide.isErasePathArray = slide.isErasePathArray || []
+                    slide.isErasePathArray.unshift(false)
                 }
 
                 // 重新生成preview
@@ -757,6 +780,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                         slide.markerIdArray.splice(backgroundIndex, 1)
                         slide.forceTypeArray.splice(backgroundIndex, 1)
                         slide.dataArray.splice(backgroundIndex, 1)
+                        slide.isErasePathArray?.splice(backgroundIndex, 1)
 
                         // 重新生成preview
                         await regenerateSlidePreview(index, slideData)
