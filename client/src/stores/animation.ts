@@ -433,7 +433,6 @@ export const useAnimationStore = defineStore('animation', () => {
       const epsilon = 0.0001
       const pos = new paper.Point(el.position)
       const rotate = el.matrix.rotation
-      const opacity = el.opacity
       const startOpacity = el.startOpacity ?? 0
       const endOpacity = el.endOpacity ?? 1
       const startRotate = el.startRotate ?? 0
@@ -450,9 +449,7 @@ export const useAnimationStore = defineStore('animation', () => {
       el.elapsedTime = elapsed
       const t = Math.min(elapsed / (time_interval.value / 1000), 1)
 
-      if (Math.abs(opacity - endOpacity) > epsilon) {
-        el.opacity = opacity + (endOpacity - startOpacity) / 200
-      }
+      el.opacity = startOpacity + (endOpacity - startOpacity) * t
       if (Math.abs(scaleX - endScaleX) > epsilon || Math.abs(scaleY - endScaleY) > epsilon) {
         const newScaleX = startScaleX + (endScaleX - startScaleX) * t
         const newScaleY = startScaleY + (endScaleY - startScaleY) * t
