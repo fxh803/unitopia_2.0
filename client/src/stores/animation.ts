@@ -47,6 +47,8 @@ interface RasterWithProps extends paper.Raster {
   elapsedTime?: number
   startOpacity?: number
   endOpacity?: number
+  /** 非 collaging 时 hover 前保存的透明度，用于 mouseleave 恢复 */
+  _preHoverOpacity?: number
 }
 
 export const useAnimationStore = defineStore('animation', () => {
@@ -133,6 +135,33 @@ export const useAnimationStore = defineStore('animation', () => {
         removeAnimation()
     }
   })
+
+  function attachRasterHoverHandlers(raster: RasterWithProps) {
+    raster.onMouseEnter = (event: paper.Event) => {
+      const hoverInfoPanelStore = useHoverInfoPanelStore()
+      hoverInfoPanelStore.handleRasterHover(event, raster)
+      const el = paper.view?.element
+      if (el) el.style.cursor = 'pointer'
+      if (!collaging.value) {
+        raster._preHoverOpacity = raster.opacity
+        raster.opacity = 0.5
+      }
+    }
+    raster.onMouseLeave = (event: paper.Event) => {
+      const hoverInfoPanelStore = useHoverInfoPanelStore()
+      hoverInfoPanelStore.handleRasterOut(event, raster)
+      const el = paper.view?.element
+      if (el) el.style.cursor = 'default'
+      if (!collaging.value) {
+        if (raster._preHoverOpacity !== undefined) {
+          raster.opacity = raster._preHoverOpacity
+          delete raster._preHoverOpacity
+        } else {
+          raster.opacity = 1
+        }
+      }
+    }
+  }
 
   // 方法
 
@@ -320,17 +349,7 @@ export const useAnimationStore = defineStore('animation', () => {
               console.log('onError', e)
             }
           }) as RasterWithProps
-          raster.onMouseEnter = (event: paper.Event) => {
-            const hoverInfoPanelStore = useHoverInfoPanelStore()
-            hoverInfoPanelStore.handleRasterHover(event, raster)
-          }
-          raster.onMouseLeave = (event: paper.Event) => {
-            const hoverInfoPanelStore = useHoverInfoPanelStore()
-            hoverInfoPanelStore.handleRasterOut(event, raster)
-          }
-          // raster.onMouseLeave = () => {
-          //   markerToast.value.classList.add('hidden')
-          // }
+          attachRasterHoverHandlers(raster)
           elements.value.push(raster);
         }
         now_collage_idx.value = now_collage
@@ -365,17 +384,7 @@ export const useAnimationStore = defineStore('animation', () => {
             console.log('onError',e)
           }
         }) as RasterWithProps
-        raster.onMouseEnter = (event: paper.Event) => {
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterHover(event, raster)
-        }
-        raster.onMouseLeave = (event: paper.Event) => {
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterOut(event, raster)
-        }
-        // raster.onMouseLeave = () => {
-        //   markerToast.value.classList.add('hidden')
-        // }
+        attachRasterHoverHandlers(raster)
         elements.value.push(raster);
       }
     }
@@ -500,17 +509,7 @@ export const useAnimationStore = defineStore('animation', () => {
             console.log('onError',e,raster)
           }
         }) as RasterWithProps
-        raster.onMouseEnter = (event: paper.Event) => {
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterHover(event, raster)
-        }
-        raster.onMouseLeave = (event: paper.Event) => {
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterOut(event, raster)
-        }
-        // raster.onMouseLeave = () => {
-        //   markerToast.value.classList.add('hidden')
-        // }
+        attachRasterHoverHandlers(raster)
         elements.value.push(raster);
       }
       now_collage_idx.value = now_collage
@@ -540,17 +539,7 @@ export const useAnimationStore = defineStore('animation', () => {
             console.log('onError',e,raster)
           }
         }) as RasterWithProps
-        raster.onMouseEnter = (event: paper.Event) => {
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterHover(event, raster)
-        }
-        raster.onMouseLeave = (event: paper.Event) => {
-          const hoverInfoPanelStore = useHoverInfoPanelStore()
-          hoverInfoPanelStore.handleRasterOut(event, raster)
-        }
-        // raster.onMouseLeave = () => {
-        //   markerToast.value.classList.add('hidden')
-        // }
+        attachRasterHoverHandlers(raster)
         elements.value.push(raster);
       }
     }
