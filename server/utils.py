@@ -160,9 +160,8 @@ def grid_based_sampling(contour, num_points, canvas_width, canvas_height, contai
     # 3. 动态调整网格间距，确保生成的点数 >= num_points
     grid_size = int(np.sqrt(contour_area / num_points))
     
-    # 使用基于grid_size的形态学腐蚀操作收缩轮廓
-    # 腐蚀核大小基于grid_size，确保腐蚀程度与网格密度匹配
-    erosion_size = max(1, grid_size // 2)  # 腐蚀核大小为grid_size的一半，至少为1
+    # 腐蚀操作防止贴边
+    erosion_size = max(1, grid_size // 2)
     kernel = cv2.getStructuringElement(cv2.MORPH_ELLIPSE, (erosion_size*2+1, erosion_size*2+1))
     shrunk_img = cv2.erode(binary_img, kernel, iterations=1)
     
@@ -192,8 +191,8 @@ def grid_based_sampling(contour, num_points, canvas_width, canvas_height, contai
     if not shrunk_contours:
         target_contour = contour
     else:
-        # 直接取第一个（也是唯一的）收缩轮廓
-        target_contour = shrunk_contours[0] 
+        # 腐蚀后可能分裂为多个连通域，取面积最大的作为主区域
+        target_contour = max(shrunk_contours, key=cv2.contourArea)
     
     # 4. 动态调整网格间距，确保生成的点数 >= num_points
     points = []
@@ -208,7 +207,6 @@ def grid_based_sampling(contour, num_points, canvas_width, canvas_height, contai
             for j in range(y, y + h, grid_size):
                 if cv2.pointPolygonTest(target_contour, (i, j), False) >= 0:
                     if container_alpha is not None:
-                        # container_alpha 形状为(H,W)，j是y坐标，i是x坐标
                         if 0 <= j < canvas_height and 0 <= i < canvas_width and container_alpha[j, i] > 0:
                             points.append((i, j))
                     else:
