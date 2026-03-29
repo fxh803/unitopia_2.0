@@ -95,7 +95,7 @@ export async function collectAllSlidesData(): Promise<ProcessedData[]> {
       result.dataBinding = processDataBinding(tempCanvas)
 
       const slideSettings = slide as any
-      result.iterations = slideSettings.iterations ?? 200
+      result.iterations = slideSettings.iterations ?? 180
       result.rotation = slideSettings.rotation ?? true
       result.orientation = slideSettings.orientation ?? 'free'
       result.hole = slideSettings.hole ?? false

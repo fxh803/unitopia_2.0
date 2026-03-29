@@ -522,7 +522,7 @@
             1,
             0.5090800000000009
           ],
-          "iterations": 200,
+          "iterations": 180,
           "rotation": true,
           "hole": false,
           "orientation": "free",

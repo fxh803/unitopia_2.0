@@ -109,7 +109,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
                     dataArray: [],
                     origOpacityArray: [],
                     // 每个 slide 的个性化设置
-                    iterations: 200,
+                    iterations: 180,
                     rotation: true,
                     hole: false,
                     orientation: 'free',
@@ -461,7 +461,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             isErasePathArray,
             origOpacityArray: [],
             // 初始化个性化设置默认值
-            iterations: 200,
+            iterations: 180,
             rotation: true,
             hole: false,
             orientation: 'free' as 'free' | 'center',
@@ -575,7 +575,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
             isErasePathArray: [...(originalSlide.isErasePathArray || [])],
             origOpacityArray: [...(originalSlide.origOpacityArray || [])],
             // 复制个性化设置
-            iterations: originalSlide.iterations ?? 200,
+            iterations: originalSlide.iterations ?? 180,
             rotation: originalSlide.rotation ?? true,
             hole: originalSlide.hole ?? false,
             orientation: originalSlide.orientation ?? 'free'
