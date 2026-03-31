@@ -57,6 +57,9 @@ const contentWrapRef = ref<HTMLElement | null>(null)
 const leftColumnWidth = ref(400)
 const EDITOR_FRESH_KEY = 'unitopia-editor-fresh-once'
 
+/** 从 gallery 等入口加载示例到各 store 未完成时，全屏蒙版 */
+const isExampleLoading = ref(false)
+
 function updateLeftWidth() {
   if (!contentWrapRef.value) return
   const w = contentWrapRef.value.offsetWidth
@@ -238,7 +241,12 @@ onMounted(async () => {
       window.localStorage.removeItem('unitopia-example')
       try {
         const item = JSON.parse(raw) as ExampleItem
-        await loadExampleToStores(item)
+        isExampleLoading.value = true
+        try {
+          await loadExampleToStores(item)
+        } finally {
+          isExampleLoading.value = false
+        }
       } catch {
         // 忽略解析错误
       }
@@ -254,6 +262,23 @@ onBeforeUnmount(() => {
   <div class="bg-[var(--primary-light-color)] flex flex-col h-screen w-screen dark:bg-gray-900">
     <Header />
     <TutorialOverlay />
+
+    <!-- 示例数据加载中：系统级蒙版，避免用户在未完成时操作 -->
+    <Teleport to="body">
+      <Transition name="editor-example-fade">
+        <div
+          v-if="isExampleLoading"
+          class="fixed inset-0 z-[10000] flex flex-col items-center justify-center gap-3 bg-black/45 backdrop-blur-[2px] dark:bg-black/55 pointer-events-auto"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <span class="i-carbon:renew text-4xl text-white animate-spin" aria-hidden="true" />
+          <span class="text-sm font-medium text-white/90">loading example…</span>
+        </div>
+      </Transition>
+    </Teleport>
+
     <div ref="contentWrapRef" class="h-full relative overflow-hidden flex min-w-0">
       <!-- 左侧：初始 1/4 宽，展示详情时为两倍宽，Sidebar 与 Detail 等宽（固定 px，无动画） -->
       <div
@@ -289,3 +314,14 @@ onBeforeUnmount(() => {
     </div>
   </div>
 </template>
+
+<style scoped>
+.editor-example-fade-enter-active,
+.editor-example-fade-leave-active {
+  transition: opacity 0.2s ease;
+}
+.editor-example-fade-enter-from,
+.editor-example-fade-leave-to {
+  opacity: 0;
+}
+</style>
