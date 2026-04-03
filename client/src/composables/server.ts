@@ -486,7 +486,7 @@ export async function sendDataToServer() {
     for (const slide of slides) {
       let isPng = false
       slide.markers.forEach((marker: any) => {
-        if (!isPng && marker.thumbnail.includes('data:image/png;base64,')) {
+        if (!isPng && marker.thumbnail.includes('data:image/png;base64,') || marker.thumbnail.includes('data:img/png;base64,')) {
           isPng = true
         }
       })
