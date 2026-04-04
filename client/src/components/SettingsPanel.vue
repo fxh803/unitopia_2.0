@@ -164,7 +164,7 @@ const handleClose = () => emit('close')
 
         <!-- hole: Element Plus Switch -->
         <div class="flex items-center justify-between">
-          <label class="text-[var(--title-color)] font-medium select-none">hole</label>
+          <label class="text-[var(--title-color)] font-medium select-none">block</label>
           <el-switch
             :model-value="currentSlide?.hole ?? false"
             size="small"
