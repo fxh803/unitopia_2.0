@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, ref, onMounted, onBeforeUnmount, nextTick, watch } from 'vue'
+import { computed, ref, onMounted, onBeforeUnmount, nextTick } from 'vue'
+import { storeToRefs } from 'pinia'
 import { useMarkInstanceStore } from '~/stores/markInstance'
 import { useTableStore } from '~/stores/table'
 import { useMarkerStore } from '~/stores/marker'
@@ -33,24 +34,11 @@ const backgroundStore = useBackgroundStore()
 const bezierDrawingStore = useBezierDrawingStore()
 const forceDrawingStore = useForceDrawingStore()
 const hasMarkDetail = computed(() => Boolean(markInstanceStore.selectedMarkForDetail))
+const { markDetailPanelCollapsed } = storeToRefs(markInstanceStore)
 
-// 是否展示右侧 MarkDetailPanel（与是否选中分离，可单独折叠）
-const isDetailCollapsed = ref(false)
-const showMarkDetailPanel = computed(() => hasMarkDetail.value && !isDetailCollapsed.value)
-
-// 当没有选中 mark 时，自动重置折叠状态
-watch(hasMarkDetail, (val) => {
-  if (!val) isDetailCollapsed.value = false
-})
-
-// 当切换/重新选择 Mark 时，如果详情面板当前是收起的，则自动展开
-watch(
-  () => markInstanceStore.selectedMarkForDetail,
-  (val) => {
-    if (val && isDetailCollapsed.value) {
-      isDetailCollapsed.value = false
-    }
-  },
+// 是否展示右侧 MarkDetailPanel（与是否选中分离，可单独折叠；折叠状态在 markInstance store）
+const showMarkDetailPanel = computed(
+  () => hasMarkDetail.value && !markDetailPanelCollapsed.value,
 )
 
 const contentWrapRef = ref<HTMLElement | null>(null)
@@ -68,7 +56,7 @@ function updateLeftWidth() {
 
 function toggleDetailPanel() {
   if (!hasMarkDetail.value) return
-  isDetailCollapsed.value = !isDetailCollapsed.value
+  markInstanceStore.setMarkDetailPanelCollapsed(!markDetailPanelCollapsed.value)
 }
 
 function adaptOverviewSnapshotToCurrentCanvas(snapshot: any) {

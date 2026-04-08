@@ -75,13 +75,23 @@ export const useMarkInstanceStore = defineStore('markInstance', () => {
   const markInstances = ref<MarkInstance[]>([])
   /** 非 null 时左侧栏显示 MarkDetailPanel，否则显示 LeftSidebar */
   const selectedMarkForDetail = ref<SelectedMarkForDetail>(null)
+  /** 有选中 Mark 时，为 true 表示仅收起详情面板（不取消选中），由 editor 与工具栏共用 */
+  const markDetailPanelCollapsed = ref(false)
+
+  function setMarkDetailPanelCollapsed(collapsed: boolean) {
+    markDetailPanelCollapsed.value = collapsed
+  }
 
   function setSelectedMarkForDetail(payload: SelectedMarkForDetail) {
     selectedMarkForDetail.value = payload
+    if (payload) {
+      markDetailPanelCollapsed.value = false
+    }
   }
 
   function clearSelectedMarkForDetail() {
     selectedMarkForDetail.value = null
+    markDetailPanelCollapsed.value = false
   }
 
   function addMarkInstance(mark: Omit<MarkInstance, 'id'>) {
@@ -105,6 +115,7 @@ export const useMarkInstanceStore = defineStore('markInstance', () => {
       const isSameParent = sel.type === 'childInstance' && sel.parentMarkId === id
       if (isSameSingle || isSameParent) {
         selectedMarkForDetail.value = null
+        markDetailPanelCollapsed.value = false
       }
     }
 
@@ -144,6 +155,8 @@ export const useMarkInstanceStore = defineStore('markInstance', () => {
   return {
     markInstances,
     selectedMarkForDetail,
+    markDetailPanelCollapsed,
+    setMarkDetailPanelCollapsed,
     setSelectedMarkForDetail,
     clearSelectedMarkForDetail,
     addMarkInstance,

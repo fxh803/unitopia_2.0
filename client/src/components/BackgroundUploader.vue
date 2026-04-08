@@ -2,8 +2,10 @@
 import { storeToRefs } from 'pinia'
 import { useBackgroundStore } from '~/stores/background'
 import { useCollageSeriesStore } from '~/stores/collageSeries'
+import { useMarkInstanceStore } from '~/stores/markInstance'
 
 const backgroundStore = useBackgroundStore()
+const markInstanceStore = useMarkInstanceStore()
 const { creatingBackground } = storeToRefs(backgroundStore)
 const { getCurrentOverviewBackground, setCurrentOverviewBackground, setCurrentOverviewBackgroundTransform } = backgroundStore
 
@@ -98,6 +100,9 @@ const setBackgroundImage = async (imageDataUrl: string, fileName: string) => {
 }
 
 const triggerFileUpload = () => {
+  if (markInstanceStore.selectedMarkForDetail) {
+    markInstanceStore.setMarkDetailPanelCollapsed(true)
+  }
   creatingBackground.value = true
   fileInputRef.value?.click()
 }
