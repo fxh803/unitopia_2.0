@@ -213,7 +213,10 @@ export const useCanvasStore = defineStore('canvas', () => {
           setDrawedObjectDataType(e)
         }
         debouncedUpdateCurrentSlide()
-        adjustLayer()
+        // 批量拖放 Mark 时在 finally 里统一 adjustLayer，避免每个 object:added 都全画布重绘
+        if (!isMarkDropInProgress.value) {
+          adjustLayer()
+        }
         // 询问是否闭合路径
         askToClosePath(e.target)
         updateCanvasDataTypePresence()
@@ -974,11 +977,10 @@ export const useCanvasStore = defineStore('canvas', () => {
       addedGroups.push(group)
     }
 
-    // 批量更新坐标并仅刷新一次，避免循环内多次重绘
+    // 批量更新坐标；重绘由 handleDrop 的 finally 里 adjustLayer 统一执行
     for (const g of addedGroups) {
       g.setCoords()
     }
-    ;(canvasInstance.requestRenderAll?.bind(canvasInstance) || canvasInstance.renderAll?.bind(canvasInstance) || (() => {}))()
   }
 
   // 基于 group mark 实例的 drop 处理
@@ -1231,7 +1233,6 @@ export const useCanvasStore = defineStore('canvas', () => {
 
         canvasInstance.add(group)
         group.setCoords()
-        canvasInstance.renderAll()
       }
     }
   }
@@ -1293,6 +1294,8 @@ export const useCanvasStore = defineStore('canvas', () => {
       await handleSingleInstanceDrop(mark, dropX, dropY, dropOnEmitter, canvasInstance, tableStore)
     } finally {
       isMarkDropInProgress.value = false
+      // 补一次 container 置底 + 全画布重绘（批量 add 期间跳过了 object:added 里的 adjustLayer）
+      adjustLayer()
     }
   }
 
