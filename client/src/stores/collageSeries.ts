@@ -9,6 +9,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
     interface Overview {
         overviewId: string,
         preview: string,
+        width?: number,
+        height?: number,
         collageSeries: {
             slideId: string,
             json: string,
@@ -70,6 +72,14 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         canvasRef.value = canvas
     }
 
+    function getCurrentCanvasSize() {
+        const canvasInstance = canvasRef.value?.()
+        return {
+            width: canvasInstance?.width || 400,
+            height: canvasInstance?.height || 400,
+        }
+    }
+
     // 从外部快照加载 overviews（用于示例或状态恢复）
     function loadOverviewSnapshot(snapshot: Overview[] | Overview) {
         console.log('loadOverviewSnapshot', snapshot)
@@ -86,6 +96,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
     function initializeEmptySlide() {
         const canvasInstance = canvasRef.value?.()
         if (!canvasInstance) return
+        const { width, height } = getCurrentCanvasSize()
 
         const json = JSON.stringify(canvasInstance.toJSON())
         const preview = canvasInstance.toDataURL({
@@ -99,6 +110,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         overviews.value = [{
             overviewId,
             preview: preview, // 初始预览就是第一个幻灯片的预览
+            width,
+            height,
                 collageSeries: [{
                     slideId,
                     json,
@@ -838,6 +851,7 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         const slideId = generateSlideId()
         stopListen.value = true
         clearCanvas()
+        const { width, height } = getCurrentCanvasSize()
         // 创建空白幻灯片
         const canvasInstance = canvasRef.value?.()
         let json = ''
@@ -854,6 +868,8 @@ export const useCollageSeriesStore = defineStore('collageSeries', () => {
         const newOverview: Overview = {
             overviewId,
                     preview: preview, // 初始预览就是第一个幻灯片的预览
+                    width,
+                    height,
                 collageSeries: [{
                     slideId,
                     json,

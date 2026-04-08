@@ -71,6 +71,57 @@ function toggleDetailPanel() {
   isDetailCollapsed.value = !isDetailCollapsed.value
 }
 
+function adaptOverviewSnapshotToCurrentCanvas(snapshot: any) {
+  const fabricCanvas = collageSeriesStore.canvasRef?.()
+  const targetWidth = fabricCanvas?.width || 400
+  const targetHeight = fabricCanvas?.height || 400
+  const overviews = Array.isArray(snapshot) ? snapshot : [snapshot]
+
+  overviews.forEach((overview: any, overviewIndex: number) => {
+    const slides = Array.isArray(overview?.collageSeries) ? overview.collageSeries : []
+
+    slides.forEach((slide: any, slideIndex: number) => {
+      if (!slide?.json) return
+      try {
+        const jsonObj = typeof slide.json === 'string' ? JSON.parse(slide.json) : slide.json
+        if (!jsonObj || typeof jsonObj !== 'object') return
+
+        const sourceWidth = Number(overview?.width)
+        const sourceHeight = Number(overview?.height)
+        const validSourceSize =
+          Number.isFinite(sourceWidth) &&
+          Number.isFinite(sourceHeight) &&
+          sourceWidth > 0 &&
+          sourceHeight > 0
+
+        const objects = Array.isArray(jsonObj.objects) ? jsonObj.objects : []
+
+        if (validSourceSize && (sourceWidth !== targetWidth || sourceHeight !== targetHeight)) {
+          const sx = targetWidth / sourceWidth
+          const sy = targetHeight / sourceHeight
+          const uniformScale = Math.max(sx, sy)
+          objects.forEach((obj: any) => {
+            if (!obj || typeof obj !== 'object') return
+            if (typeof obj.left === 'number') obj.left *= uniformScale
+            if (typeof obj.top === 'number') obj.top *= uniformScale
+            if (typeof obj.scaleX === 'number') obj.scaleX *= uniformScale
+            if (typeof obj.scaleY === 'number') obj.scaleY *= uniformScale
+          })
+        }
+
+        jsonObj.width = targetWidth
+        jsonObj.height = targetHeight
+        slide.json = typeof slide.json === 'string' ? JSON.stringify(jsonObj) : jsonObj
+      } catch (error) {
+        // 忽略单个 slide 解析异常，避免阻断整体示例加载
+        console.error('adaptOverviewSnapshotToCurrentCanvas error', error)
+      }
+    })
+  })
+
+  return snapshot
+}
+
 async function loadExampleToStores(item: ExampleItem) {
   // 1. 加载数据表
   if (item.dataUrl) {
@@ -164,7 +215,8 @@ async function loadExampleToStores(item: ExampleItem) {
       const overviewRes = await fetch(item.collageSeriesSnapshotUrl)
       if (overviewRes.ok) {
         const overviewSnapshot = await overviewRes.json()
-        collageSeriesStore.loadOverviewSnapshot(overviewSnapshot as any)
+        const adaptedOverviewSnapshot = adaptOverviewSnapshotToCurrentCanvas(overviewSnapshot)
+        collageSeriesStore.loadOverviewSnapshot(adaptedOverviewSnapshot as any)
 
         const targetOverview = collageSeriesStore.overviews[collageSeriesStore.currentOverviewIndex] ||
           collageSeriesStore.overviews[0]

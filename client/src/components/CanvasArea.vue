@@ -386,6 +386,9 @@ onMounted(async () => {
   // 延迟一下确保DOM完全渲染
   setTimeout(() => {
     updateCanvasSize()
+    if (canvas && collageSeriesStore.overviews.length === 0) {
+      initializeEmptySlide()
+    }
   }, 200)
 
   // 根据窗口或容器尺寸变化更新画布大小
@@ -422,8 +425,6 @@ onMounted(async () => {
     canvasStore.setCanvas(() => canvas)
     // dataScaleStore.setCanvas(() => canvas)
 
-    // 初始化空白幻灯片
-    initializeEmptySlide()
     addCanvasEventListeners()
 
     // 添加键盘事件监听
