@@ -32,7 +32,7 @@
               class="absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity duration-200"
             >
               <button
-                class="px-5 py-2.5 rounded-lg bg-[var(--primary-color)] text-white text-sm md:text-base font-semibold shadow-lg hover:bg-[var(--primary-hover-color)] cursor-pointer" 
+                class="px-5 py-2.5 rounded-lg bg-[var(--primary-color)] text-white text-sm md:text-base font-semibold shadow-lg hover:bg-[var(--primary-hover-color)] cursor-pointer"
                 @click.stop="handleTryInEditor(item)"
               >
                 try in editor
@@ -132,6 +132,16 @@ const galleryItems = [
     markLibUrls: ['/marks/pigBank/1.svg', '/marks/pigBank/2.svg', '/marks/pigBank/3.svg', '/marks/pigBank/4.svg', '/marks/pigBank/5.svg'],
     containerUrls: ['/containers/pigBank.png'],
     backgroundUrl: '/background/pigBank.png',
+  },{
+    id: 8,
+    title: 'fruit',
+    image: '/galleries/fruit.png',
+    markSnapshotUrl: '/snapshots/fruitMarks.json',
+    collageSeriesSnapshotUrl: '/snapshots/fruitCanvas.json',
+    dataUrl: '/csv/fruit.csv',
+    markLibUrls: ['/marks/fruit/apple.png', '/marks/fruit/banana.png'],
+    containerUrls: ['/containers/fruit.png'],
+    backgroundUrl: '/background/fruit.png',
   }
 ]
 
