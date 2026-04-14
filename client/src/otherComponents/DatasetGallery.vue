@@ -240,7 +240,7 @@
             v-if="loading"
             class="col-span-4 text-center py-20 text-gray-500"
           >
-            加载中...
+            loading...
           </div>
         </div>
       </main>
