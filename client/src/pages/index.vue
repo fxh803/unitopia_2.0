@@ -48,15 +48,23 @@
 
 <script setup lang="ts">
 import MainHeader from '~/otherComponents/MainHeader.vue'
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 const EDITOR_FRESH_KEY = 'unitopia-editor-fresh-once'
+
+const navigateByBrowser = (path: string) => {
+  if (typeof window === 'undefined')
+    return
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const currentPath = window.location.pathname
+  const documentPath = currentPath.endsWith('index.html')
+    ? currentPath
+    : `${currentPath.replace(/\/$/, '')}/index.html`
+  window.location.assign(`${window.location.origin}${documentPath}#${normalizedPath}`)
+}
 
 const goEditorFresh = () => {
   if (typeof window !== 'undefined')
     window.sessionStorage.setItem(EDITOR_FRESH_KEY, '1')
-  router.push('/editor')
+  navigateByBrowser('/editor')
 }
 </script>
 

@@ -58,43 +58,51 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router'
-
-const router = useRouter()
 const EDITOR_FRESH_KEY = 'unitopia-editor-fresh-once'
 
+const navigateByBrowser = (path: string) => {
+  if (typeof window === 'undefined')
+    return
+  const normalizedPath = path.startsWith('/') ? path : `/${path}`
+  const currentPath = window.location.pathname
+  const documentPath = currentPath.endsWith('index.html')
+    ? currentPath
+    : `${currentPath.replace(/\/$/, '')}/index.html`
+  window.location.assign(`${window.location.origin}${documentPath}#${normalizedPath}`)
+}
+
 const goHome = () => {
-  router.push('/')
+  navigateByBrowser('/')
 }
 
 const goToGallery = () => {
-  router.push('/gallery')
+  navigateByBrowser('/gallery')
 }
 
 const goToDataset = () => {
-  router.push('/dataset')
+  navigateByBrowser('/dataset')
 }
 
 const goToUserStudy = () => {
-  router.push('/userstudy')
+  navigateByBrowser('/userstudy')
 }
 
 const goToGetStarted = () => {
-  router.push('/getStarted')
+  navigateByBrowser('/getStarted')
 }
 
 const goToPaper = () => {
-  router.push('/paper')
+  navigateByBrowser('/paper')
 }
 
 const goToSourceCode = () => {
-  router.push('/sourceCode')
+  navigateByBrowser('/sourceCode')
 }
 
 const goEditorFresh = () => {
   if (typeof window !== 'undefined')
     window.sessionStorage.setItem(EDITOR_FRESH_KEY, '1')
-  router.push('/editor')
+  navigateByBrowser('/editor')
 }
 </script>
 
