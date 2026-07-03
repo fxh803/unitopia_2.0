@@ -1,25 +1,62 @@
-# Unitopia 2.0
+# Unitopia: Design Tool for Pictorial Unit Visualization (VIS 2026)
 
-基于 **Vue 3** 的交互式拼贴编辑前端，与 **Flask + Python** 的后端编排服务组成。后端将画布状态整理为DSL，调用 **`unitopia` 运行库**（[unitopia-lib](https://github.com/fxh803/unitopia-lib)）执行拼贴计算；分割相关能力由SAM2提供。
+<div align="center">
+
+### [Paper]() | [Online System](https://unitopia-web.github.io/) | [中文文档](./README_zh.md)
+
+Xinghui Fu<sup>1</sup> · [Zhida Sun](https://zhdsun.github.io/)<sup>1</sup> · Yoojin Jeon<sup>2</sup> · Guozheng Li<sup>3</sup> · [Yu Zhang](https://zhangyu94.github.io/)<sup>4</sup>  · [Bongshin Lee](https://www.bongshiny.com/)<sup>3</sup>  · [Min Lu](https://deardeer.github.io/)<sup>1</sup> 
+
+<sup>1</sup>Shenzhen University · <sup>2</sup>Yonsei University · <sup>3</sup>Beijing Institute of Technology · <sup>4</sup>Huawei Technologies 
+
+</div>
+
+
+<p align="center">
+  <img src="./static/interface.png" alt="interface" width="90%">
+</p>
+
+
+**UnitoPia** is an interactive construction tool for pictorial unit visualization. In UnitoPia, users can easily create a pictorial unit visualization with a tangible design model called contain-and-fill. The interface of UnitoPia consists of (A) a dataset panel, (B) a mark panel, (C) a resource library, (D) a main canvas, and (E) a pop-out mark design panel. Via sketching and direct manipulation, users can easily define the four components to create a pictorial unit visualization.
+
+## Examples of Pictorial Unit Visualizations 
+
+<p align="center">
+  <img src="./static/unitopia.png" alt="UnitoPia teaser" width="90%">
+</p>
+
+With UnitoPia, users can create diverse pictorial unit visualizations with expressive elements and flexible layouts.
+
+## Audience
+
+This document is for:
+
+* Developers who want to deploy UnitoPia on a local server.
+* Developers who want to extend or build upon UnitoPia.
+
+If you only want to use and design with UnitoPia, visit our [online system](https://unitopia-web.github.io/#/).
+
+## Tech Stack
+
+The project consists of a **Vue 3** interactive collage editor frontend and a **Flask + Python** backend orchestration service. The backend organizes canvas state into a DSL and invokes the **`unitopia` runtime library** ([unitopia-lib](https://github.com/fxh803/unitopia-lib)) for collage computation; segmentation is powered by SAM2.
 
 ---
 
-## 仓库结构
+## Repository Structure
 
-| 目录 | 说明 |
-|------|------|
-| `client/` | 前端：编辑器、多页面路由、Pinia 状态、与后端通信（`src/composables/server.ts`） |
-| `server/` | 后端：`server.py` 入口，`utils.py` 工具函数，`data/` 等；运行结果写入 `workdir/` |
-| `example/` | 示例与辅助材料 |
-| `sam/` | 基于 SAM2 的分割服务（需安装 `sam2` 与权重并单独部署）  |
+| Directory | Description |
+|-----------|-------------|
+| `client/` | Frontend: editor, multi-page routing, Pinia state, backend communication (`src/composables/server.ts`) |
+| `server/` | Backend: `server.py` entry point, `utils.py` helpers, `data/`, etc.; runtime output written to `workdir/` |
+| `example/` | Examples and supplementary materials |
+| `sam/` | SAM2-based segmentation service (requires `sam2` install, weights, and separate deployment) |
 
 ---
 
-## 系统架构（前后端对照）
+## System Architecture
 
 ```mermaid
 flowchart LR
-  subgraph client [client 前端]
+  subgraph client [client frontend]
     Pages["pages/*.vue"]
     Stores["stores/*.ts"]
     Components["components/*.vue"]
@@ -28,47 +65,47 @@ flowchart LR
     Components --> Stores
     Stores --> ServerTs
   end
-  subgraph server [server 后端]
+  subgraph server [server backend]
     Flask["Flask server.py"] 
     Lib["unitopia.Unitopia"] 
     Flask --> Lib
   end
-  subgraph external [外部依赖]
-    SegAPI["分割 HTTP 服务"] 
+  subgraph external [external dependencies]
+    SegAPI["segmentation HTTP service"] 
   end
   ServerTs -->|REST| Flask 
-  Flask -->|转发 segmentAll/segmentPoint| SegAPI
+  Flask -->|forward segmentAll/segmentPoint| SegAPI
 ```
 
-**典型运行流程**
+**Typical Runtime Flow**
 
-1. 用户在编辑器中操作，状态落在 **Pinia `stores`**。
-2. 用户触发运行（如 Run）时，`server.ts` 中 **`collectAllSlidesData()`** 按当前任务遍历每个层级设置，抽取 **markers / container / emitter / forces / dataBinding** 等数据，组装为 `ProcessedData[]`。
-3. **`sendDataToServer()`** 向 `POST /processDataApi` 发送组装好的数据`。
-4. 后端 **`processDataApi`** 为每个 collage 子任务在`workdir`创建工作目录，生成 marker 的 SVG/PNG、container 二值图等资源，并生成对应DSL `workdir/{id}_collage.json`，调用 **`unitopia.start_collage`**。
-5. 前端轮询 **`GET /fetchProgressApi?id=...`** 更新进度与结果；需要时先通过 **`GET /getRenderTxtApi`** 拉取渲染图元等。
+1. User actions in the editor update state in **Pinia `stores`**.
+2. When the user triggers a run (e.g. Run), **`collectAllSlidesData()`** in `server.ts` walks the current task's layer settings and extracts **markers / container / emitter / forces / dataBinding**, assembling `ProcessedData[]`.
+3. **`sendDataToServer()`** POSTs the assembled payload to `/processDataApi`.
+4. Backend **`processDataApi`** creates a work directory per collage sub-task under `workdir`, generates marker SVG/PNG assets, container binary masks, and the corresponding DSL `workdir/{id}_collage.json`, then calls **`unitopia.start_collage`**.
+5. The frontend polls **`GET /fetchProgressApi?id=...`** for progress and results; when needed, it fetches render primitives via **`GET /getRenderTxtApi`**.
 
 ---
 
-## 前端（`client/`）
+## Frontend (`client/`)
 
-### 技术栈
+### Tech Stack
 
-- Vue 3、Vite、TypeScript、Pinia、Vue Router
-- 画布：**Fabric.js**；部分能力：**Paper.js**
-- UI：Element Plus、UnoCSS、vxe-table
+- Vue 3, Vite, TypeScript, Pinia, Vue Router
+- Canvas: **Fabric.js**; additional capabilities: **Paper.js**
+- UI: Element Plus, UnoCSS, vxe-table
 
-### 目录要点
+### Key Directories
 
-| 路径 | 职责 |
-|------|------|
-| `src/pages/` | 路由页面：`editor`、`dataset`、`paper`、`gallery`、`userstudy` 等 |
-| `src/components/` | 编辑器内主要 Vue 组件 |
-| `src/otherComponents/` | 非核心编辑器视图或杂项组件 |
-| `src/stores/` | 业务状态与画布逻辑（主画布、自定义 mark 画布、动画、导出等） |
-| `src/composables/server.ts` | **与后端通信**：收集 slide 数据、进度轮询、容器上传、分割、marker 落点等 |
+| Path | Responsibility |
+|------|----------------|
+| `src/pages/` | Routed pages: `editor`, `dataset`, `paper`, `gallery`, `userstudy`, etc. |
+| `src/components/` | Main Vue components in the editor |
+| `src/otherComponents/` | Non-core editor views and miscellaneous components |
+| `src/stores/` | Business state and canvas logic (main canvas, custom mark canvas, animation, export, etc.) |
+| `src/composables/server.ts` | **Backend communication**: collect slide data, progress polling, container upload, segmentation, marker placement, etc. |
 
-### 本地运行
+### Local Development
 
 ```bash
 cd client
@@ -76,68 +113,68 @@ pnpm install
 pnpm dev
 ```
 
-默认开发脚本使用端口 **3333**（见 `client/package.json` 中 `dev` 脚本）。
+The default dev script uses port **3333** (see the `dev` script in `client/package.json`).
 
-### 后端地址配置
+### Backend URL Configuration
 
-前端通过 `client/src/composables/server.ts` 中的 **`ip`** 常量指向 API 基址；仓库中默认示例为线上地址，本地联调可改为 `http://localhost:4444`（与 `server/server.py` 默认端口一致）。
+The frontend points to the API base URL via the **`ip`** constant in `client/src/composables/server.ts`. The repository defaults to a hosted example; for local development, change it to `http://localhost:4444` (matching the default port in `server/server.py`).
 
 ---
 
-## 后端（`server/`）
+## Backend (`server/`)
 
-### 技术栈
+### Tech Stack
 
 - Flask
-- **unitopia-lib** 核心运行库（需提前安装，详见 [unitopia-lib](https://github.com/fxh803/unitopia-lib) 仓库内 `README.md` 与 `collage_config_zh.md`） 
+- **unitopia-lib** core runtime (install separately; see `README.md` and `collage_config_zh.md` in the [unitopia-lib](https://github.com/fxh803/unitopia-lib) repository)
 
-### HTTP 接口一览（与前端调用对应）
+### HTTP API Overview
 
-| 路由 | 方法 | 作用 | 前端主要入口 |
-|------|------|------|----------------|
-| `/processDataApi` | POST | 接收多层级拼贴任务，写 `workdir` 与 `*_collage.json`，启动 `unitopia.start_collage` | `sendDataToServer()` |
-| `/fetchProgressApi` | GET | 按任务 `id` 查询进度/结果（内存 `progress_data`） | `startProgressTimer()` |
-| `/uploadContainerApi` | POST | 上传容器图 base64，透明处理与裁剪后返回 PNG data URL | `sendUploadContainerToServer()` |
-| `/markerDropApi` | POST | 根据容器与数量生成 marker 初始落点 | `handleMarkerDropCanvas()` |
-| `/getRenderTxtApi` | GET | 读取某任务mark列表 | `getRenderTxtData()` |
-| `/segmentAll` | POST | 全图分割：转发至外部分割服务，再对 mask 做裁剪与着色处理 | `sendBackgroundToSegmentAll()` |
-| `/segmentPoint` | POST | 点选分割：同上转发逻辑 | `sendPointToSegmentPoint()` |
-| `/workdir/<path>` | GET | 提供 `workdir` 下生成文件的静态访问 | 结果资源链接等 |
-| `/api/images` | GET | Dataset 用：从 Excel 聚合结构化条目 | `dataset` 相关页面 |
+| Route | Method | Purpose | Primary frontend entry |
+|-------|--------|---------|------------------------|
+| `/processDataApi` | POST | Accept multi-layer collage tasks, write `workdir` and `*_collage.json`, start `unitopia.start_collage` | `sendDataToServer()` |
+| `/fetchProgressApi` | GET | Query progress/result by task `id` (in-memory `progress_data`) | `startProgressTimer()` |
+| `/uploadContainerApi` | POST | Upload container image as base64; transparency handling and cropping; return PNG data URL | `sendUploadContainerToServer()` |
+| `/markerDropApi` | POST | Generate initial marker placements from container and count | `handleMarkerDropCanvas()` |
+| `/getRenderTxtApi` | GET | Read mark list for a task | `getRenderTxtData()` |
+| `/segmentAll` | POST | Full-image segmentation: forward to external service, then crop and color masks | `sendBackgroundToSegmentAll()` |
+| `/segmentPoint` | POST | Point-based segmentation: same forwarding logic | `sendPointToSegmentPoint()` |
+| `/workdir/<path>` | GET | Static access to generated files under `workdir` | Result asset URLs, etc. |
+| `/api/images` | GET | Dataset: aggregate structured entries from Excel | `dataset`-related pages |
 
-外部分割服务地址当前写在 `server.py` 内（例如 `http://175.178.152.10:2616/segmentAll` 与 `segmentPoint`）；部署时请按环境替换或改为配置项。
+External segmentation service URLs are currently hard-coded in `server.py` (e.g. `http://175.178.152.10:2616/segmentAll` and `segmentPoint`). Replace them or move to configuration when deploying.
 
-### 本地运行
+### Local Development
 
 ```bash
 cd server
-# 需已安装 unitopia 包及上述依赖
+# Requires the unitopia package and dependencies installed
 python server.py
 ```
 
-默认监听 **`0.0.0.0:4444`**，`debug=True`（见 `server.py` 末尾）。
+Listens on **`0.0.0.0:4444`** by default with `debug=True` (see the bottom of `server.py`).
 
-### 工作目录
+### Work Directory
 
-- 任务输出与中间文件位于 **`server/workdir/`**（若不存在会在处理时创建）。
-- 同一时刻 **`processDataApi`** 通过全局标志避免并发重入（忙时返回 503）。
-
----
-
-## 可选：`sam/` 本地分割
-
-`sam/server.py` 提供了基于 **SAM2** 的 Flask 分割服务，需依赖本地的 `sam2` 源码及 checkpoint 文件。完成部署后，请将主仓库 **`server/server.py`** 中分割相关请求的 URL 修改为当前服务的实际地址，以实现分割功能的对接。
+- Task output and intermediate files live under **`server/workdir/`** (created on demand during processing).
+- **`processDataApi`** uses a global flag to prevent concurrent re-entry (returns 503 when busy).
 
 ---
 
-## 相关链接
+## Optional: Local Segmentation with `sam/`
 
-- 系统前后端仓库：<https://github.com/fxh803/unitopia_2.0>
-- 运行库仓库：<https://github.com/fxh803/unitopia-lib>
-- SAM2 参考：<https://github.com/facebookresearch/sam2>
+`sam/server.py` provides a Flask segmentation service based on **SAM2**, requiring local `sam2` source and checkpoint files. After deployment, update the segmentation request URLs in the main repo's **`server/server.py`** to point to your service.
 
 ---
 
-## 更多前端模板说明
+## Related Links
 
-`client/` 基于 Vitesse Lite 脚手架，组件自动导入、UnoCSS 等通用说明见 **`client/README.zh-CN.md`**。
+- Application repository: <https://github.com/fxh803/unitopia_2.0>
+- Runtime library: <https://github.com/fxh803/unitopia-lib>
+- SAM2 reference: <https://github.com/facebookresearch/sam2>
+
+---
+
+## Frontend Template Notes
+
+`client/` is scaffolded from Vitesse Lite. For auto-import, UnoCSS, and other generic setup details, see **`client/README.zh-CN.md`**.
