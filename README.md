@@ -169,7 +169,7 @@ Listens on **`0.0.0.0:4444`** by default with `debug=True` (see the bottom of `s
 
 ## Related Links
 
-- Application repository: <https://github.com/fxh803/unitopia_2.0>
+- Application repository: <https://github.com/fxh803/unitopia>
 - Runtime library: <https://github.com/fxh803/unitopia-lib>
 - SAM2 reference: <https://github.com/facebookresearch/sam2>
 
