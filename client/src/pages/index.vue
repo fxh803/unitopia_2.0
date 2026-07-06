@@ -34,10 +34,11 @@
               Pictorial Unit Visualization, Made Easy
             </p>
             <button
-              class="mt-8 inline-flex items-center rounded-lg bg-[#f6d767] px-6 py-2.5 text-base font-semibold text-[#5c4314] shadow-[0_6px_16px_rgba(246,215,103,0.5)] hover:bg-[#efca4b] transition-colors cursor-pointer"
+              class="try-online-btn mt-8 inline-flex items-center gap-1 rounded-lg bg-[#f6d767] px-6 py-2.5 text-base font-semibold text-[#5c4314] shadow-[0_6px_16px_rgba(246,215,103,0.5)] cursor-pointer"
               @click.stop="goEditorFresh"
             >
-              Try Online >>
+              Try Online
+              <span class="try-online-btn__arrow" aria-hidden="true">&gt;&gt;</span>
             </button>
           </div>
         </div>
@@ -82,6 +83,111 @@ const goEditorFresh = () => {
 
 .unitopia-wordmark {
   font-family: 'Kirang Haerang', 'Comic Sans MS', cursive;
+}
+
+.try-online-btn {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  transition:
+    transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1),
+    box-shadow 0.4s ease,
+    background-color 0.25s ease;
+}
+
+.try-online-btn::before {
+  content: '';
+  position: absolute;
+  inset: -40% -60%;
+  background: linear-gradient(
+    105deg,
+    transparent 38%,
+    rgba(255, 255, 255, 0.65) 50%,
+    transparent 62%
+  );
+  transform: translateX(-120%) skewX(-12deg);
+  transition: transform 0.65s ease;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.try-online-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  opacity: 0;
+  box-shadow: 0 0 0 0 rgba(246, 215, 103, 0.7);
+  transition: opacity 0.35s ease;
+  pointer-events: none;
+  z-index: -1;
+}
+
+.try-online-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  background-color: #efca4b;
+  box-shadow:
+    0 14px 32px rgba(246, 215, 103, 0.55),
+    0 0 28px rgba(239, 202, 75, 0.45),
+    inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  animation: try-online-glow 1.6s ease-in-out infinite;
+}
+
+.try-online-btn:hover::before {
+  transform: translateX(120%) skewX(-12deg);
+}
+
+.try-online-btn:hover::after {
+  opacity: 1;
+}
+
+.try-online-btn:active {
+  transform: translateY(-1px) scale(1.02);
+  transition-duration: 0.12s;
+}
+
+.try-online-btn__arrow {
+  display: inline-block;
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.try-online-btn:hover .try-online-btn__arrow {
+  transform: translateX(8px);
+}
+
+@keyframes try-online-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 14px 32px rgba(246, 215, 103, 0.55),
+      0 0 28px rgba(239, 202, 75, 0.45),
+      inset 0 1px 0 rgba(255, 255, 255, 0.35);
+  }
+
+  50% {
+    box-shadow:
+      0 16px 36px rgba(246, 215, 103, 0.65),
+      0 0 40px rgba(255, 220, 90, 0.55),
+      inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .try-online-btn,
+  .try-online-btn::before,
+  .try-online-btn__arrow {
+    transition: none;
+    animation: none;
+  }
+
+  .try-online-btn:hover {
+    transform: none;
+    background-color: #efca4b;
+  }
+
+  .try-online-btn:hover .try-online-btn__arrow {
+    transform: none;
+  }
 }
 </style>
 

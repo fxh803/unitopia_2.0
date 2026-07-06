@@ -40,20 +40,25 @@
       >
         Paper
       </button>
-      <button
-        class="hover:text-[var(--primary-color)] transition-colors cursor-pointer"
-        @click="goToSourceCode"
-      >
-        Source Code
-      </button>
     </nav>
 
-    <button
-      class="ml-6 inline-flex items-center rounded-full border border-[var(--primary-color)] px-4 py-1.5 text-sm font-semibold text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition-colors cursor-pointer"
-      @click="goEditorFresh"
-    >
-      Try Online
-    </button>
+    <div class=" flex items-center gap-5">
+      <a
+        href="https://github.com/fxh803/UnitoPia"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center justify-center hover:text-[var(--text-muted)] transition-colors"
+        aria-label="Source Code"
+      >
+        <span class="i-carbon:logo-github text-3xl" aria-hidden="true" />
+      </a>
+      <button
+        class="inline-flex items-center rounded-full border border-[var(--primary-color)] px-4 py-1.5 text-sm font-semibold text-[var(--primary-color)] hover:bg-[var(--primary-color)] hover:text-white transition-colors cursor-pointer"
+        @click="goEditorFresh"
+      >
+        Try Online
+      </button>
+    </div>
   </header>
 </template>
 
@@ -93,10 +98,6 @@ const goToGetStarted = () => {
 
 const goToPaper = () => {
   navigateByBrowser('/paper')
-}
-
-const goToSourceCode = () => {
-  navigateByBrowser('/sourceCode')
 }
 
 const goEditorFresh = () => {

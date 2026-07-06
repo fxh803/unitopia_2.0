@@ -6,16 +6,13 @@
     <MainHeader />
 
     <main class="flex-1 w-full max-w-5xl mx-auto px-4 py-10">
-      <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-3">
-        Get Started
-      </h1>
-      <p class="text-sm text-[var(--text-muted)]">
-        This page is currently empty. Content will be added soon.
-      </p>
+      <MarkdownView :content="getStartedContent" />
     </main>
   </div>
 </template>
 
 <script setup lang="ts">
+import getStartedContent from '~/content/getStarted.md?raw'
 import MainHeader from '~/otherComponents/MainHeader.vue'
+import MarkdownView from '~/otherComponents/MarkdownView.vue'
 </script>

@@ -28,5 +28,13 @@
     "dist",
     "node_modules",
     "eslint.config.js"
+  ],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.vue",
+    "shims.d.ts",
+    "auto-imports.d.ts",
+    "components.d.ts",
+    "typed-router.d.ts"
   ]
 }

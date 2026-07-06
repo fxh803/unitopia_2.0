@@ -10,3 +10,4 @@ node_modules
 workdir
 __pycache__
 corpus
+*.mp4
